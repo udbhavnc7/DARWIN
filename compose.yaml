@@ -1,0 +1,81 @@
+name: darwin-shop
+
+x-shop: &shop
+  build: .
+  environment: &environment
+    DARWIN_DATABASE_URL: postgresql://darwin:darwin_demo@db:5432/darwin_shop
+    DARWIN_INVENTORY_URL: http://inventory:8000
+    DARWIN_PAYMENT_URL: http://payment:8000
+  networks: [sandbox]
+  cpus: 0.75
+  mem_limit: 512m
+  healthcheck:
+    test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready',timeout=2)"]
+    interval: 5s
+    timeout: 3s
+    retries: 12
+  depends_on:
+    seed:
+      condition: service_completed_successfully
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: darwin
+      POSTGRES_PASSWORD: darwin_demo
+      POSTGRES_DB: darwin_shop
+    volumes: [shop-data:/var/lib/postgresql]
+    networks: [sandbox]
+    cpus: 1
+    mem_limit: 1536m
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U darwin -d darwin_shop"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  seed:
+    <<: *shop
+    command: [python, -m, darwin.shop.cli, init]
+    healthcheck:
+      disable: true
+    depends_on:
+      db:
+        condition: service_healthy
+  inventory:
+    <<: *shop
+    command: [python, -m, uvicorn, 'darwin.shop.services:inventory', --host, 0.0.0.0, --port, '8000']
+  payment:
+    <<: *shop
+    command: [python, -m, uvicorn, 'darwin.shop.services:payment', --host, 0.0.0.0, --port, '8000']
+  api:
+    <<: *shop
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      inventory:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+  gateway:
+    <<: *shop
+    command: [python, -m, uvicorn, 'darwin.shop.gateway:app', --host, 0.0.0.0, --port, '8000']
+    environment:
+      DARWIN_SHOP_API_URL: http://api:8000
+    ports: ['127.0.0.1:8010:8000']
+    cpus: 0.5
+    mem_limit: 256m
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/shop/ready',timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    depends_on:
+      api:
+        condition: service_healthy
+
+networks:
+  sandbox:
+    internal: true
+volumes:
+  shop-data:

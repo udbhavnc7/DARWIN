@@ -1,0 +1,1 @@
+{"app_replicas":3,"catalog_cache_ttl_s":10,"notification_mode":"queued","retry_policy":"idempotent_only"}
