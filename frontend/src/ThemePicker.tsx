@@ -2,15 +2,15 @@ import {useRef, type CSSProperties} from 'react';
 import {themes, type ThemeId} from './themes';
 import {Action, Icon} from './Action';
 
-export function ThemePicker({theme, onChange, onReplay}: {
-  theme: ThemeId; onChange: (id: ThemeId) => void; onReplay: () => void;
+export function ThemePicker({theme, onChange}: {
+  theme: ThemeId; onChange: (id: ThemeId) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
 
   return <>
     <button ref={trigger} className="theme-trigger" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
-      <span className="theme-swatch current-swatch" aria-hidden="true"/><span><small>Theme</small><strong>{themes[theme].name}</strong></span>
+      <span className="theme-swatch current-swatch" aria-hidden="true"/><strong>{themes[theme].name}</strong>
       <Icon name="chevron" className="theme-chevron"/>
     </button>
     <dialog ref={dialog} className="theme-dialog" aria-labelledby="theme-title" onClose={() => trigger.current?.focus()}>
@@ -26,7 +26,7 @@ export function ThemePicker({theme, onChange, onReplay}: {
           </label>;
         })}
       </fieldset>
-      <div className="theme-dialog-footer"><span className="muted"><Icon name="check"/> Saved on this device</span><Action variant="quiet" icon="play" onClick={() => {dialog.current?.close(); onReplay();}}>Replay intro</Action></div>
+      <div className="theme-dialog-footer"><span className="muted"><Icon name="check"/> Saved on this device</span></div>
     </dialog>
   </>;
 }

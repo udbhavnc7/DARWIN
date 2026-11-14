@@ -142,7 +142,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
     <p className="page-intro">Run isolated checkout, load, and recovery tests. Compare measured results and inspect the evidence.</p>
     <div className="experiment-grid">
     <div className="panel experiment-controls">
-    <div className="section-title"><h2>New experiment</h2></div>
+    <div className="section-title panel-heading"><div><p className="section-kicker">Experiment setup</p><h2>New experiment</h2></div></div>
     <label htmlFor="experiment-mode">Experiment type</label><select id="experiment-mode" value={canMeasure?mode:'smoke'} disabled={locked} onChange={e=>setMode(e.target.value)}>
       {canMeasure&&<><option value="benchmark">Compare performance</option><option value="faults">Verify failure recovery</option><option value="unsafe">Unsafe retry fixture</option></>}<option value="smoke">Checkout smoke check</option></select>
     {!(faults && mode==='unsafe') && <>
@@ -178,7 +178,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
         <p>{historyState==='loading'?'Retrieving saved runs and their results.':historyState==='error'?'Reconnect to the API, then refresh the saved experiments above.':'Choose an experiment type and configuration, then start a run. Its measurements, recovery checks, and evidence will appear here.'}</p>
       </div>
     </div>}
-    {history.length>0&&<><label htmlFor="saved-run">Saved experiments</label>
+    {history.length>0&&<div className="run-picker"><label htmlFor="saved-run">Saved experiments</label>
       <select id="saved-run" disabled={busy||historyState==='loading'||!terminal(run)} value={run?.experiment_id??''} onChange={e=>{
         setError(''); setEvents([]); setRun(history.find(row=>row.experiment_id===e.target.value)??null);
         rememberRunInUrl('experiment',e.target.value);
@@ -186,7 +186,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
         {history.map(row=><option key={row.experiment_id} value={row.experiment_id}>
           {row.request.mode.endsWith('_faults')?(row.request.fault_fixture==='unsafe_retry'?'Unsafe retry':'Fault verification'):row.measurement_kind==='measured'?row.request.workload_profile.replace('_',' '):'Smoke'} · {row.request.mode.startsWith('docker_')?'Docker':'Native'} · {row.status} · {row.experiment_id.slice(0,8)}
         </option>)}
-      </select></>}
+      </select></div>}
     {run&&<div>
       <div className="run-card">
         <div className="section-title"><h3>{run.request.mode.endsWith('_faults')

@@ -64,7 +64,9 @@ The dashboard selects Docker when it detects a local Linux engine and lets you s
 
 Use **Architecture** to adjust the checkout stack, see the service graph update, simulate it, or hand the selected configuration to **Experiments**. Save a downloaded Compose file at the repository root to run that configuration with Docker Compose.
 
-Use **Theme** to choose Greenhouse, Hazard, Rosewire, Terracotta, or Ink & Paper. The choice persists in your browser and also applies to the Three.js splash screen, which you can replay from the theme picker.
+New here? **What is DARWIN?** in the sidebar, **How DARWIN works** on the overview, or the **Tour** button on small screens opens a five-step guided tour of the lab, from the design-measure-verify-evolve loop to the four supported controls, the correctness gate, and measured search. Share it with `?tour=1`.
+
+Use **Theme** to choose Greenhouse, Hazard, Rosewire, Terracotta, or Ink & Paper. The choice persists in your browser and applies across the workspace, including the overview's palette-aware Three.js server assembly.
 
 The local release bundle is `artifacts/demo/darwin-workspace.zip`. It contains the app source, verified run evidence, and a recorded demonstration of the earlier interface. Extract it before opening `recorded-demo.html`.
 

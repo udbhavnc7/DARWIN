@@ -21,7 +21,7 @@ const paths = {
   book: 'M12 5v15 M3 4c4-1 7 0 9 1 2-1 5-2 9-1v15c-4-1-7 0-9 1-2-1-5-2-9-1V4Z',
 } as const;
 
-type IconName = keyof typeof paths;
+export type IconName = keyof typeof paths;
 
 export function Icon({name, className}: {name: IconName; className?: string}) {
   return <svg className={className ? `ui-icon ${className}` : 'ui-icon'} aria-hidden="true" viewBox="0 0 24 24" fill="none"

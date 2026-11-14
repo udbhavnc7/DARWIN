@@ -181,7 +181,7 @@ export function Search({workload, runtime, canMeasure, onEditCandidate}: {
     <p className="page-intro">Screen candidate architectures, verify them under failures, and compare those that pass.</p>
     <div className={`search-grid${terminal(run) ? '' : ' search-running'}`}>
     <div className="panel search-setup" hidden={!terminal(run)}>
-    <h2>New search</h2>
+    <div className="section-title panel-heading"><div><p className="section-kicker">Search setup</p><h2>New search</h2></div></div>
     <div className="genome-controls search-controls">
       <div><label htmlFor="algorithm">Search method</label><select id="algorithm" value={algorithm} disabled={busy || !terminal(run)} onChange={event => setAlgorithm(event.target.value)}>
         <option value="nsga2">NSGA-II</option><option value="random">Random search</option><option value="hill_climbing">Hill climbing</option>
@@ -214,13 +214,13 @@ export function Search({workload, runtime, canMeasure, onEditCandidate}: {
         {historyState === 'error' && <Action icon="refresh" onClick={() => setHistoryRefresh(value => value + 1)}>Retry loading searches</Action>}
       </div>
     </div>}
-    {history.length > 0 && <><label htmlFor="search-history">Saved searches</label><select id="search-history" disabled={busy || !terminal(run)} value={run?.search_id ?? ''} onChange={event => {
+    {history.length > 0 && <div className="run-picker"><label htmlFor="search-history">Saved searches</label><select id="search-history" disabled={busy || !terminal(run)} value={run?.search_id ?? ''} onChange={event => {
       setRun(history.find(row => row.search_id === event.target.value) ?? null);
       setSelectedHash(null); setEvents([]); setFilter('all'); setSort('search');
       rememberRunInUrl('search', event.target.value);
     }}>{history.map(row => <option key={row.search_id} value={row.search_id}>
       {algorithms[row.request.algorithm] ?? row.request.algorithm} · {row.request.runtime === 'docker' ? 'Docker' : 'Native'} · {row.status} · {row.search_id.slice(0, 8)}
-    </option>)}</select></>}
+    </option>)}</select></div>}
     {run && <>
       <div className="run-card">
         <div className="section-title"><h3>{algorithms[run.request.algorithm] ?? run.request.algorithm}</h3><Status value={run.status}/></div>
@@ -234,15 +234,23 @@ export function Search({workload, runtime, canMeasure, onEditCandidate}: {
       </div>
       <div className="chart-card search-chart"><h3>Measured feasible tradeoffs</h3>
       {feasible.length ? <><p className="muted">Select a point to inspect its evidence. Filled points are on the Pareto front across latency, CPU time, and recovery.</p>
-        <svg viewBox="0 0 640 280" role="group" aria-label="Measured latency versus application CPU time" className="pareto">
-          <path d="M50 40H590M50 90H590M50 140H590M50 190H590M185 40V240M320 40V240M455 40V240M590 40V240" fill="none" stroke="var(--line)"/>
-          <path d="M50 20V240H620" fill="none" stroke="currentColor"/>
-          <text x="260" y="275" fill="currentColor">Application CPU seconds</text><text x="5" y="15" fill="currentColor">p95 ms</text>
-          <text x="5" y="40" fill="currentColor">{maxLatency.toFixed(0)}</text><text x="565" y="260" fill="currentColor">{maxCpu.toFixed(1)}</text>
+        <svg viewBox="0 0 660 300" role="group" aria-label="Measured latency versus application CPU time" className="pareto">
+          {[0, .25, .5, .75, 1].map(fraction => {
+            const y = 40 + (1 - fraction) * 200;
+            return <g key={`y-${fraction}`}><line className="chart-grid" x1="52" x2="620" y1={y} y2={y}/>
+              <text x="44" y={y + 4} textAnchor="end">{Math.round(maxLatency * fraction)}</text></g>;
+          })}
+          {[0, .25, .5, .75, 1].map(fraction => {
+            const x = 52 + fraction * 568;
+            return <g key={`x-${fraction}`}><line className="chart-grid" x1={x} x2={x} y1="40" y2="240"/>
+              <text x={x} y="258" textAnchor="middle">{(maxCpu * fraction).toFixed(1)}</text></g>;
+          })}
+          <path className="chart-axis" d="M52 24V240H630" fill="none"/>
+          <text x="335" y="284" textAnchor="middle">Application CPU seconds</text><text x="10" y="30">p95 ms</text>
           {feasible.map(row => {
             const [latency, cpu, recovery] = row.objectives!;
             const label = `${describeGenome(row.genome)} · p95 ${latency.toFixed(1)} ms · CPU ${cpu.toFixed(2)} s · recovery ${recovery.toFixed(2)} s`;
-            return <circle key={row.genome_hash} cx={50 + cpu / maxCpu * 540} cy={240 - latency / maxLatency * 200}
+            return <circle key={row.genome_hash} cx={52 + cpu / maxCpu * 568} cy={240 - latency / maxLatency * 200}
               className="candidate-point" role="button" tabIndex={0} aria-label={label} aria-haspopup="dialog"
               onClick={event => inspect(row, event.currentTarget)} onKeyDown={event => {
                 if (event.key === 'Enter' || event.key === ' ') {
@@ -253,9 +261,13 @@ export function Search({workload, runtime, canMeasure, onEditCandidate}: {
               <title>{label}</title>
             </circle>;
           })}
-        </svg></> : <p className="muted">No complete configuration has passed every measured feasibility gate in this search.</p>}
+        </svg>
+        <div className="chart-legend">
+          <span><i className="legend-dot on"/>Pareto front</span>
+          <span><i className="legend-dot"/>Measured feasible</span>
+        </div></> : <p className="muted">No complete configuration has passed every measured feasibility gate in this search.</p>}
       </div>
-      <section className="candidate-browser" aria-labelledby="candidates-title">
+      <section className="candidate-browser panel" aria-labelledby="candidates-title">
         <div className="section-title"><h3 id="candidates-title">Candidates</h3><span className="muted" role="status">{candidates.length} of {run.candidates.length} shown</span></div>
         <div className="candidate-filters">
           <div><label htmlFor="candidate-filter">Evidence</label><select id="candidate-filter" value={filter} onChange={event => setFilter(event.target.value as CandidateFilter)}>

@@ -6,7 +6,8 @@ import {Architecture} from './Architecture';
 import {Experiments} from './Experiments';
 import {Search} from './Search';
 import {Status} from './Status';
-import {BrandMark, Startup} from './Startup';
+import {BrandMark} from './Brand';
+import {Tour} from './Demo';
 import {ArchitectureArt} from './ArchitectureArt';
 import {ThemePicker} from './ThemePicker';
 import {Action, Icon} from './Action';
@@ -37,18 +38,13 @@ function currentPage(): Page {
   return params.has('experiment') ? 'experiments' : params.has('search') ? 'search' : 'overview';
 }
 
-function shouldShowIntro() {
-  if (currentPage() !== 'overview') return false;
-  try {return sessionStorage.getItem('darwin-intro') !== 'seen';} catch {return true;}
-}
-
 function App() {
   const [project, setProject] = useState<Project | null>(null);
   const [connecting, setConnecting] = useState(true);
   const [workload, setWorkload] = useState('normal');
   const [selectedRuntime, setSelectedRuntime] = useState<Runtime | null>(null);
   const [page, setPage] = useState<Page>(currentPage);
-  const [intro, setIntro] = useState(shouldShowIntro);
+  const [tourOpen, setTourOpen] = useState(() => new URLSearchParams(location.search).has('tour'));
   const [themeId, setThemeId] = useState(readTheme);
   const theme = themes[themeId];
   const [builderDraft, setBuilderDraft] = useState(() => readDraft('builder') ?? baseline);
@@ -87,12 +83,6 @@ function App() {
     }
   }, []);
 
-  const dismissIntro = useCallback(() => {
-    try {sessionStorage.setItem('darwin-intro', 'seen');} catch { /* Storage can be disabled. */ }
-    setIntro(false);
-    requestAnimationFrame(() => title.current?.focus({preventScroll: true}));
-  }, []);
-
   useEffect(() => {
     void connect();
     const navigate = () => {
@@ -120,40 +110,44 @@ function App() {
 
   const runtimeLabel = runtime === 'docker' ? 'Docker' : 'Native';
   return <>
-    <div className="app-frame" inert={intro}>
+    <div className="app-frame">
       <a className="skip-link" href="#workspace" onClick={event => {event.preventDefault(); title.current?.focus();}}>Skip to workspace</a>
       <aside className="app-sidebar">
         <a className="brand" href="#overview"><BrandMark/><span>DARWIN<small>Architecture lab</small></span></a>
-        <div className="sidebar-workspace"><span className="workspace-avatar"><Icon name="configuration"/></span><span><strong>Local workspace</strong><small>Backend experimentation</small></span></div>
-        <p className="nav-caption">Workspace</p>
         <nav className="section-nav" aria-label="Workspace">
           {pageOrder.map(id => <a key={id} href={`#${id}`} aria-current={page === id ? 'page' : undefined}>
             <Icon name={id}/><span>{pages[id].label}</span><span className="nav-current" aria-hidden="true">›</span>
           </a>)}
         </nav>
-        <a className="sidebar-guide" href="#shop"><Icon name="book"/><strong>Start with a checkout</strong><span>See how the backend works in the demo shop.</span><span className="sidebar-guide-link">Try the walkthrough <Icon name="arrow"/></span></a>
+        <button type="button" className="sidebar-guide" aria-haspopup="dialog" onClick={() => setTourOpen(true)}>
+          <span className="sidebar-guide-icon"><Icon name="play"/></span>
+          <strong>What is DARWIN?</strong>
+          <span>See the lab end to end in a one-minute product tour.</span>
+          <span className="sidebar-guide-link">Take the tour <Icon name="arrow"/></span>
+        </button>
         <div className="sidebar-status">
           <Status value={connecting ? 'running' : project ? 'connected' : 'offline'}
             label={connecting ? 'Checking API' : project ? 'API connected' : 'API offline'}/>
-          <Action variant="quiet" className="replay" icon="play" onClick={() => setIntro(true)}>Replay intro</Action>
+          <Action variant="quiet" className="mobile-tour" icon="play" aria-haspopup="dialog"
+            onClick={() => setTourOpen(true)}>Tour</Action>
         </div>
       </aside>
       <main id="workspace">
         <header className="workspace-header">
           <div><p className="workspace-breadcrumb">Workspace <span aria-hidden="true">/</span> <span> {pages[page].label}</span></p><h1 ref={title} tabIndex={-1}>{pages[page].title}</h1></div>
-          <ThemePicker theme={themeId} onChange={changeTheme} onReplay={() => setIntro(true)}/>
+          <ThemePicker theme={themeId} onChange={changeTheme}/>
         </header>
-        {page !== 'shop' && <div className="context-bar" role="group" aria-label="Run settings">
+        {page !== 'shop' && page !== 'overview' && <div className="context-bar" role="group" aria-label="Run settings">
           <div className="context-heading"><Icon name="settings"/><span>Run settings</span></div>
           <div className="header-controls">
-            <div><label htmlFor="runtime">Execution runtime</label>
+            <div><label htmlFor="runtime">Runtime</label>
               <select id="runtime" value={runtime} disabled={!project || connecting}
                 onChange={event => setSelectedRuntime(event.target.value as Runtime)}>
                 <option value="native">Native</option>
                 <option value="docker" disabled={!dockerAvailable}>Docker{dockerAvailable ? '' : ' (unavailable)'}</option>
               </select>
             </div>
-            <div><label htmlFor="workload">Workload profile</label>
+            <div><label htmlFor="workload">Workload</label>
               <select id="workload" value={workload} onChange={event => setWorkload(event.target.value)}>
                 <option value="normal">Normal traffic</option><option value="flash_sale">Flash sale</option><option value="checkout_heavy">Checkout heavy</option>
               </select>
@@ -166,14 +160,14 @@ function App() {
           <section className="overview" aria-labelledby="overview-title">
             <div className="hero-copy">
               <span className="section-kicker hero-kicker"><span/>The backend architecture lab</span>
-              <h2 id="overview-title">Better backends.<br/><em>Built on evidence.</em></h2>
+              <h2 id="overview-title">Better backends.{' '}<br/><em>Built on evidence.</em></h2>
               <p>Design your system, see where it breaks, and discover architectures that recover.</p>
               <div className="shop-actions">
                 <a className="primary action-link" href="#configuration">Open architecture builder <Icon name="arrow"/></a>
-                <a className="hero-secondary" href="#shop">Try the demo <Icon name="arrow"/></a>
+                <button type="button" className="hero-secondary" aria-haspopup="dialog" onClick={() => setTourOpen(true)}><Icon name="play"/>How DARWIN works</button>
               </div>
             </div>
-            <div className="hero-visual">{page === 'overview' && !intro && <ArchitectureArt theme={theme}/>}<div className="visual-caption"><span className="visual-caption-line"/>Design <span>→</span> Measure <span>→</span> Evolve</div></div>
+            <div className="hero-visual"><ArchitectureArt theme={theme}/><div className="visual-caption"><span className="visual-caption-line"/>Design <span>→</span> Measure <span>→</span> Evolve</div></div>
           </section>
           <div className="workflow-heading"><div><span className="section-kicker">From idea to evidence</span><h2>Your next move</h2></div><span className="muted">One workspace. Three steps.</span></div>
           <nav className="workflow" aria-label="Architecture workflow">
@@ -207,7 +201,7 @@ function App() {
         <div hidden={page !== 'shop'}><Shop/></div>
       </main>
     </div>
-    {intro && <Startup dismiss={dismissIntro} theme={theme}/>}
+    <Tour open={tourOpen} onClose={() => setTourOpen(false)}/>
   </>;
 }
 
