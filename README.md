@@ -12,12 +12,13 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Tests](https://img.shields.io/badge/tests-96%20passing%20%C2%B7%2013%20integration-2ea44f)](#testing)
 [![Status](https://img.shields.io/badge/status-MVP%20complete%20%C2%B7%20~75%25%20to%20production-176541)](#project-status)
+[![License: MIT](https://img.shields.io/badge/license-MIT-176541.svg)](LICENSE)
 
 </div>
 
 ![DARWIN overview](docs/images/overview.png)
 
-> **Status:** all ten MVP phases are complete and the app is roughly **75% of the way to a production-ready release**. Everything described here runs locally today. The remaining work is hardening and generalization, not missing core functionality. See [Project status](#project-status).
+> **Status:** all ten MVP phases are complete and the app is roughly **75% of the way to a production-ready release**. Everything described here runs locally today. The remaining work is hardening and generalization, not missing core functionality. See [Project status](#project-status) or the detailed [project context](CONTEXT.md).
 
 ---
 
@@ -33,6 +34,7 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 - [API](#api)
 - [Testing](#testing)
 - [Project status](#project-status)
+- [Project context](CONTEXT.md)
 - [Documentation](#documentation)
 - [License](#license)
 
@@ -389,7 +391,6 @@ What remains to reach a production-ready v1:
 - **Cross-platform native adapter.** Native fault experiments are Windows-specific; Docker is the route on Linux.
 - **Packaging.** A one-command installer or containerized control plane would remove the manual three-terminal setup.
 - **Demo assets.** The bundled recorded demo predates the current interface and should be re-recorded.
-- **License.** No open-source license has been chosen yet.
 - **Later extensions.** Cloud/Kubernetes adapters, broader scenario matrices, and optional LLM explanations.
 
 The project deliberately keeps negative and inconclusive results. They are part of the evidence, not something to tune away.
@@ -400,6 +401,7 @@ The project deliberately keeps negative and inconclusive results. They are part 
 
 | Document | Contents |
 | --- | --- |
+| [Project context](CONTEXT.md) | Completion map, exact scope, verified evidence, gaps, and glossary |
 | [Roadmap](ROADMAP.md) | Scope, ten phases, working rules, and extensions |
 | [Architecture](docs/ARCHITECTURE.md) | System design, shop behavior, invariants, and scope boundary |
 | [Contracts](docs/CONTRACTS.md) | Schema, lifecycle, budgets, comparability, and gate semantics |
@@ -412,4 +414,4 @@ For a guided walkthrough of the codebase, start with `backend/darwin/contracts.p
 
 ## License
 
-No license has been selected yet. The repository is public for review and evaluation, but reuse, modification, or redistribution is not granted without permission. If you intend to build on DARWIN, add an explicit license first; MIT or Apache-2.0 would suit this project.
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 udbhavnc7.
