@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 import time
 from typing import Annotated
 from uuid import NAMESPACE_URL, UUID, uuid5
@@ -13,6 +14,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from darwin.shop.db import connection
 from darwin.shop.settings import genome
+
+logger = logging.getLogger('darwin.shop')
 
 
 class Checkout(BaseModel):
@@ -50,6 +53,7 @@ def base_app(role):
 
     @app.exception_handler(psycopg.Error)
     async def database_error(request, exc):
+        logger.warning('%s %s failed: %s: %s', request.method, request.url.path, type(exc).__name__, exc)
         return JSONResponse(status_code=503, content={'detail': 'Database temporarily unavailable; retry with the same request key'})
 
     return app
@@ -73,7 +77,7 @@ def reserve(request: Reservation):
         if not conn.execute('SELECT 1 FROM products WHERE sku=%s', (request.sku,)).fetchone():
             raise HTTPException(404, 'Unknown product')
         conn.execute('''INSERT INTO reservations VALUES (%s,%s,%s,'pending')
-                        ON CONFLICT(request_key) DO NOTHING''', (request.request_key, request.sku, request.quantity))
+                        ON CONFLICT DO NOTHING''', (request.request_key, request.sku, request.quantity))
         row = conn.execute('SELECT * FROM reservations WHERE request_key=%s FOR UPDATE', (request.request_key,)).fetchone()
         if row['sku'] != request.sku or row['quantity'] != request.quantity:
             raise HTTPException(409, 'Request key already used for another payload')
@@ -90,7 +94,7 @@ def reserve(request: Reservation):
 def capture(request: Capture):
     with connection() as conn:
         inserted = conn.execute('''INSERT INTO captures (request_key,order_id,amount_cents) VALUES (%s,%s,%s)
-                        ON CONFLICT(request_key) DO NOTHING RETURNING request_key''',
+                        ON CONFLICT DO NOTHING RETURNING request_key''',
                         (request.request_key, request.order_id, request.amount_cents)).fetchone()
         row = conn.execute('SELECT * FROM captures WHERE request_key=%s', (request.request_key,)).fetchone()
         if row['order_id'] != request.order_id or row['amount_cents'] != request.amount_cents:
@@ -156,7 +160,7 @@ def deliver_notification(job_key):
         job = conn.execute('SELECT * FROM outbox WHERE job_key=%s', (job_key,)).fetchone()
         if not job:
             return
-        conn.execute('INSERT INTO deliveries(job_key,order_id) VALUES (%s,%s) ON CONFLICT(job_key) DO NOTHING',
+        conn.execute('INSERT INTO deliveries(job_key,order_id) VALUES (%s,%s) ON CONFLICT DO NOTHING',
                      (job_key, job['order_id']))
     control = os.environ.get('DARWIN_FAULT_CONTROL_FILE')
     if control and os.environ.get('DARWIN_ISOLATED_FAULT_TEST') == '1':
@@ -166,42 +170,61 @@ def deliver_notification(job_key):
         conn.execute("UPDATE outbox SET status='completed' WHERE job_key=%s", (job_key,))
 
 
+def settle_order(key, request):
+    """Advance one order to a final state while duplicate requests queue behind it.
+
+    Repeating a request is safe because the inventory and payment calls are
+    idempotent on the request key. If the row lock times out under a burst of
+    duplicates, retry within the checkout budget instead of reporting a
+    transient database error for a request that will succeed moments later.
+    """
+    settle_deadline = time.monotonic() + 8
+    while True:
+        deadline = time.monotonic() + 2
+        try:
+            # Serialize repeated requests for this order, independently of inventory/payment transactions.
+            with connection() as conn:
+                order = conn.execute('SELECT * FROM orders WHERE request_key=%s FOR UPDATE', (key,)).fetchone()
+                if order['sku'] != request.sku or order['quantity'] != request.quantity:
+                    raise HTTPException(409, 'Request key already used for another payload')
+                if order['status'] == 'pending':
+                    reserved = post_safe(os.environ.get('DARWIN_INVENTORY_URL', 'http://127.0.0.1:8011') + '/reserve',
+                                         {'request_key': key, **request.model_dump()}, deadline)
+                    if reserved.status_code == 409 and reserved.json().get('status') == 'rejected':
+                        conn.execute("UPDATE orders SET status='failed',failure_reason='out_of_stock' WHERE request_key=%s", (key,))
+                        order.update(status='failed', failure_reason='out_of_stock')
+                    elif reserved.status_code != 200:
+                        raise HTTPException(503, 'Reservation could not be verified')
+                    else:
+                        paid = post_safe(os.environ.get('DARWIN_PAYMENT_URL', 'http://127.0.0.1:8012') + '/capture',
+                                         {'request_key': key, 'order_id': str(order['order_id']), 'amount_cents': order['amount_cents']}, deadline)
+                        if paid.status_code != 200:
+                            raise HTTPException(503, 'Payment could not be verified; retry with the same key')
+                        evidence = paid.json()
+                        if (evidence.get('status') != 'captured' or evidence.get('request_key') != key or
+                                evidence.get('order_id') != str(order['order_id']) or evidence.get('amount_cents') != order['amount_cents']):
+                            raise HTTPException(503, 'Payment evidence mismatch')
+                        conn.execute("UPDATE orders SET status='confirmed' WHERE request_key=%s", (key,))
+                        conn.execute('INSERT INTO outbox(job_key,order_id) VALUES (%s,%s) ON CONFLICT DO NOTHING', (key, order['order_id']))
+                        order['status'] = 'confirmed'
+                return order
+        except (psycopg.errors.LockNotAvailable, psycopg.errors.QueryCanceled, psycopg.errors.DeadlockDetected):
+            if time.monotonic() >= settle_deadline:
+                raise HTTPException(503, 'Order update is still busy; retry with the same key')
+            time.sleep(0.05)
+
+
 @api.post('/checkout')
 def checkout(request: Checkout, idempotency_key: Annotated[str, Header(min_length=1, max_length=128)]):
-    deadline = time.monotonic() + 2
     key = idempotency_key
     with connection() as conn:
         product = conn.execute('SELECT * FROM products WHERE sku=%s', (request.sku,)).fetchone()
         if not product:
             raise HTTPException(404, 'Unknown product')
         conn.execute('''INSERT INTO orders(request_key,order_id,sku,quantity,amount_cents,status)
-                        VALUES (%s,%s,%s,%s,%s,'pending') ON CONFLICT(request_key) DO NOTHING''',
+                        VALUES (%s,%s,%s,%s,%s,'pending') ON CONFLICT DO NOTHING''',
                      (key, uuid5(NAMESPACE_URL, 'darwin:shop:' + key), request.sku, request.quantity, product['price_cents'] * request.quantity))
-    # Serialize repeated requests for this order, independently of inventory/payment transactions.
-    with connection() as conn:
-        order = conn.execute('SELECT * FROM orders WHERE request_key=%s FOR UPDATE', (key,)).fetchone()
-        if order['sku'] != request.sku or order['quantity'] != request.quantity:
-            raise HTTPException(409, 'Request key already used for another payload')
-        if order['status'] == 'pending':
-            reserved = post_safe(os.environ.get('DARWIN_INVENTORY_URL', 'http://127.0.0.1:8011') + '/reserve',
-                                 {'request_key': key, **request.model_dump()}, deadline)
-            if reserved.status_code == 409 and reserved.json().get('status') == 'rejected':
-                conn.execute("UPDATE orders SET status='failed',failure_reason='out_of_stock' WHERE request_key=%s", (key,))
-                order.update(status='failed', failure_reason='out_of_stock')
-            elif reserved.status_code != 200:
-                raise HTTPException(503, 'Reservation could not be verified')
-            else:
-                paid = post_safe(os.environ.get('DARWIN_PAYMENT_URL', 'http://127.0.0.1:8012') + '/capture',
-                                 {'request_key': key, 'order_id': str(order['order_id']), 'amount_cents': order['amount_cents']}, deadline)
-                if paid.status_code != 200:
-                    raise HTTPException(503, 'Payment could not be verified; retry with the same key')
-                evidence = paid.json()
-                if (evidence.get('status') != 'captured' or evidence.get('request_key') != key or
-                        evidence.get('order_id') != str(order['order_id']) or evidence.get('amount_cents') != order['amount_cents']):
-                    raise HTTPException(503, 'Payment evidence mismatch')
-                conn.execute("UPDATE orders SET status='confirmed' WHERE request_key=%s", (key,))
-                conn.execute('INSERT INTO outbox(job_key,order_id) VALUES (%s,%s) ON CONFLICT(job_key) DO NOTHING', (key, order['order_id']))
-                order['status'] = 'confirmed'
+    order = settle_order(key, request)
     if order['status'] == 'failed':
         return JSONResponse(status_code=409, content={'order_id': str(order['order_id']), 'status': 'failed', 'detail': order['failure_reason']})
     if genome().notification_mode == 'sync':

@@ -118,7 +118,7 @@ def test_ledger_shows_one_effect_after_repeat_and_reset_clears_it(shop):
 def test_concurrent_duplicate_requests_have_one_effect(shop):
     with ThreadPoolExecutor(max_workers=6) as pool:
         responses = list(pool.map(lambda _: purchase(shop, 'concurrent'), range(12)))
-    assert all(r.status_code == 200 for r in responses), [r.text for r in responses]
+    assert all(r.status_code == 200 for r in responses), [(r.status_code, r.text) for r in responses]
     assert len({r.json()['order_id'] for r in responses}) == 1
     data = snapshot()
     assert len(data['orders']) == len(data['captures']) == len(data['deliveries']) == 1
