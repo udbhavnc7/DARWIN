@@ -1,0 +1,2100 @@
+{
+  "schema_version": 1,
+  "label": "Recorded run",
+  "generated_at": "2026-11-14T15:40:13.259094+00:00",
+  "note": "Saved from completed DARWIN searches for offline review. These are recorded measurements, not a live execution. Re-run the search to produce new evidence.",
+  "searches": [
+    {
+      "experiment_id": "fe3386fb-8cf5-4440-b616-2ec48e1db3d9",
+      "search_id": "fe3386fb-8cf5-4440-b616-2ec48e1db3d9",
+      "created_at": "2026-11-13T13:49:44.335434+00:00",
+      "started_at": "2026-11-13T13:49:44.345858+00:00",
+      "finished_at": "2026-11-13T14:28:54.712644+00:00",
+      "status": "completed",
+      "request": {
+        "schema_version": 1,
+        "algorithm": "random",
+        "runtime": "docker",
+        "workload_profile": "normal",
+        "fault_scenarios": [
+          "db_delay",
+          "service_outage",
+          "timeout_retry_duplicate"
+        ],
+        "seed": 30,
+        "budget": {
+          "schema_version": 1,
+          "max_candidates": 24,
+          "real_test_budget": 18,
+          "repetitions": 3,
+          "wall_clock_s": 4320,
+          "concurrent_deployments": 1,
+          "sandbox_cpu_cores": 4,
+          "sandbox_memory_mb": 4096
+        },
+        "constraints": {
+          "schema_version": 1,
+          "max_error_rate": 0.01,
+          "max_p95_ms": null
+        },
+        "generations": 6,
+        "population_size": 4,
+        "promotions_per_generation": 1,
+        "use_simulator": true
+      },
+      "candidates": [
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "789f98e44fc0f4e292ec2462af95581d08deb2e05df7972e7b154b281c682ce0",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "measured",
+          "objectives": [
+            82.95100000395905,
+            2.387155,
+            7.985000000000582
+          ],
+          "penalty": 0,
+          "simulation": {
+            "calibration_status": "fitted_limited_evidence",
+            "metrics": {
+              "p95_ms": 440.6718863861787
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 78.79109999339562,
+                "median": 82.95100000395905,
+                "max": 101.21030001027975
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 2.033404999999999,
+                "median": 2.387155,
+                "max": 2.5480219999999996
+              },
+              "memory_peak_mb": {
+                "min": 335.84765625,
+                "median": 337.890625,
+                "max": 381.97265625
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "passed"
+          },
+          "experiment_id": "545a66ec-479a-4aae-8fc2-9ac76e3eb807",
+          "candidate_id": "bcad70f5-074f-48f7-878b-deeef89b3bf2",
+          "evaluations": [
+            {
+              "evaluation_id": "2365194b-1a7c-4826-980a-e79560c72284",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 20.706900002551265,
+                "p95_ms": 101.21030001027975,
+                "p99_ms": 145.00450000923593,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.033404999999999,
+                "memory_peak_mb": 381.97265625,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "3db49293-55ef-4b66-a8f6-306b50f9b5a5",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 20.88999999978114,
+                "p95_ms": 82.95100000395905,
+                "p99_ms": 89.56900000339374,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.387155,
+                "memory_peak_mb": 337.890625,
+                "recovery_s": 7.985000000000582,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 7.985000000000582,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "d66223ec-2eff-43c8-bf84-1d3b2d622a81",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 21.81979999295436,
+                "p95_ms": 78.79109999339562,
+                "p99_ms": 108.44910000741947,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.5480219999999996,
+                "memory_peak_mb": 335.84765625,
+                "recovery_s": 8.812000000005355,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 8.812000000005355,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "ee535455de598fde37b1565401f27f1b9e04da4d24d4da4721239366dfe0fbb2",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "56ef19f086d66489a1f65d784e1bbea90526dbfd31cecb2e747bbae32e0d9ad8",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "ddbfdf852b30e1a1a0610ba2c72c4846d36f6aa2886d35cb98aa32fbee2e908f",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "queued",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "09b204780c6f0053f1bef3b0e06e94a457d821a4d48c8327c0ccb7c3d61650c6",
+          "parent_ids": [],
+          "generation": 1,
+          "status": "measured",
+          "objectives": [
+            77.01749999250751,
+            3.6979120000000005,
+            8.468999999997322
+          ],
+          "penalty": 0,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 164.11177966857338
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 70.26559999212623,
+                "median": 77.01749999250751,
+                "max": 81.05860000068787
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 3.1112159999999998,
+                "median": 3.6979120000000005,
+                "max": 3.712706999999998
+              },
+              "memory_peak_mb": {
+                "min": 455.91796875,
+                "median": 457.96875,
+                "max": 462.73046875
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "passed"
+          },
+          "experiment_id": "a906fdcb-5440-40e8-ad22-223d561918f5",
+          "candidate_id": "c7c3a5f2-70a6-4d91-bcf6-fe41c3181451",
+          "evaluations": [
+            {
+              "evaluation_id": "4d140b7a-19a3-4ab4-9c7a-ec23b3106450",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 20.737900005769916,
+                "p95_ms": 77.01749999250751,
+                "p99_ms": 87.0749000023352,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.1112159999999998,
+                "memory_peak_mb": 455.91796875,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "6e1bd547-66bc-4729-9af1-c83a713c7f24",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 21.88249999016989,
+                "p95_ms": 81.05860000068787,
+                "p99_ms": 103.36139998980798,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.712706999999998,
+                "memory_peak_mb": 462.73046875,
+                "recovery_s": 9.469000000011874,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.01600000000326,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 9.469000000011874,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "eb4479ef-eed0-4853-8ea3-78ab0e407492",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 22.734500002115965,
+                "p95_ms": 70.26559999212623,
+                "p99_ms": 93.39840000029653,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.6979120000000005,
+                "memory_peak_mb": 457.96875,
+                "recovery_s": 8.468999999997322,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 8.468999999997322,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 8.26600000000326,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "11321ac45372360727e54988d3e227c082f94b3ff788bd92d35f92c3f546f2fc",
+          "parent_ids": [],
+          "generation": 1,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "09c8b5ffa796cf498f9fad53b21ae1afe86d01908cc3d3e6541c080b508f59b2",
+          "parent_ids": [],
+          "generation": 1,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "0c3137e35db2997a538de3d67fc413148de89aaecffdec1e6b3bee4d05908b46",
+          "parent_ids": [],
+          "generation": 1,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "2d5f874ca03821696dcdd59a9fec3946213d1ea9b705927c029d900dbf03dcee",
+          "parent_ids": [],
+          "generation": 2,
+          "status": "measured",
+          "objectives": [
+            100.70229999837466,
+            3.358905000000002,
+            5.0
+          ],
+          "penalty": 0,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 89.16950000275392,
+                "median": 100.70229999837466,
+                "max": 110.80850000143982
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 3.3108699999999986,
+                "median": 3.358905000000002,
+                "max": 3.481157999999998
+              },
+              "memory_peak_mb": {
+                "min": 473.75,
+                "median": 474.6640625,
+                "max": 488.34375
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "passed"
+          },
+          "experiment_id": "e512e627-2eb7-4f3e-af25-d74552fb2a1d",
+          "candidate_id": "0d6aaf6c-d376-454a-a6b9-d15cd1172553",
+          "evaluations": [
+            {
+              "evaluation_id": "cff75179-3f0e-4267-bd93-93264e71b47b",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 25.33259999472648,
+                "p95_ms": 110.80850000143982,
+                "p99_ms": 131.34900000295602,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.3108699999999986,
+                "memory_peak_mb": 488.34375,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "46292dfb-07ad-4dca-a920-ffacd4bd7139",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 22.87070000602398,
+                "p95_ms": 100.70229999837466,
+                "p99_ms": 135.55279999854974,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.358905000000002,
+                "memory_peak_mb": 473.75,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "d561e52b-4a59-4916-a576-9011b69f3a10",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 25.025399998412468,
+                "p95_ms": 89.16950000275392,
+                "p99_ms": 104.5150999998441,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.481157999999998,
+                "memory_peak_mb": 474.6640625,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "queued",
+            "retry_policy": "none"
+          },
+          "genome_hash": "3e66f0418d26ba5adb1641a77a2c688b737ff0bfdb0b121e0aa92e6d063e4c75",
+          "parent_ids": [],
+          "generation": 2,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 164.11177966857338
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "c9041cd42e2f00e22452f81eb0f2c8ec694301e960d55083b7527b3876bf40c9",
+          "parent_ids": [],
+          "generation": 2,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "queued",
+            "retry_policy": "none"
+          },
+          "genome_hash": "f7e8e0086b3f82988498c3cc1efc2aea6af0b55b5c90c3927c6909410f94112f",
+          "parent_ids": [],
+          "generation": 2,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 164.11177966857338
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "queued",
+            "retry_policy": "none"
+          },
+          "genome_hash": "f43a26208513521ef3fe72d09d67b51e0bfdcf11b5a63744bf19e919b7fe887b",
+          "parent_ids": [],
+          "generation": 3,
+          "status": "measured",
+          "objectives": [
+            78.47599999513477,
+            3.5846360000000015,
+            7.48399999999674
+          ],
+          "penalty": 0,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 148.11177966857338
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 70.55079999554437,
+                "median": 78.47599999513477,
+                "max": 82.15049999125767
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 3.204344999999999,
+                "median": 3.5846360000000015,
+                "max": 3.815730000000002
+              },
+              "memory_peak_mb": {
+                "min": 464.51953125,
+                "median": 468.85546875,
+                "max": 471.21484375
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "passed"
+          },
+          "experiment_id": "c7b489f0-dc54-4416-bfe4-c7bb60ebaa71",
+          "candidate_id": "cbbec8c9-7e9f-4596-9519-26db7aa0cdeb",
+          "evaluations": [
+            {
+              "evaluation_id": "e3fba459-821b-41ca-99c8-3f1e604a99be",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 21.724400008679368,
+                "p95_ms": 78.47599999513477,
+                "p99_ms": 104.22870000184048,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.204344999999999,
+                "memory_peak_mb": 464.51953125,
+                "recovery_s": 7.48399999999674,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 7.48399999999674,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "29b85d81-5b20-4920-a7c7-a411303cdfac",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 23.223600001074374,
+                "p95_ms": 70.55079999554437,
+                "p99_ms": 168.61599999538157,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.5846360000000015,
+                "memory_peak_mb": 468.85546875,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "7c596b7e-0c41-4baa-811c-ecee42607a93",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 23.624599998584017,
+                "p95_ms": 82.15049999125767,
+                "p99_ms": 136.58800000848714,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.815730000000002,
+                "memory_peak_mb": 471.21484375,
+                "recovery_s": 9.5,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 9.5,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "3246ae2475f571acc6027978d922723fbe108d01fc5f25b6f91ab253d6e4c95f",
+          "parent_ids": [],
+          "generation": 3,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "queued",
+            "retry_policy": "none"
+          },
+          "genome_hash": "2b6ad6753925b21d72e066d179dba0653b9af48ee0242d85b325a26f82c171ad",
+          "parent_ids": [],
+          "generation": 3,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 164.11177966857338
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "c36d048b306207207afe6c1505856a62fdc5b7ca1537c8acd35c102e33ec7219",
+          "parent_ids": [],
+          "generation": 3,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "queued",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "fbd0ba5fbbee09df6366bc3cab719d2894ae5a46e7761da342b1bbcd53ffbbde",
+          "parent_ids": [],
+          "generation": 4,
+          "status": "measured",
+          "objectives": [
+            76.34040000266396,
+            3.889337000000001,
+            5.0
+          ],
+          "penalty": 0,
+          "simulation": {
+            "calibration_status": "fitted_limited_evidence",
+            "metrics": {
+              "p95_ms": 303.6291483205762
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 75.67229999403935,
+                "median": 76.34040000266396,
+                "max": 110.84150000533555
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 3.5930919999999986,
+                "median": 3.889337000000001,
+                "max": 4.216012
+              },
+              "memory_peak_mb": {
+                "min": 530.8984375,
+                "median": 531.30859375,
+                "max": 531.5078125
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "passed"
+          },
+          "experiment_id": "21f9ca04-03d4-4ac3-9fc8-29c44d406c53",
+          "candidate_id": "ee12b2a3-5c29-4d77-9d0c-3e66030a386b",
+          "evaluations": [
+            {
+              "evaluation_id": "7ee056a7-e1e9-426e-8338-bdd2e2d4618e",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 23.193500004708767,
+                "p95_ms": 76.34040000266396,
+                "p99_ms": 81.5881000016816,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.5930919999999986,
+                "memory_peak_mb": 531.30859375,
+                "recovery_s": 8.468999999997322,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 8.468999999997322,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.014999999999418,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "2fadb793-905d-4833-847c-7bf63fb9b392",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 24.3759000004502,
+                "p95_ms": 75.67229999403935,
+                "p99_ms": 105.60809999878984,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.889337000000001,
+                "memory_peak_mb": 530.8984375,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "309ade06-472f-4cfb-83ea-6f20e1a4463b",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 25.2638000092702,
+                "p95_ms": 110.84150000533555,
+                "p99_ms": 171.99309999705292,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 4.216012,
+                "memory_peak_mb": 531.5078125,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "queued",
+            "retry_policy": "none"
+          },
+          "genome_hash": "3285dc268d3ca91e65ca1df1122d8e64492a12576ea4ff96ff1116abde42430d",
+          "parent_ids": [],
+          "generation": 4,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 148.11177966857338
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "bda7820ec3fca5b19a70776a65149d5e3b619d260b4e8c022cddf5282b935ba0",
+          "parent_ids": [],
+          "generation": 4,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "queued",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "6fbe06a113e5da23ef941a1be9dbf4e946553922b1512a068bf1bbcb940ee409",
+          "parent_ids": [],
+          "generation": 4,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 148.11177966857338
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "385bbf0bf09cef0ed0cb628266d3074f0390e520cd6a4d7d203f4210978a5aad",
+          "parent_ids": [],
+          "generation": 5,
+          "status": "measured",
+          "objectives": [
+            115.23160000797361,
+            2.918811,
+            5.01600000000326
+          ],
+          "penalty": 0,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 214.96189579813674
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 88.95469999697525,
+                "median": 115.23160000797361,
+                "max": 120.73969999619294
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 2.7335969999999996,
+                "median": 2.918811,
+                "max": 3.1951219999999987
+              },
+              "memory_peak_mb": {
+                "min": 342.75390625,
+                "median": 343.86328125,
+                "max": 346.890625
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "passed"
+          },
+          "experiment_id": "28ff90a0-5ccc-484c-9ba1-7c785021bf89",
+          "candidate_id": "4e62794f-71fa-4697-a69e-db551190730f",
+          "evaluations": [
+            {
+              "evaluation_id": "0090d6e4-b9b7-43b5-a340-aa83fa528e40",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 24.47780000511557,
+                "p95_ms": 115.23160000797361,
+                "p99_ms": 122.01280001318082,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.7335969999999996,
+                "memory_peak_mb": 342.75390625,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "8a5d0346-b1f2-43c1-b893-34205c28af05",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 22.624500008532777,
+                "p95_ms": 88.95469999697525,
+                "p99_ms": 124.4557000027271,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.918811,
+                "memory_peak_mb": 346.890625,
+                "recovery_s": 5.01600000000326,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.01600000000326,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "10b4ebb5-02ca-4c36-b11a-dd52cbee90e6",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 29.464300008839928,
+                "p95_ms": 120.73969999619294,
+                "p99_ms": 192.7092999976594,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.1951219999999987,
+                "memory_peak_mb": 343.86328125,
+                "recovery_s": 8.452999999994063,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 8.452999999994063,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.953000000008615,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 3,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "queued",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "3db37f952aee051389511d8e05f510357ce33b8cf5bc55642a249a9dafcebd84",
+          "parent_ids": [],
+          "generation": 5,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 148.11177966857338
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "queued",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "f9aa9e18aaa3cb8170d446c9040cd30d57277b0e1b3eecbad69b339e8435a45b",
+          "parent_ids": [],
+          "generation": 5,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 148.11177966857338
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "queued",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "22bb53bc62bf59b2bda90e8afb7eb651c1be7dfa1db27edd48695ab62f81b412",
+          "parent_ids": [],
+          "generation": 5,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 164.11177966857338
+            }
+          },
+          "evaluations": []
+        }
+      ],
+      "experiment_ids": [
+        "545a66ec-479a-4aae-8fc2-9ac76e3eb807",
+        "a906fdcb-5440-40e8-ad22-223d561918f5",
+        "e512e627-2eb7-4f3e-af25-d74552fb2a1d",
+        "c7b489f0-dc54-4416-bfe4-c7bb60ebaa71",
+        "21f9ca04-03d4-4ac3-9fc8-29c44d406c53",
+        "28ff90a0-5ccc-484c-9ba1-7c785021bf89"
+      ],
+      "attempts_used": 18,
+      "pareto_ids": [
+        "789f98e44fc0f4e292ec2462af95581d08deb2e05df7972e7b154b281c682ce0",
+        "09b204780c6f0053f1bef3b0e06e94a457d821a4d48c8327c0ccb7c3d61650c6",
+        "2d5f874ca03821696dcdd59a9fec3946213d1ea9b705927c029d900dbf03dcee",
+        "f43a26208513521ef3fe72d09d67b51e0bfdcf11b5a63744bf19e919b7fe887b",
+        "fbd0ba5fbbee09df6366bc3cab719d2894ae5a46e7761da342b1bbcd53ffbbde",
+        "385bbf0bf09cef0ed0cb628266d3074f0390e520cd6a4d7d203f4210978a5aad"
+      ],
+      "generation": 6,
+      "search_overhead_s": 1.2330000000074506,
+      "recorded": true
+    },
+    {
+      "experiment_id": "e54c8fca-4f1f-47c4-ae7e-2070e71b8e47",
+      "search_id": "e54c8fca-4f1f-47c4-ae7e-2070e71b8e47",
+      "created_at": "2026-11-12T16:57:08.870810+00:00",
+      "started_at": "2026-11-12T16:57:08.879811+00:00",
+      "finished_at": "2026-11-12T17:10:09.327205+00:00",
+      "status": "completed",
+      "request": {
+        "schema_version": 1,
+        "algorithm": "nsga2",
+        "runtime": "docker",
+        "workload_profile": "normal",
+        "fault_scenarios": [
+          "db_delay",
+          "service_outage",
+          "timeout_retry_duplicate"
+        ],
+        "seed": 42,
+        "budget": {
+          "schema_version": 1,
+          "max_candidates": 12,
+          "real_test_budget": 6,
+          "repetitions": 3,
+          "wall_clock_s": 1800,
+          "concurrent_deployments": 1,
+          "sandbox_cpu_cores": 4,
+          "sandbox_memory_mb": 4096
+        },
+        "constraints": {
+          "schema_version": 1,
+          "max_error_rate": 0.01,
+          "max_p95_ms": null
+        },
+        "generations": 2,
+        "population_size": 4,
+        "promotions_per_generation": 1,
+        "use_simulator": true
+      },
+      "candidates": [
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "789f98e44fc0f4e292ec2462af95581d08deb2e05df7972e7b154b281c682ce0",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "measured",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 233.14575742365662
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 83.9429000002383,
+                "median": 103.66919999978563,
+                "max": 110.9175999999934
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 2.3285829999999996,
+                "median": 2.645988000000001,
+                "max": 2.649455999999999
+              },
+              "memory_peak_mb": {
+                "min": 332.53515625,
+                "median": 336.625,
+                "max": 336.953125
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "failed"
+          },
+          "experiment_id": "ad9b23ba-adaf-4db8-ac5a-62887cafa6cd",
+          "candidate_id": "07e8b14c-e5e1-44ec-8586-89ac1b97f449",
+          "evaluations": [
+            {
+              "evaluation_id": "6ba115ec-2aa2-4279-8c1f-fc88dbc53581",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "failed",
+              "gate_reasons": [
+                "recovery_not_observed"
+              ],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 27.53819999998086,
+                "p95_ms": 110.9175999999934,
+                "p99_ms": 161.14660000016556,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.649455999999999,
+                "memory_peak_mb": 336.625,
+                "recovery_s": null,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 9.968999999999824,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": null,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "ff2421f5-417b-40cd-b000-cc8d5e6d8f79",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 22.639299999809737,
+                "p95_ms": 83.9429000002383,
+                "p99_ms": 91.85610000031375,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.3285829999999996,
+                "memory_peak_mb": 332.53515625,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "99f7ecec-86aa-4dec-9676-d4bfb395bfd3",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 27.116899999782618,
+                "p95_ms": 103.66919999978563,
+                "p99_ms": 186.2439000001359,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 2.645988000000001,
+                "memory_peak_mb": 336.953125,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "queued",
+            "retry_policy": "none"
+          },
+          "genome_hash": "537684c3c7cfd3a1fbb404aad67c22beb7f0fe2b9f5efe433e2bed50cb01c8e5",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 212.50398285202544
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 2,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "0c3137e35db2997a538de3d67fc413148de89aaecffdec1e6b3bee4d05908b46",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 233.14575742365662
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "queued",
+            "retry_policy": "none"
+          },
+          "genome_hash": "a3b3d6efb9addfafc265c8384ae1a8642d48cba6c915bf919b3113c68004e82f",
+          "parent_ids": [],
+          "generation": 0,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 212.50398285202544
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "queued",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "22bb53bc62bf59b2bda90e8afb7eb651c1be7dfa1db27edd48695ab62f81b412",
+          "parent_ids": [
+            "789f98e44fc0f4e292ec2462af95581d08deb2e05df7972e7b154b281c682ce0"
+          ],
+          "generation": 1,
+          "status": "measured",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 212.50398285202544
+            }
+          },
+          "summary": {
+            "repetitions": 3,
+            "spread": {
+              "p95_ms": {
+                "min": 70.89129999985744,
+                "median": 77.08080000020345,
+                "max": 88.1521999999677
+              },
+              "requests_per_s": {
+                "min": 4.0,
+                "median": 4.0,
+                "max": 4.0
+              },
+              "cpu_seconds": {
+                "min": 3.190804,
+                "median": 3.385834,
+                "max": 3.3895750000000007
+              },
+              "memory_peak_mb": {
+                "min": 393.4453125,
+                "median": 394.5859375,
+                "max": 395.3828125
+              },
+              "error_rate": {
+                "min": 0.0,
+                "median": 0.0,
+                "max": 0.0
+              }
+            },
+            "performance_constraints_met": true,
+            "gate": "failed"
+          },
+          "experiment_id": "a488aa34-e5b6-4ae3-a528-80d2ed9a447f",
+          "candidate_id": "b58ed73c-28d8-4acb-a1af-352109617856",
+          "evaluations": [
+            {
+              "evaluation_id": "dc905197-fdf2-4289-b696-4179bde4a893",
+              "repetition": 0,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 32.906200000070385,
+                "p95_ms": 70.89129999985744,
+                "p99_ms": 90.8143999999993,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.385834,
+                "memory_peak_mb": 395.3828125,
+                "recovery_s": 5.219000000000051,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.219000000000051,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "d5426ca0-21b7-4888-80c1-6c2589b29d5a",
+              "repetition": 1,
+              "status": "completed",
+              "gate": "failed",
+              "gate_reasons": [
+                "recovery_not_observed"
+              ],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 22.675100000014936,
+                "p95_ms": 77.08080000020345,
+                "p99_ms": 99.77389999994557,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.190804,
+                "memory_peak_mb": 393.4453125,
+                "recovery_s": null,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": null,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 7.5,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            },
+            {
+              "evaluation_id": "af035876-a8a1-44a3-89c1-dca7871439d3",
+              "repetition": 2,
+              "status": "completed",
+              "gate": "passed",
+              "gate_reasons": [],
+              "violations": [],
+              "metrics": {
+                "schema_version": 1,
+                "p50_ms": 28.196400000069843,
+                "p95_ms": 88.1521999999677,
+                "p99_ms": 108.68570000002364,
+                "requests_per_s": 4.0,
+                "error_rate": 0.0,
+                "cpu_seconds": 3.3895750000000007,
+                "memory_peak_mb": 394.5859375,
+                "recovery_s": 5.0,
+                "sample_count": 48
+              },
+              "recovery": [
+                {
+                  "scenario": "database_latency",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "database_disconnect",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                },
+                {
+                  "scenario": "application_outage",
+                  "recovery_s": 5.0,
+                  "fault_observed": true,
+                  "schedule_valid": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 10,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "bda7820ec3fca5b19a70776a65149d5e3b619d260b4e8c022cddf5282b935ba0",
+          "parent_ids": [
+            "789f98e44fc0f4e292ec2462af95581d08deb2e05df7972e7b154b281c682ce0"
+          ],
+          "generation": 1,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 220.3989948897007
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 0,
+            "notification_mode": "sync",
+            "retry_policy": "none"
+          },
+          "genome_hash": "6c8955557e727ff41dc37c90780717a7df8088b34c1d4c8f858e07d8a10c3203",
+          "parent_ids": [
+            "789f98e44fc0f4e292ec2462af95581d08deb2e05df7972e7b154b281c682ce0"
+          ],
+          "generation": 1,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 233.14575742365662
+            }
+          },
+          "evaluations": []
+        },
+        {
+          "genome": {
+            "schema_version": 1,
+            "app_replicas": 1,
+            "catalog_cache_ttl_s": 30,
+            "notification_mode": "sync",
+            "retry_policy": "idempotent_only"
+          },
+          "genome_hash": "3246ae2475f571acc6027978d922723fbe108d01fc5f25b6f91ab253d6e4c95f",
+          "parent_ids": [
+            "789f98e44fc0f4e292ec2462af95581d08deb2e05df7972e7b154b281c682ce0"
+          ],
+          "generation": 1,
+          "status": "screened",
+          "objectives": null,
+          "penalty": 1,
+          "simulation": {
+            "calibration_status": "uncalibrated",
+            "metrics": {
+              "p95_ms": 220.3989948897007
+            }
+          },
+          "evaluations": []
+        }
+      ],
+      "experiment_ids": [
+        "ad9b23ba-adaf-4db8-ac5a-62887cafa6cd",
+        "a488aa34-e5b6-4ae3-a528-80d2ed9a447f"
+      ],
+      "attempts_used": 6,
+      "pareto_ids": [],
+      "generation": 2,
+      "search_overhead_s": 0.39000000000010004,
+      "recorded": true
+    }
+  ],
+  "default": "fe3386fb-8cf5-4440-b616-2ec48e1db3d9"
+}

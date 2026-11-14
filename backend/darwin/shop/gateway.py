@@ -16,16 +16,18 @@ def health():
 
 @app.api_route('/shop/{path:path}', methods=['GET', 'POST'])
 async def proxy(path: str, request: Request):
-    if (request.method, path) not in {('GET', 'catalog'), ('POST', 'checkout'), ('GET', 'ready')}:
+    if (request.method, path) not in {('GET', 'catalog'), ('POST', 'checkout'), ('GET', 'ready'),
+                                      ('GET', 'ledger'), ('POST', 'reset')}:
         return JSONResponse(status_code=404, content={'detail': 'Unknown shop route'})
     headers = {'content-type': 'application/json'}
     if 'idempotency-key' in request.headers:
         headers['idempotency-key'] = request.headers['idempotency-key']
+    query = f'?{request.url.query}' if request.url.query else ''
     try:
         targets = os.environ.get('DARWIN_SHOP_API_URLS', os.environ.get('DARWIN_SHOP_API_URL', 'http://127.0.0.1:8013')).split(',')
         target = targets[next(sequence) % len(targets)].strip()
         async with httpx.AsyncClient(timeout=5, trust_env=False) as client:
-            response = await client.request(request.method, target + '/' + path,
+            response = await client.request(request.method, target + '/' + path + query,
                                             content=await request.body(), headers=headers)
         return Response(content=response.content, status_code=response.status_code,
                         headers={key: response.headers[key] for key in ('x-darwin-instance', 'x-darwin-cache') if key in response.headers},

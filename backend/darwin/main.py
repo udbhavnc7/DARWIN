@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from contextlib import asynccontextmanager
 import os
 from pathlib import Path
+from typing import Literal
 from pydantic import Field
 import yaml
 from darwin.experiments import Engine, StartExperiment
@@ -10,6 +11,8 @@ from darwin.contracts import Budget, Contract, ExperimentRequest, Genome, Worklo
 from darwin.architecture import genome_hash, render_compose, topology
 from darwin.calibration import calibrated_simulation
 from darwin.docker_resources import docker_status
+from darwin.exhibition import scenario_catalog, scenario_request
+from darwin.preflight import collect_preflight
 from darwin.search import SearchEngine
 from darwin.search_api import router as search_router
 
@@ -36,8 +39,7 @@ def health():
     return {"status": "ok", "project": "DARWIN", "phase": 10}
 
 
-@app.get("/api/project")
-def project():
+def execution_modes():
     modes = ['native_smoke']
     if os.name == 'nt':
         modes.extend(['native_benchmark', 'native_faults'])
@@ -46,6 +48,12 @@ def project():
         modes.append('docker_smoke')
     if cgroups == '2':
         modes.extend(['docker_benchmark', 'docker_faults'])
+    return modes
+
+
+@app.get("/api/project")
+def project():
+    modes = execution_modes()
     return {
         "name": "DARWIN",
         "description": "Evolve backend configurations. Verify every improvement.",
@@ -57,6 +65,41 @@ def project():
         "budget": Budget().model_dump(),
         "workloads": ["normal", "flash_sale", "checkout_heavy"],
     }
+
+
+@app.get("/api/preflight")
+def preflight(request: Request, refresh: bool = False):
+    """Report what this machine can run before a visitor starts a demo."""
+    engine = getattr(request.app.state, 'engine', None)
+    root = engine.store.root if engine else Path(os.environ.get('DARWIN_EXPERIMENT_DIR', 'artifacts/experiments'))
+    return collect_preflight(root, refresh)
+
+
+@app.get('/api/exhibition/scenarios')
+def exhibition_scenarios(request: Request, runtime: Literal['native', 'docker'] = 'native'):
+    """List judge-facing presets and the recorded evidence that backs them."""
+    engine = getattr(request.app.state, 'engine', None)
+    if engine is None:
+        raise HTTPException(503, 'Experiment store is not ready')
+    search = getattr(request.app.state, 'search', None)
+    searches = search.store.all() if search else []
+    return scenario_catalog(engine.store.all(), runtime, searches, execution_modes())
+
+
+@app.post('/api/exhibition/scenarios/{ident}', status_code=202)
+def start_exhibition_scenario(ident: str, request: Request, runtime: Literal['native', 'docker'] = 'native'):
+    """Start a preset through the same measured engine as a manual experiment."""
+    try:
+        body = scenario_request(ident, runtime)
+    except KeyError:
+        raise HTTPException(404, 'Scenario not found')
+    engine = getattr(request.app.state, 'engine', None)
+    if engine is None:
+        raise HTTPException(503, 'Experiment worker is not started')
+    try:
+        return engine.submit(body)
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc))
 
 
 class SimulationRequest(Contract):

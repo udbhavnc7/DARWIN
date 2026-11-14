@@ -102,6 +102,19 @@ def test_replay_is_stable_and_changed_payload_conflicts(shop):
     assert snapshot() == before
 
 
+def test_ledger_shows_one_effect_after_repeat_and_reset_clears_it(shop):
+    purchase(shop, 'ledger-proof', quantity=2)
+    purchase(shop, 'ledger-proof', quantity=2)
+    ledger = httpx.get(shop + '/ledger', params={'request_key': 'ledger-proof'}, trust_env=False).json()
+    assert ledger['orders'] == ledger['captures'] == ledger['payment_effects'] == 1
+    assert ledger['for_request'] == {'orders': 1, 'captures': 1, 'payment_effects': 1}
+    assert httpx.post(shop + '/reset', trust_env=False).json() == {'status': 'reset'}
+    cleared = httpx.get(shop + '/ledger', trust_env=False).json()
+    assert cleared['orders'] == cleared['captures'] == cleared['payment_effects'] == 0
+    catalog = httpx.get(shop + '/catalog', trust_env=False).json()
+    assert next(row for row in catalog if row['sku'] == 'darwin-notebook')['available'] == 20
+
+
 def test_concurrent_duplicate_requests_have_one_effect(shop):
     with ThreadPoolExecutor(max_workers=6) as pool:
         responses = list(pool.map(lambda _: purchase(shop, 'concurrent'), range(12)))

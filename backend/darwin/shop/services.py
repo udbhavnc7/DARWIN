@@ -211,3 +211,33 @@ def checkout(request: Checkout, idempotency_key: Annotated[str, Header(min_lengt
             pass  # Confirmation is already committed; outbox work stays pending.
     return {'order_id': str(order['order_id']), 'status': order['status'], 'sku': order['sku'],
             'quantity': order['quantity'], 'amount_cents': order['amount_cents']}
+
+
+@api.get('/ledger')
+def ledger(request_key: str | None = None):
+    """Read-only counters that make duplicate effects visible in the demo."""
+    with connection() as conn:
+        totals = conn.execute('''SELECT
+            (SELECT count(*) FROM orders) AS orders,
+            (SELECT count(*) FROM captures) AS captures,
+            (SELECT count(*) FROM payment_effects) AS payment_effects,
+            (SELECT count(*) FROM outbox) AS outbox,
+            (SELECT count(*) FROM deliveries) AS deliveries''').fetchone()
+        result = dict(totals)
+        if request_key:
+            result['for_request'] = dict(conn.execute('''SELECT
+                (SELECT count(*) FROM orders WHERE request_key=%s) AS orders,
+                (SELECT count(*) FROM captures WHERE request_key=%s) AS captures,
+                (SELECT count(*) FROM payment_effects WHERE request_key=%s) AS payment_effects''',
+                (request_key, request_key, request_key)).fetchone())
+    return result
+
+
+@api.post('/reset')
+def reset():
+    """Reset the synthetic demo shop. Never points at production or personal data."""
+    with connection() as conn:
+        conn.execute('''TRUNCATE TABLE payment_effects, deliveries, outbox, captures, reservations, orders
+                        RESTART IDENTITY''')
+        conn.execute('UPDATE products SET available=initial_stock')
+    return {'status': 'reset'}

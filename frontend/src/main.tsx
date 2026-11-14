@@ -10,6 +10,7 @@ import {BrandMark} from './Brand';
 import {Tour} from './Demo';
 import {ArchitectureArt} from './ArchitectureArt';
 import {ThemePicker} from './ThemePicker';
+import {Readiness, type Preflight} from './Preflight';
 import {Action, Icon} from './Action';
 import {applyTheme, onThemeStorage, readTheme, saveTheme, themes, type ThemeId} from './themes';
 import {baseline, readDraft, saveDraft, type Genome} from './genome';
@@ -40,6 +41,8 @@ function currentPage(): Page {
 
 function App() {
   const [project, setProject] = useState<Project | null>(null);
+  const [preflight, setPreflight] = useState<Preflight | null>(null);
+  const [preflightLoading, setPreflightLoading] = useState(true);
   const [connecting, setConnecting] = useState(true);
   const [workload, setWorkload] = useState('normal');
   const [selectedRuntime, setSelectedRuntime] = useState<Runtime | null>(null);
@@ -82,6 +85,21 @@ function App() {
       setConnecting(false);
     }
   }, []);
+
+  const loadPreflight = useCallback(async (refresh = false) => {
+    setPreflightLoading(true);
+    try {
+      const response = await fetch(`/api/preflight${refresh ? '?refresh=true' : ''}`, {signal: AbortSignal.timeout(15000)});
+      if (!response.ok) throw Error();
+      setPreflight(await response.json());
+    } catch {
+      setPreflight(null);
+    } finally {
+      setPreflightLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {void loadPreflight();}, [loadPreflight]);
 
   useEffect(() => {
     void connect();
@@ -193,11 +211,12 @@ function App() {
               <a href="#search">Explore measured search <span aria-hidden="true">→</span></a>
             </article>
           </div>
+          <Readiness preflight={preflight} loading={preflightLoading} onRefresh={() => void loadPreflight(true)}/>
         </div>
         <div hidden={page !== 'configuration'}><Architecture genome={builderDraft} onEdit={setBuilderDraft} workload={workload} connected={!!project} active={page === 'configuration'} onUse={useDraft}/></div>
         <div hidden={page !== 'experiments'}><Experiments workload={workload} canMeasure={canMeasure} runtime={runtime}
           canStart={modes.includes(`${runtime}_smoke`)} draft={draft}/></div>
-        <div hidden={page !== 'search'}><Search workload={workload} runtime={runtime} canMeasure={canMeasure} onEditCandidate={editCandidate}/></div>
+        <div hidden={page !== 'search'}><Search workload={workload} runtime={runtime} canMeasure={canMeasure} onEditCandidate={editCandidate} onWorkloadChange={setWorkload}/></div>
         <div hidden={page !== 'shop'}><Shop/></div>
       </main>
     </div>

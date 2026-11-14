@@ -6,6 +6,8 @@ type Product = {sku: string; name: string; price_cents: number; available: numbe
 type Receipt = {order_id: string; status: 'confirmed'; sku: string; quantity: number; amount_cents: number};
 type Attempt = {key: string; sku: string; name: string; quantity: number; stockBefore: number | null};
 type Observation = {receipt: Receipt; stock: number | null};
+type Ledger = {orders: number; captures: number; payment_effects: number; outbox: number; deliveries: number;
+  for_request?: {orders: number; captures: number; payment_effects: number}};
 
 const credits = (cents: number) => `${(cents / 100).toFixed(2)} credits`;
 const stockFor = (catalog: Product[] | null, sku: string) => catalog?.find(product => product.sku === sku)?.available ?? null;
@@ -22,6 +24,8 @@ export function Shop() {
   const [replay, setReplay] = useState<Observation | null>(null);
   const [rejected, setRejected] = useState(false);
   const [error, setError] = useState('');
+  const [ledger, setLedger] = useState<Ledger | null>(null);
+  const [resetting, setResetting] = useState(false);
   const pending = useRef(false);
   const product = products.find(item => item.sku === sku) ?? products[0];
   const units = Number(quantity);
@@ -43,6 +47,30 @@ export function Shop() {
   }
 
   useEffect(() => {void loadCatalog();}, []);
+
+  async function loadLedger(key?: string) {
+    try {
+      const response = await fetch(`/shop/ledger${key ? `?request_key=${encodeURIComponent(key)}` : ''}`, {cache: 'no-store', signal: AbortSignal.timeout(5000)});
+      return response.ok ? await response.json() as Ledger : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function resetDemo() {
+    setResetting(true); setError('');
+    try {
+      const response = await fetch('/shop/reset', {method: 'POST', signal: AbortSignal.timeout(7000)});
+      if (!response.ok) throw Error();
+      newOrder();
+      setLedger(null);
+      await loadCatalog();
+    } catch {
+      setError('The demo shop could not be reset. Check that the shop is running, then try again.');
+    } finally {
+      setResetting(false);
+    }
+  }
 
   async function checkout() {
     if (pending.current || rejected || (!attempt && !canOrder)) return;
@@ -80,6 +108,7 @@ export function Shop() {
       }
 
       const observation = {receipt: data as Receipt, stock: stockFor(await loadCatalog(), current.sku)};
+      setLedger(await loadLedger(current.key));
       if (original) setReplay(observation);
       else setOriginal(observation);
     } catch {
@@ -96,6 +125,7 @@ export function Shop() {
     setReplay(null);
     setRejected(false);
     setError('');
+    setLedger(null);
     setQuantity('1');
   }
 
@@ -109,8 +139,12 @@ export function Shop() {
   return <section id="shop" className="page-content shop-demo" aria-label="Demo shop walkthrough">
     <div className="shop-intro">
       <p className="page-intro">Try a real checkout in DARWIN’s test shop with sample products and simulated payments. Then resend the order to see how the backend handles a duplicate request.</p>
-      <Status value={catalogState === 'loading' ? 'running' : catalogState}
-        label={catalogState === 'loading' ? 'Checking shop' : catalogState === 'connected' ? 'Shop connected' : 'Catalog unavailable'}/>
+      <div className="shop-intro-actions">
+        <Status value={catalogState === 'loading' ? 'running' : catalogState}
+          label={catalogState === 'loading' ? 'Checking shop' : catalogState === 'connected' ? 'Shop connected' : 'Catalog unavailable'}/>
+        <Action variant="quiet" icon="refresh" pending={resetting} disabled={busy || catalogState !== 'connected'}
+          onClick={() => void resetDemo()}>{resetting ? 'Resetting…' : 'Reset demo shop'}</Action>
+      </div>
     </div>
     <ol className="shop-steps" aria-label="Checkout walkthrough">
       {['Place a demo order', 'Resend the same request', 'Compare the results'].map((label, index) =>
@@ -168,6 +202,11 @@ export function Shop() {
                 ? 'Catalog stock changed between checks. Other checkouts can affect this count.' : 'A catalog reading was unavailable, so stock could not be compared.'}</p>
             </> : <p><strong>Next:</strong> Select <em>Resend same request</em> to compare the two responses.</p>}
           </div>
+          {ledger?.for_request && <p className="shop-ledger" role="status">
+            <strong>Payment ledger for this request:</strong>{' '}
+            {ledger.for_request.orders} order · {ledger.for_request.captures} capture · {ledger.for_request.payment_effects} payment {ledger.for_request.payment_effects === 1 ? 'effect' : 'effects'}.
+            {replay && ledger.for_request.payment_effects === 1 ? ' The repeat added no second effect.' : ''}
+          </p>}
           <details><summary>Full order IDs</summary><p><code>{original.receipt.order_id}</code></p>
             {replay && <p><code>{replay.receipt.order_id}</code></p>}
           </details>

@@ -35,6 +35,7 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 - [Testing](#testing)
 - [Project status](#project-status)
 - [Project context](CONTEXT.md)
+- [Exhibition runbook](docs/EXHIBITION.md)
 - [Documentation](#documentation)
 - [License](#license)
 
@@ -135,15 +136,15 @@ The React dashboard is the primary interface to the lab. A five-step product tou
 
 | Workspace | What you do there |
 | --- | --- |
-| **Overview** | See the workflow, baseline stack, and environment readiness |
+| **Overview** | See the workflow, baseline stack, and a machine-readiness panel that separates required tools from optional ones |
 | **Architecture** | Shape the checkout topology, preview the service graph, simulate, or export Compose |
-| **Experiments** | Run smoke checks, benchmarks, fault verification, or request validation; inspect repetitions and evidence |
-| **Search** | Run NSGA-II, random, or hill-climbing searches; inspect lineage, measured gates, and the Pareto plot |
-| **Demo shop** | Place a simulated checkout and resend the same request to see idempotency in action |
+| **Experiments** | Run smoke checks, benchmarks, fault verification, request validation, or a judge-ready scenario with its observed duration |
+| **Search** | Run NSGA-II, random, or hill-climbing searches; inspect lineage, measured gates, and the Pareto plot; open a saved feasible or rejected run offline |
+| **Demo shop** | Place a simulated checkout and resend the same request to see idempotency, payment effects, and ledger counters |
 
 ![Architecture builder](docs/images/architecture.png)
 
-The search workspace separates **proposed**, **simulated**, and **measured** evidence. Rejected candidates expose their violated invariant, the trace, and the original artifact downloads. An empty Pareto front says so explicitly rather than inventing a winner.
+The search workspace separates **proposed**, **simulated**, and **measured** evidence. Rejected candidates expose their violated invariant, the trace, and the original artifact downloads. When no measured candidate passes every gate, the workspace shows a "No candidate passed all gates" verdict with the rejection reasons and safe next choices; it never promotes a rejected candidate. A saved-run fallback is labelled **Recorded run** and cannot be mistaken for a live execution.
 
 ![Search results](docs/images/search.png)
 
@@ -222,10 +223,13 @@ Docker measurements require a local Linux engine with cgroup v2 CPU quotas, swap
 ### First five minutes
 
 1. Open the product tour.
-2. In **Architecture**, change replicas, cache, notifications, and retries; watch the topology update.
-3. Hand the configuration to **Experiments** and run a smoke check or a measured comparison.
-4. Open **Search**, inspect a completed run, its lineage, and the measured Pareto plot.
-5. Open **Demo shop**, place an order, then resend it. The confirmation is identical and the ledger does not grow.
+2. On **Overview**, confirm **Machine readiness**. Required tools must be green; optional ones (for example Docker or Toxiproxy) are named with a remedy and their runs stay disabled.
+3. In **Architecture**, change replicas, cache, notifications, and retries; watch the topology update.
+4. In **Experiments**, start **Quick checkout smoke** (~30 s) or a larger comparison. Each preset records its own duration source.
+5. In **Search**, inspect a completed run, its lineage, and the measured Pareto plot, or open the recorded feasible and rejected examples. The rejected example shows the no-feasible verdict without a live run.
+6. In **Demo shop**, place an order, then resend it. The receipt is identical, stock is unchanged, and the ledger stays at one order, one capture, and one payment effect.
+
+For a timed presentation checklist and the captured baseline, use the [exhibition runbook](docs/EXHIBITION.md).
 
 ---
 
@@ -316,6 +320,9 @@ The control plane exposes a JSON API with versioned Pydantic contracts. Unknown 
 | --- | --- |
 | `GET /api/health` | Process health and project identity |
 | `GET /api/project` | Baseline, runtime capabilities, and planning defaults |
+| `GET /api/preflight` | Machine readiness, execution modes, optional-tool remedies; `?refresh=true` bypasses the 15 s cache |
+| `GET /api/exhibition/scenarios` | Judge-ready presets with recorded or estimated durations and saved example IDs |
+| `POST /api/exhibition/scenarios/{id}` | Start a preset as an ordinary measured experiment (`?runtime=native\|docker`) |
 | `POST /api/experiments/validate` | Validate a request without running or persisting it |
 | `POST /api/experiments` | Queue a smoke check, benchmark, or fault verification |
 | `GET /api/experiments` | List saved experiments |
@@ -346,6 +353,10 @@ Interactive schema: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). Ex
 # Fast suite (PostgreSQL/Redis integrations skip when those services are not configured)
 .\.venv\Scripts\python.exe -m pytest -q
 
+# Shop integration against a dedicated disposable database (name must end in _test)
+$env:DARWIN_TEST_DATABASE_URL = 'postgresql://darwin:darwin_demo@127.0.0.1:55432/darwin_shop_test'
+.\.venv\Scripts\python.exe -m pytest -q tests/test_shop.py
+
 # Type-check and production build
 npm --prefix frontend run build
 
@@ -356,11 +367,13 @@ npm --prefix frontend run build
 .\.venv\Scripts\python.exe scripts/validate_searches.py --output artifacts/validation/search-comparison.json
 ```
 
-Latest local run:
+Latest local run (2026-11-14):
 
-- **96 passed, 13 skipped.** The skipped tests are the PostgreSQL and Redis integrations; they are explicitly skipped, not silently passed. With those services configured, `pytest` runs the full integration suite.
+- **104 passed, 14 skipped.** The skipped tests are the PostgreSQL and Redis integrations; they are explicitly skipped, not silently passed.
+- **14 shop integration tests passed** against the dedicated `darwin_shop_test` database, including replay, concurrency, ledger, and reset.
 - **Frontend production build passed**, including `tsc --noEmit`.
-- **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including cleanup verification.
+- **Quick checkout smoke completed in 18 s** with three measured attempts and verified cleanup; the unsafe-payment scenario rejected all three repetitions.
+- **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including cleanup verification. The Docker daemon was not running during the latest exhibition check, so Docker options are shown as disabled.
 - **Product tour checks passed 10/10**: deep link, focus, step navigation, dots, link routing, and close behavior.
 
 Known build note: the Three.js overview scene produces a separate 528 kB chunk and Vite warns about the 500 kB threshold. It is lazy-loaded, so it does not block the dashboard.
@@ -380,6 +393,7 @@ What is done:
 - Calibrated simulator used only for screening
 - NSGA-II, random search, hill climbing, lineage, and measured Pareto ranking
 - React dashboard with evidence inspection, reruns, search history, responsive layout, and a guided tour
+- Exhibition layer: machine preflight, four judge-ready scenarios, explicit no-feasible verdict, labelled saved-run fallback, and demo-shop ledger/reset
 - Saved evidence bundles with digest verification and replay instructions
 
 What remains to reach a production-ready v1:
@@ -390,7 +404,7 @@ What remains to reach a production-ready v1:
 - **Docker search depth.** The accepted Docker search ended with an empty Pareto front; a larger budget should confirm recovery behavior.
 - **Cross-platform native adapter.** Native fault experiments are Windows-specific; Docker is the route on Linux.
 - **Packaging.** A one-command installer or containerized control plane would remove the manual three-terminal setup.
-- **Demo assets.** The bundled recorded demo predates the current interface and should be re-recorded.
+- **Demo assets.** The saved-search fallback is current, but the older walkthrough video predates the interface and should be re-recorded.
 - **Later extensions.** Cloud/Kubernetes adapters, broader scenario matrices, and optional LLM explanations.
 
 The project deliberately keeps negative and inconclusive results. They are part of the evidence, not something to tune away.
@@ -406,6 +420,7 @@ The project deliberately keeps negative and inconclusive results. They are part 
 | [Architecture](docs/ARCHITECTURE.md) | System design, shop behavior, invariants, and scope boundary |
 | [Contracts](docs/CONTRACTS.md) | Schema, lifecycle, budgets, comparability, and gate semantics |
 | [Phases 1–10](docs/) | Acceptance records and implementation detail for each phase |
+| [Exhibition runbook](docs/EXHIBITION.md) | Machine baseline, readiness checks, scenario durations, demo script, validation record, and limits |
 | [Docker acceptance](docs/DOCKER_ACCEPTANCE.md) | Container runtime requirements, measurements, and cleanup verification |
 
 For a guided walkthrough of the codebase, start with `backend/darwin/contracts.py`, then `experiments.py`, `fault_suite.py`, `search.py`, and finally `frontend/src/main.tsx`.

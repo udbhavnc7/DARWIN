@@ -119,9 +119,10 @@ Every run stores its configuration, source snapshot, seeds, manifests, logs, fau
 | MVP phases | **10 / 10 complete** |
 | Core user workflows | **All working locally** |
 | Production readiness | **~75% (judgment, not a computed metric)** |
-| Tests | **96 passing, 13 skipped** without PostgreSQL/Redis |
+| Tests | **104 passing, 14 skipped** without PostgreSQL/Redis; **14 shop integration tests pass** against a dedicated `*_test` database |
 | Frontend production build | **Passing** |
-| Docker acceptance | **21 / 21 repetitions passed** |
+| Docker acceptance | **21 / 21 repetitions passed** (Docker daemon was not running at the latest exhibition check) |
+| Exhibition path | **Conditional:** native smoke, benchmark, and fault scenarios verified; Docker options disabled when the engine is absent |
 
 ### Completion by area
 
@@ -137,15 +138,15 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 | Faults and invariants | Done | 95% | Three fault families, five checkers, reproducible unsafe fixture |
 | Simulator | Done, limited accuracy | 85% | SimPy model calibrated to 27.0% mean p95 error across nine holdouts; some misses are large |
 | Search | Done, validation thin | 85% | NSGA-II, random, hill climbing, lineage, Pareto ranking; only one seed per strategy validated |
-| Dashboard | Done | 95% | Five workspaces, evidence inspection, reruns, tour, themes, responsive down to 360 px; formal accessibility audit pending |
+| Dashboard | Done | 95% | Five workspaces, machine-readiness panel, judge scenario presets, saved-run fallback, no-feasible verdict, evidence inspection, reruns, tour, themes, responsive down to 360 px; formal accessibility audit pending |
 | Evidence and replay | Done | 90% | SQLite history, artifact digests, source snapshots, export bundle, replay instructions |
 | Docker path | Done | 85% | Full acceptance passed; the accepted search ended with an empty Pareto front |
 | Native path | Done on Windows | 80% | Windows resource jobs and private PostgreSQL clusters; not cross-platform |
-| Tests | Strong locally | 80% | 96 pass, 13 integration tests skip without services; no CI |
+| Tests | Strong locally | 82% | 104 pass; 14 service integrations skip by default and pass with a dedicated `*_test` database; no CI |
 | Security and multi-user | Not started | 10% | Loopback-only trusted operator; no authentication or project isolation |
 | Packaging and distribution | Partial | 40% | Manual three-terminal setup; no installer or containerized control plane |
-| Documentation | Strong | 90% | Full README, contracts, phase records; a few early-phase status lines are stale |
-| Demo assets | Partial | 70% | Evidence bundles exist; the recorded walkthrough predates the current interface |
+| Documentation | Strong | 92% | README, contracts, phase records, and an exhibition runbook; a few early-phase status lines are stale |
+| Demo assets | Partial | 80% | Recorded feasible/rejected search fallback is current; the older walkthrough video still predates the interface |
 | CI and release automation | Not started | 0% | No workflow pipeline; validation is run manually |
 
 **Why 75% and not 100%:** the MVP is feature-complete for the defined scope, but a production release also needs authentication, CI, packaging, multi-host validation, cross-platform support, and refreshed demo assets. Those are real work, not polish.
@@ -156,10 +157,10 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 
 ### In the dashboard
 
-- **Overview** with the product tour and environment readiness
+- **Overview** with the product tour and a machine-readiness panel (required vs optional tools, execution modes, remedies)
 - **Architecture** with live topology, simulation, Compose export, and hand-off to Experiments
-- **Experiments** for smoke checks, benchmarks, fault verification, and request validation
-- **Search** for NSGA-II, random, and hill-climbing runs with lineage, gates, and the Pareto plot
+- **Experiments** for smoke checks, benchmarks, fault verification, request validation, and four judge-ready scenario presets with observed durations
+- **Search** for NSGA-II, random, and hill-climbing runs with lineage, gates, the Pareto plot, an explicit no-feasible verdict, and a saved feasible/rejected run fallback
 - **Demo shop** where the same request key can be replayed against the real local shop
 - Five themes, persisted per browser
 - A five-step product tour at `?tour=1`, from the sidebar, or from the overview
@@ -178,8 +179,11 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 
 | Check | Result |
 | --- | --- |
-| Backend suite | 96 passed, 13 skipped |
+| Backend suite | 104 passed, 14 skipped; shop integrations 14 passed with `darwin_shop_test` |
 | Frontend build | Passed, including `tsc --noEmit` |
+| Preflight | Ready; required checks green, Docker optional-missing, bundled Toxiproxy detected |
+| Judge scenarios | Quick smoke completed in 18 s; unsafe payment rejected all 3 repetitions |
+| Shop proof | Repeated request returned one order, one capture, one payment effect; reset cleared the ledger |
 | Docker acceptance | 21 of 21 repetitions passed, including cleanup |
 | Unsafe fixture | Rejected for I-01 in all repetitions, with three payment effects per key |
 | Product tour | 10 of 10 interaction checks passed |
@@ -204,11 +208,11 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 
 | Gap | Why it matters |
 | --- | --- |
-| 13 integration tests skip by default | PostgreSQL/Redis behavior is unverified without manual service setup |
+| 14 integration tests skip by default | PostgreSQL/Redis behavior is unverified without manual service setup; the 14 shop tests pass when pointed at a dedicated `*_test` database |
 | Docker search produced an empty Pareto front | Both promoted candidates missed a recovery window; needs a larger budget |
 | Native fault adapter is Windows-only | Linux users must use Docker for measured/fault runs |
 | Manual three-terminal setup | No installer, no containerized control plane, no service manager |
-| Recorded demo is outdated | It shows an earlier interface than the current dashboard |
+| Recorded walkthrough video is outdated | It shows an earlier interface; the in-app tour and saved-search fallback are current |
 | One host, one environment | No multi-host or cross-platform performance validation |
 
 ### Priority 2 — cleanup and polish
@@ -265,6 +269,8 @@ flowchart TD
 | Docker acceptance | `artifacts/docker-acceptance*/` (Git-ignored) |
 | Evidence bundles | `artifacts/demo/*.zip` (Git-ignored) |
 | Committed acceptance narratives | `docs/PHASE_1.md` … `docs/PHASE_10.md`, `docs/DOCKER_ACCEPTANCE.md` |
+| Exhibition baseline and runbook | `docs/EXHIBITION.md` |
+| Offline search fallback | `frontend/public/recorded-example.json` (compact real runs, labelled recorded) |
 
 A fresh checkout has the code and the written results, but not the historical run artifacts. That is intentional: evidence is produced locally and exported on demand.
 
@@ -273,8 +279,12 @@ A fresh checkout has the code and the written results, but not the historical ru
 ## 10. How to verify this status yourself
 
 ```powershell
-# Fast suite: expect 96 passed, 13 skipped in a clean local environment
+# Fast suite: expect 104 passed, 14 skipped in a clean local environment
 .\.venv\Scripts\python.exe -m pytest -q
+
+# Shop integration against a dedicated disposable database (name must end in _test)
+$env:DARWIN_TEST_DATABASE_URL = 'postgresql://darwin:darwin_demo@127.0.0.1:55432/darwin_shop_test'
+.\.venv\Scripts\python.exe -m pytest -q tests/test_shop.py
 
 # Type-check and production build
 npm --prefix frontend run build
@@ -290,9 +300,10 @@ To exercise the UI:
 
 1. Start the API, Vite dev server, and demo shop as described in the [README](README.md#quickstart).
 2. Open `http://127.0.0.1:5173/?tour=1`.
-3. Run a smoke experiment from **Experiments**.
-4. Open a completed search in **Search** and inspect lineage and the Pareto plot.
-5. Place and replay an order in **Demo shop**.
+3. Confirm the **Machine readiness** panel on Overview; optional tools should be explained, not failing.
+4. Run the **Quick checkout smoke** card from **Experiments**.
+5. In **Search**, open a completed run or the recorded feasible/rejected examples; inspect lineage, the Pareto plot, and the no-feasible verdict.
+6. Place and replay an order in **Demo shop**; confirm the ledger stays at 1 order / 1 capture / 1 payment effect. The full runbook is in [docs/EXHIBITION.md](docs/EXHIBITION.md).
 
 ---
 
@@ -310,6 +321,7 @@ To exercise the UI:
 | 8 | NSGA-II, random, hill climbing, lineage, measured Pareto ranking |
 | 9 | Dashboard with evidence inspection, React Flow topology, search history, responsive UI, guided tour |
 | 10 | Equal-budget validation, Docker acceptance, honest negative results, evidence bundles |
+| Post-MVP | Exhibition readiness: preflight panel, judge scenario presets, no-feasible verdict, saved-run fallback, shop ledger/reset, runbook |
 
 ---
 

@@ -9,10 +9,12 @@ type Artifact={name:string;sha256:string};
 type Evaluation={evaluation_id:string;status:string;repetition:number;artifacts:Artifact[];gate?:string;gate_reasons?:string[];violations?:{invariant_id:string;detail:string;key?:string}[];recovery?:{scenario:string;recovery_s:number|null}[]};
 type Spread={min:number;median:number;max:number};
 type Summary={repetitions:number;performance_constraints_met:boolean;spread:Record<string,Spread>;gate?:string};
+type Scenario={id:string;kicker:string;title:string;description:string;expectation:string;kind:'smoke'|'benchmark'|'faults';mode:string;workload:string;genome_count:number;runtime:'native'|'docker';recorded_seconds:number|null;estimated_seconds:number;duration_source:string;available:boolean};
 type Run={experiment_id:string;status:string;attempts_used:number;error?:string;cleanup_status:string;measurement_kind:string;request:{workload_profile:string;mode:string;fault_fixture?:string;budget?:{repetitions:number}};candidates:{candidate_id:string;genome:Genome;summary?:Summary;evaluations:Evaluation[]}[]};
 const terminal=(run:Run|null)=>!run||['completed','failed','cancelled'].includes(run.status);
 const measures = [['p95_ms','p95 (ms)'], ['requests_per_s','Requests/s'], ['error_rate','Errors (%)'], ['cpu_seconds','CPU (s)'], ['memory_peak_mb','Peak MiB']];
 const formatMetric = (n:number, field:string) => (field==='error_rate'?100*n:n).toFixed(2);
+const duration = (seconds:number) => seconds < 90 ? `~${Math.round(seconds)} s` : `~${Math.round(seconds/60)} min`;
 export function Experiments({workload,canMeasure,runtime,canStart,draft}:{workload:string;canMeasure:boolean;runtime:'native'|'docker';canStart:boolean;draft:{genome:Genome}|null}){
   const [history,setHistory]=useState<Run[]>([]);
   const [historyState,setHistoryState]=useState<'loading'|'ready'|'error'>('loading');
@@ -25,6 +27,10 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
   const measure=mode==='benchmark' && canMeasure;
   const faults=(mode==='faults'||mode==='unsafe') && canMeasure;
   const [candidate,setCandidate]=useState('preset');
+  const [scenarios,setScenarios]=useState<Scenario[]>([]);
+  const [scenarioBusy,setScenarioBusy]=useState<string|null>(null);
+  const [activeScenario,setActiveScenario]=useState<Scenario|null>(null);
+  const [scenarioError,setScenarioError]=useState('');
   const [validating,setValidating]=useState(false);
   const [validatedRequest,setValidatedRequest]=useState('');
   const selectedGenome = candidate==='custom' && draft ? draft.genome
@@ -84,9 +90,37 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
     },700);
     return ()=>{alive=false;clearInterval(timer)};
   },[run?.experiment_id,run?.status]);
+  useEffect(()=>{
+    let alive=true;
+    setScenarioError('');
+    fetch(`/api/exhibition/scenarios?runtime=${runtime}`,{signal:AbortSignal.timeout(10000)}).then(response=>{
+      if(!response.ok) throw Error();
+      return response.json();
+    }).then((data:{scenarios:Scenario[]})=>{
+      if(alive) setScenarios(data.scenarios);
+    }).catch(()=>{
+      if(alive){setScenarios([]);setScenarioError('Scenario presets are unavailable. Check the API connection and refresh runtimes.');}
+    });
+    return ()=>{alive=false};
+  },[runtime,refreshKey]);
+  async function startScenario(scenario:Scenario) {
+    setBusy(true);setScenarioBusy(scenario.id);setError('');setScenarioError('');
+    try {
+      const response=await fetch(`/api/exhibition/scenarios/${scenario.id}?runtime=${runtime}`,{method:'POST'});
+      const data=await response.json();
+      if(!response.ok) throw Error(typeof data.detail==='string'?data.detail:'Scenario was rejected');
+      rememberRunInUrl('experiment',data.experiment_id);
+      remember(data);setActiveScenario(scenario);setEvents([]);
+    } catch(reason) {
+      setError(String(reason));
+    } finally {
+      setScenarioBusy(null);setBusy(false);
+    }
+  }
   async function start(){
     setBusy(true);
     setError('');
+    setActiveScenario(null);
     try {
       const response=await fetch('/api/experiments',{
         method:'POST',headers:{'Content-Type':'application/json'},body:requestBody
@@ -143,6 +177,27 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
     <div className="experiment-grid">
     <div className="panel experiment-controls">
     <div className="section-title panel-heading"><div><p className="section-kicker">Experiment setup</p><h2>New experiment</h2></div></div>
+    <div className="scenario-block">
+      <div className="scenario-head"><span className="section-kicker">Judge-ready scenarios</span><span className="muted">Canned requests · live evidence</span></div>
+      {scenarios.length > 0 && <div className="scenario-list" role="group" aria-label="Exhibition scenarios">
+        {scenarios.map(scenario => {
+          const supported = scenario.available && (scenario.kind === 'smoke' ? canStart : canMeasure);
+          const seconds = scenario.recorded_seconds ?? scenario.estimated_seconds;
+          return <button type="button" key={scenario.id} className="scenario-card"
+            disabled={locked || !supported || !!scenarioBusy} onClick={() => void startScenario(scenario)}>
+            <span className="scenario-top"><span className="scenario-kicker">{scenario.kicker}</span>
+              <span className="scenario-duration">{duration(seconds)}{scenario.duration_source === 'recorded' ? ' recorded' : ''}</span></span>
+            <strong>{scenario.title}</strong>
+            <span className="scenario-description">{scenario.description}</span>
+            <span className="scenario-expect">{scenarioBusy === scenario.id ? 'Starting scenario…' : scenario.expectation}</span>
+            {!supported && <span className="scenario-unavailable">Not available for {runtime} on this machine</span>}
+          </button>;
+        })}
+      </div>}
+      {scenarios.length === 0 && !scenarioError && <p className="muted">Loading scenario presets…</p>}
+      {scenarioError && <p role="alert">{scenarioError}</p>}
+      <p className="muted scenario-note">Each preset uses the same isolated sandbox, fault injection and invariant gates as a manual run. Durations come from recorded local runs where available.</p>
+    </div>
     <label htmlFor="experiment-mode">Experiment type</label><select id="experiment-mode" value={canMeasure?mode:'smoke'} disabled={locked} onChange={e=>setMode(e.target.value)}>
       {canMeasure&&<><option value="benchmark">Compare performance</option><option value="faults">Verify failure recovery</option><option value="unsafe">Unsafe retry fixture</option></>}<option value="smoke">Checkout smoke check</option></select>
     {!(faults && mode==='unsafe') && <>
@@ -180,7 +235,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
     </div>}
     {history.length>0&&<div className="run-picker"><label htmlFor="saved-run">Saved experiments</label>
       <select id="saved-run" disabled={busy||historyState==='loading'||!terminal(run)} value={run?.experiment_id??''} onChange={e=>{
-        setError(''); setEvents([]); setRun(history.find(row=>row.experiment_id===e.target.value)??null);
+        setError(''); setEvents([]); setActiveScenario(null); setRun(history.find(row=>row.experiment_id===e.target.value)??null);
         rememberRunInUrl('experiment',e.target.value);
       }}>
         {history.map(row=><option key={row.experiment_id} value={row.experiment_id}>
@@ -193,6 +248,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
           ? run.request.fault_fixture==='unsafe_retry'?'Unsafe payment fixture':'Fault verification'
           : run.measurement_kind==='measured'?'Performance comparison':'Checkout smoke check'}</h3><Status value={run.status}/></div>
         <p className="muted run-meta">{run.request.mode.startsWith('docker_')?'Docker':'Native'} · {run.request.workload_profile.replace('_',' ')} · {run.experiment_id}</p>
+        {activeScenario && <p className="scenario-active" role="status"><Status value="running" label="Live scenario"/> <strong>{activeScenario.title}</strong> · {activeScenario.expectation}</p>}
         <div className="progress-caption" role="status"><span>Attempts started</span><span>{run.attempts_used} / {plannedAttempts}</span></div>
         {plannedAttempts>0&&<progress aria-label="Experiment attempts started" value={run.attempts_used} max={plannedAttempts}/>}
         <p className="muted run-meta">Cleanup {run.cleanup_status.replaceAll('_',' ')}</p>
