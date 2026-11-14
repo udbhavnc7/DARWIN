@@ -133,10 +133,12 @@ function App() {
       <aside className="app-sidebar">
         <a className="brand" href="#overview"><BrandMark/><span>DARWIN<small>Architecture lab</small></span></a>
         <nav className="section-nav" aria-label="Workspace">
-          {pageOrder.map(id => <a key={id} href={`#${id}`} aria-current={page === id ? 'page' : undefined}>
+          {pageOrder.map((id, index) => <a key={id} href={`#${id}`} aria-current={page === id ? 'page' : undefined}>
+            <span className="nav-index" aria-hidden="true">0{index + 1}</span>
             <Icon name={id}/><span>{pages[id].label}</span><span className="nav-current" aria-hidden="true">›</span>
           </a>)}
         </nav>
+        <p className="sidebar-readout" aria-hidden="true"><span>LOCAL BENCH</span><span>v0.1.0</span></p>
         <button type="button" className="sidebar-guide" aria-haspopup="dialog" onClick={() => setTourOpen(true)}>
           <span className="sidebar-guide-icon"><Icon name="play"/></span>
           <strong>What is DARWIN?</strong>
@@ -152,8 +154,8 @@ function App() {
       </aside>
       <main id="workspace">
         <header className="workspace-header">
-          <div><p className="workspace-breadcrumb">Workspace <span aria-hidden="true">/</span> <span> {pages[page].label}</span></p><h1 ref={title} tabIndex={-1}>{pages[page].title}</h1></div>
-          <ThemePicker theme={themeId} onChange={changeTheme}/>
+          <div><p className="workspace-breadcrumb"><span>Workspace</span> <span aria-hidden="true">/</span> <span> {pages[page].label}</span></p><h1 ref={title} tabIndex={-1}>{pages[page].title}</h1></div>
+          <div className="header-tools"><span className="workspace-index" aria-hidden="true">{String(pageOrder.indexOf(page) + 1).padStart(2, '0')} <i>/</i> 05</span><ThemePicker theme={themeId} onChange={changeTheme}/></div>
         </header>
         {page !== 'shop' && page !== 'overview' && <div className="context-bar" role="group" aria-label="Run settings">
           <div className="context-heading"><Icon name="settings"/><span>Run settings</span></div>

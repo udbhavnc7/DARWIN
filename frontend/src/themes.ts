@@ -1,21 +1,40 @@
 export const themes = {
-  greenhouse: {name: 'Greenhouse', colors: 'White & green', scheme: 'light', page: '#f3f7f2', accent: '#176541', model: '#399767', plate: '#dce9dc', trace: '#36604a'},
-  hazard: {name: 'Hazard', colors: 'Black & yellow', scheme: 'dark', page: '#151410', accent: '#f7d74d', model: '#ebbb29', plate: '#3d3723', trace: '#f4d769'},
-  rosewire: {name: 'Rosewire', colors: 'Red & pink', scheme: 'light', page: '#fdf0f2', accent: '#a41f44', model: '#ce4469', plate: '#f4bdc9', trace: '#a13151'},
-  terracotta: {name: 'Terracotta', colors: 'Brown & beige', scheme: 'light', page: '#f4eadc', accent: '#744525', model: '#a16038', plate: '#dfc3a6', trace: '#795438'},
-  ink: {name: 'Ink & Paper', colors: 'White & black', scheme: 'light', page: '#f4f4f2', accent: '#222222', model: '#4f4f4f', plate: '#d4d4d1', trace: '#555555'},
+  texture: {
+    name: 'Green Texture', colors: 'Green on brown beige', scheme: 'light',
+    page: '#e9e1cf', accent: '#2c5336', model: '#5c7a55', plate: '#cbbfa4', trace: '#48664a',
+  },
+  leather: {
+    name: 'Leather Red', colors: 'Leather red on perfect beige', scheme: 'light',
+    page: '#f2e7d4', accent: '#7c332a', model: '#a5604c', plate: '#dfcaaa', trace: '#8a4d3f',
+  },
+  carbon: {
+    name: 'Carbon Black', colors: 'Carbon black with linen grey', scheme: 'dark',
+    page: '#111311', accent: '#d9d2bf', model: '#a5a294', plate: '#2d3029', trace: '#c9c3b2',
+  },
 } as const;
 
 export type ThemeId = keyof typeof themes;
 export type Theme = (typeof themes)[ThemeId];
 const storageKey = 'darwin-theme';
 
+// Palettes retired in the lab-bench refresh still resolve to their nearest
+// surviving neighbour, so an existing browser preference is never dropped.
+const retired: Record<string, ThemeId> = {
+  greenhouse: 'texture',
+  terracotta: 'texture',
+  rosewire: 'leather',
+  hazard: 'carbon',
+  ink: 'carbon',
+};
+
 export function storedTheme(value: string | null): ThemeId {
-  return value && Object.hasOwn(themes, value) ? value as ThemeId : 'greenhouse';
+  if (value && Object.hasOwn(themes, value)) return value as ThemeId;
+  if (value && Object.hasOwn(retired, value)) return retired[value];
+  return 'texture';
 }
 
 export function readTheme(): ThemeId {
-  try {return storedTheme(localStorage.getItem(storageKey));} catch {return 'greenhouse';}
+  try {return storedTheme(localStorage.getItem(storageKey));} catch {return 'texture';}
 }
 
 export function applyTheme(id: ThemeId) {
