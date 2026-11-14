@@ -162,7 +162,7 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 - **Experiments** for smoke checks, benchmarks, fault verification, request validation, and four judge-ready scenario presets with observed durations
 - **Search** for NSGA-II, random, and hill-climbing runs with lineage, gates, the Pareto plot, an explicit no-feasible verdict, and a saved feasible/rejected run fallback
 - **Demo shop** where the same request key can be replayed against the real local shop
-- Three lab themes — Green Texture, Leather Red, Carbon Black — persisted per browser
+- Six lab themes — Green Texture (green + white default), Leather Red, Blueprint, Amethyst, Carbon Black, Midnight — persisted per browser
 - A five-step product tour at `?tour=1`, from the sidebar, or from the overview
 
 ### From the CLI and API

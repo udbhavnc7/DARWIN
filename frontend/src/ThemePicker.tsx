@@ -15,7 +15,7 @@ export function ThemePicker({theme, onChange}: {
     </button>
     <dialog ref={dialog} className="theme-dialog" aria-labelledby="theme-title" onClose={() => trigger.current?.focus()}>
       <div className="section-title"><div className="panel-heading"><span className="section-kicker">Lab appearance</span><h2 id="theme-title">Palette register</h2></div><Action variant="quiet" icon="close" aria-label="Close appearance settings" onClick={() => dialog.current?.close()}>Close</Action></div>
-      <p className="muted">Three calibrated finishes for the bench. Measurements and warnings keep their own signal colours in every palette.</p>
+      <p className="muted">Six calibrated finishes for the bench, four light and two dark. Measurements and warnings keep their own signal colours in every palette.</p>
       <fieldset className="theme-grid">
         <legend className="visually-hidden">Colour palette</legend>
         {(Object.keys(themes) as ThemeId[]).map((id, index) => {

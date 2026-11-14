@@ -3,7 +3,7 @@
 /*
   DARWIN lab-bench system
   Sharp rules, measured spacing, mono telemetry, graph-paper field.
-  Colour arrives only through the three registered palettes.
+  Colour arrives only through the registered palettes (see themes.ts).
 */
 :root {
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
@@ -12,30 +12,30 @@
   background: var(--background);
   color-scheme: light;
 
-  /* Green Texture — the default bench finish. */
-  --background: #e9e1cf;
-  --sidebar: #f1e9d7;
-  --surface: #f7f1e3;
-  --raised: #e4dac4;
-  --field: #fbf6ea;
-  --line: #cdbfa3;
-  --control-line: #8f866f;
-  --text: #1f251c;
-  --muted: #5d6251;
-  --accent: #2c5336;
-  --on-accent: #f6f1e2;
-  --accent-hover: #1e3d27;
-  --hero: #ded4bc;
-  --good: #2d5b36;
-  --good-bg: #dbe6d2;
-  --bad: #8c2f25;
-  --bad-bg: #f0d9d0;
-  --warn: #7a5a1e;
-  --warn-bg: #f2e6c8;
-  --grid: rgba(31, 37, 28, .055);
-  --graph-dot: #c4b698;
-  --graph-edge: #6c735f;
-  --selection: #2c5336;
+  /* Green Texture — the default bench finish: laboratory green on clean white. */
+  --background: #f2f7f1;
+  --sidebar: #ffffff;
+  --surface: #ffffff;
+  --raised: #e5efe3;
+  --field: #ffffff;
+  --line: #cddcc9;
+  --control-line: #7d977f;
+  --text: #13231a;
+  --muted: #506357;
+  --accent: #1e6a3b;
+  --on-accent: #ffffff;
+  --accent-hover: #15512c;
+  --hero: #e2eee0;
+  --good: #1e6a3b;
+  --good-bg: #daeeda;
+  --bad: #a3302a;
+  --bad-bg: #f8dfdc;
+  --warn: #855a0f;
+  --warn-bg: #f7ecd1;
+  --grid: rgba(30, 106, 59, .07);
+  --graph-dot: #c1d6bf;
+  --graph-edge: #5e7a64;
+  --selection: #1e6a3b;
   --shadow: none;
   --radius-sm: 2px;
   --radius: 3px;
@@ -44,57 +44,141 @@
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/* Leather Red — oxblood on a cleaner, warmer beige. */
 :root[data-theme='leather'] {
-  --background: #f2e7d4;
-  --sidebar: #f7efdf;
-  --surface: #fbf4e6;
-  --raised: #eadbc2;
-  --field: #fdf8ee;
-  --line: #d6c3a3;
-  --control-line: #97815f;
-  --text: #2a211c;
-  --muted: #6b5a48;
-  --accent: #7c332a;
-  --on-accent: #fbf4e6;
-  --accent-hover: #61241d;
-  --hero: #e8d7ba;
-  --good: #3f5a2e;
-  --good-bg: #e2e7cf;
-  --bad: #a12a1e;
-  --bad-bg: #f6d9d1;
-  --warn: #7d5518;
-  --warn-bg: #f3e4c0;
-  --grid: rgba(42, 33, 28, .05);
-  --graph-dot: #d2bb96;
-  --graph-edge: #7f6d57;
-  --selection: #7c332a;
+  --background: #f4ebdc;
+  --sidebar: #f9f2e6;
+  --surface: #fdf8ef;
+  --raised: #ecdfca;
+  --field: #fffbf4;
+  --line: #dccbb0;
+  --control-line: #9a8264;
+  --text: #2b1c17;
+  --muted: #6a5345;
+  --accent: #8a2a22;
+  --on-accent: #fff8ef;
+  --accent-hover: #6c1f19;
+  --hero: #ecdcc2;
+  --good: #3c5e2e;
+  --good-bg: #e2ead1;
+  --bad: #b02a1d;
+  --bad-bg: #f8dbd3;
+  --warn: #855915;
+  --warn-bg: #f5e6c4;
+  --grid: rgba(138, 42, 34, .05);
+  --graph-dot: #d6c19f;
+  --graph-edge: #826e59;
+  --selection: #8a2a22;
 }
 
+/* Carbon Black — graphite with linen-grey instrumentation. */
 :root[data-theme='carbon'] {
   color-scheme: dark;
-  --background: #111311;
-  --sidebar: #0d0f0d;
-  --surface: #181b17;
-  --raised: #23261f;
-  --field: #1c1f1a;
-  --line: #343830;
-  --control-line: #6a6f61;
-  --text: #ece7da;
-  --muted: #a9a795;
-  --accent: #d9d2bf;
-  --on-accent: #14160f;
-  --accent-hover: #f0ead9;
-  --hero: #1e2119;
-  --good: #bcd6a5;
-  --good-bg: #243021;
-  --bad: #f0a89a;
-  --bad-bg: #3a231f;
-  --warn: #e8c987;
-  --warn-bg: #372e1d;
-  --grid: rgba(236, 231, 218, .045);
-  --graph-dot: #3d4137;
-  --graph-edge: #8b8f80;
-  --selection: #d9d2bf;
+  --background: #0f1110;
+  --sidebar: #0b0c0b;
+  --surface: #171a18;
+  --raised: #222622;
+  --field: #1a1d1b;
+  --line: #323732;
+  --control-line: #6a7169;
+  --text: #edeae2;
+  --muted: #aaab9f;
+  --accent: #ddd7c7;
+  --on-accent: #121411;
+  --accent-hover: #f3efe4;
+  --hero: #1b1f1c;
+  --good: #b5d9a0;
+  --good-bg: #213020;
+  --bad: #f2a597;
+  --bad-bg: #3b221e;
+  --warn: #ebcb86;
+  --warn-bg: #36301d;
+  --grid: rgba(237, 234, 226, .045);
+  --graph-dot: #3a3f3a;
+  --graph-edge: #8d9389;
+  --selection: #ddd7c7;
+}
+
+/* Blueprint — cobalt drafting ink on cool white. */
+:root[data-theme='blueprint'] {
+  --background: #eef3fa;
+  --sidebar: #f7faff;
+  --surface: #ffffff;
+  --raised: #e0e9f5;
+  --field: #ffffff;
+  --line: #c5d3e7;
+  --control-line: #7889a8;
+  --text: #13203a;
+  --muted: #4e5e79;
+  --accent: #1d4f91;
+  --on-accent: #ffffff;
+  --accent-hover: #153c71;
+  --hero: #dde7f5;
+  --good: #276a3d;
+  --good-bg: #dbecdf;
+  --bad: #a3302a;
+  --bad-bg: #f7dedb;
+  --warn: #84590f;
+  --warn-bg: #f6ebcf;
+  --grid: rgba(29, 79, 145, .08);
+  --graph-dot: #bccbe2;
+  --graph-edge: #5c7297;
+  --selection: #1d4f91;
+}
+
+/* Amethyst — violet specimen stain on lilac white. */
+:root[data-theme='amethyst'] {
+  --background: #f4f1f8;
+  --sidebar: #faf8fd;
+  --surface: #ffffff;
+  --raised: #e9e3f1;
+  --field: #ffffff;
+  --line: #d7cde4;
+  --control-line: #8b7ea2;
+  --text: #221a2f;
+  --muted: #5e5370;
+  --accent: #5b3a8c;
+  --on-accent: #ffffff;
+  --accent-hover: #462b6e;
+  --hero: #e8e1f1;
+  --good: #2c6a3f;
+  --good-bg: #dcecdf;
+  --bad: #a52f3c;
+  --bad-bg: #f8dce0;
+  --warn: #85590f;
+  --warn-bg: #f6ebcf;
+  --grid: rgba(91, 58, 140, .065);
+  --graph-dot: #cdc1de;
+  --graph-edge: #6e6286;
+  --selection: #5b3a8c;
+}
+
+/* Midnight — signal blue on deep navy, for the night shift. */
+:root[data-theme='midnight'] {
+  color-scheme: dark;
+  --background: #0c1220;
+  --sidebar: #090e19;
+  --surface: #121a2a;
+  --raised: #1b2537;
+  --field: #152033;
+  --line: #29354e;
+  --control-line: #5e6e8e;
+  --text: #e5eaf4;
+  --muted: #9ca9c0;
+  --accent: #8fb4ff;
+  --on-accent: #0a1220;
+  --accent-hover: #b4cbff;
+  --hero: #131c2f;
+  --good: #9fd8b0;
+  --good-bg: #16302a;
+  --bad: #f5a4a4;
+  --bad-bg: #3a1f27;
+  --warn: #ecc97f;
+  --warn-bg: #33301f;
+  --grid: rgba(143, 180, 255, .05);
+  --graph-dot: #2b3954;
+  --graph-edge: #7f8fae;
+  --selection: #8fb4ff;
 }
 
 * { box-sizing: border-box; }
@@ -796,8 +880,9 @@ body:has(.tour[open]) { overflow: hidden; }
   .header-tools { gap: 8px; }
 }
 @media (max-width: 585px) {
-  .theme-grid { grid-template-columns: 1fr; }
-  .theme-preview { height: 74px; }
+  .theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .theme-dialog { padding: 20px 16px; }
+  .theme-preview { height: 62px; padding: 7px; }
   .workspace-index { display: none; }
 }
 @media (max-width: 400px) {

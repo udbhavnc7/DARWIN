@@ -1,15 +1,27 @@
 export const themes = {
   texture: {
-    name: 'Green Texture', colors: 'Green on brown beige', scheme: 'light',
-    page: '#e9e1cf', accent: '#2c5336', model: '#5c7a55', plate: '#cbbfa4', trace: '#48664a',
+    name: 'Green Texture', colors: 'Laboratory green on clean white', scheme: 'light',
+    page: '#f2f7f1', accent: '#1e6a3b', model: '#4f9466', plate: '#cfe2cc', trace: '#2c7a48',
   },
   leather: {
-    name: 'Leather Red', colors: 'Leather red on perfect beige', scheme: 'light',
-    page: '#f2e7d4', accent: '#7c332a', model: '#a5604c', plate: '#dfcaaa', trace: '#8a4d3f',
+    name: 'Leather Red', colors: 'Oxblood leather on perfect beige', scheme: 'light',
+    page: '#f4ebdc', accent: '#8a2a22', model: '#a95c48', plate: '#e0cdae', trace: '#8f4a3c',
   },
   carbon: {
-    name: 'Carbon Black', colors: 'Carbon black with linen grey', scheme: 'dark',
-    page: '#111311', accent: '#d9d2bf', model: '#a5a294', plate: '#2d3029', trace: '#c9c3b2',
+    name: 'Carbon Black', colors: 'Graphite with linen grey', scheme: 'dark',
+    page: '#0f1110', accent: '#ddd7c7', model: '#a7a497', plate: '#2c302b', trace: '#cbc5b4',
+  },
+  blueprint: {
+    name: 'Blueprint', colors: 'Cobalt drafting ink on cool white', scheme: 'light',
+    page: '#eef3fa', accent: '#1d4f91', model: '#4d78b4', plate: '#cdd9ec', trace: '#2d60a6',
+  },
+  amethyst: {
+    name: 'Amethyst', colors: 'Violet specimen stain on lilac white', scheme: 'light',
+    page: '#f4f1f8', accent: '#5b3a8c', model: '#8869b6', plate: '#ddd3ea', trace: '#6c49a2',
+  },
+  midnight: {
+    name: 'Midnight', colors: 'Signal blue on deep navy', scheme: 'dark',
+    page: '#0c1220', accent: '#8fb4ff', model: '#6d8dc6', plate: '#1e293e', trace: '#a6c1ff',
   },
 } as const;
 

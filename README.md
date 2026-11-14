@@ -159,7 +159,7 @@ The demo shop records the receipt, stock, order, capture, and payment effect for
 
 ![Repeated checkout keeps one order, one capture, and one payment effect](docs/images/shop-ledger.png)
 
-Three lab palettes persist per browser: **Green Texture** (green on brown beige), **Leather Red** (leather red on perfect beige), and **Carbon Black** (carbon black with linen grey). The workspace is styled as a backend-architecture bench — graph-paper ground, hairline rules, mono telemetry labels, and registration ticks — and stays responsive from desktop down to 360 px; the sidebar becomes a compact sticky header with a scrollable section bar.
+Six lab palettes persist per browser. Four are light: **Green Texture** (laboratory green on clean white, the default), **Leather Red** (oxblood on perfect beige), **Blueprint** (cobalt drafting ink on cool white) and **Amethyst** (violet on lilac white). Two are dark: **Carbon Black** (graphite with linen grey) and **Midnight** (signal blue on deep navy). Pass, fail and warning colours stay distinct in every palette. The workspace is styled as a backend-architecture bench — graph-paper ground, hairline rules, mono telemetry labels, and registration ticks — and stays responsive from desktop down to 360 px; the sidebar becomes a compact sticky header with a scrollable section bar.
 
 <p align="center">
   <img src="docs/images/mobile.png" width="300" alt="DARWIN on a phone-sized viewport" />
