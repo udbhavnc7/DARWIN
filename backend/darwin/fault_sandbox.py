@@ -47,8 +47,8 @@ class FaultSandbox(MeasuredSandbox):
         log = (self.folder / 'toxiproxy.log').open('ab')
         self.logs.append(log)
         # Fault tooling runs outside the capped application group.
-        process = super().launch([executable, '-host', '127.0.0.1', '-port', str(api_port)],
-                                 log, self.env, application=False)
+        process = super().launch([executable, '-host', '127.0.0.1', '-port', str(api_port), '-seed', str(self.request.seed)],
+                                 log, {**self.env, 'LOG_LEVEL': 'info'}, application=False)
         self.processes.append(process)
         self.ownership()
         self.ready(self.tox_url + '/version', check)
@@ -110,6 +110,16 @@ class FaultSandbox(MeasuredSandbox):
         result = super().exercise(base, check)
         return FaultSuite(self, base, check).run(result)
 
-    def close(self):
+    def arm_notification(self, key, check):
+        self.control.write_text(key)
+
+    def notification_marker(self, check):
+        marker = self.control.with_suffix('.reached.json')
+        return json.loads(marker.read_text()) if marker.exists() else None
+
+    def disarm_notification(self):
         self.control.unlink(missing_ok=True)
+
+    def close(self):
+        self.disarm_notification()
         super().close()

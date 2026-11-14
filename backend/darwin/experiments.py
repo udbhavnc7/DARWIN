@@ -9,28 +9,38 @@ import threading
 import time
 from datetime import datetime, timezone
 from uuid import uuid4
+from typing import Literal
 
 from filelock import FileLock
 from pydantic import Field, model_validator
 
-from darwin.architecture import ROOT, genome_hash, render_compose
+from darwin.architecture import ROOT, deployment_resources, genome_hash
 from darwin.contracts import ExperimentRequest, Genome
 
 TERMINAL = {'completed', 'failed', 'cancelled'}
+FAULT_MODES = {'native_faults', 'docker_faults'}
+MEASURED_MODES = FAULT_MODES | {'native_benchmark', 'docker_benchmark'}
 
 
 class StartExperiment(ExperimentRequest):
-    mode: str = Field(default='native_smoke', pattern='^(native_smoke|docker_smoke|native_benchmark)$')
+    mode: Literal['native_smoke', 'docker_smoke', 'native_benchmark', 'docker_benchmark',
+                  'native_faults', 'docker_faults'] = 'native_smoke'
+    fault_fixture: Literal['safe', 'unsafe_retry'] = 'safe'
     genomes: list[Genome] = Field(default_factory=lambda: [Genome()], min_length=1, max_length=36)
 
     @model_validator(mode='after')
     def supported(self):
-        if self.fault_scenarios:
-            raise ValueError('Fault scenarios require Phase 6')
-        if self.mode == 'native_benchmark':
+        if self.mode in FAULT_MODES:
+            if not self.fault_scenarios or len(set(self.fault_scenarios)) != len(self.fault_scenarios):
+                raise ValueError('Fault tests require a nonempty list of distinct scenarios')
+            if self.fault_fixture == 'unsafe_retry' and 'timeout_retry_duplicate' not in self.fault_scenarios:
+                raise ValueError('The unsafe retry fixture requires the payment-reply-loss scenario')
+        elif self.fault_scenarios or self.fault_fixture != 'safe':
+            raise ValueError('Fault scenarios and fixtures require a fault execution mode')
+        if self.mode in ('native_benchmark', 'native_faults'):
             if os.name != 'nt' or not float(self.budget.sandbox_cpu_cores).is_integer():
                 raise ValueError('Native benchmarks require Windows and whole logical CPUs')
-        elif self.workload_profile != 'normal' or self.constraints.max_p95_ms is not None:
+        elif self.mode not in MEASURED_MODES and (self.workload_profile != 'normal' or self.constraints.max_p95_ms is not None):
             raise ValueError('Smoke experiments accept only the normal profile without a latency target')
         if len(self.genomes) > self.budget.max_candidates:
             raise ValueError('Candidate count exceeds max_candidates')
@@ -39,11 +49,10 @@ class StartExperiment(ExperimentRequest):
         if len({genome_hash(g) for g in self.genomes}) != len(self.genomes):
             raise ValueError('Duplicate genomes are not separate candidates')
         for genome in self.genomes:
-            services = render_compose(genome)['services']
-            active = [s for name, s in services.items() if name != 'seed']
-            if sum(s['cpus'] for s in active) > self.budget.sandbox_cpu_cores + 1e-9:
+            cpu, memory = deployment_resources(genome)
+            if cpu > self.budget.sandbox_cpu_cores + 1e-9:
                 raise ValueError('Candidate exceeds configured CPU budget')
-            if sum(int(s['mem_limit'][:-1]) for s in active) > self.budget.sandbox_memory_mb:
+            if memory > self.budget.sandbox_memory_mb:
                 raise ValueError('Candidate exceeds configured memory budget')
         return self
 
@@ -127,7 +136,7 @@ class Engine:
             ident = str(uuid4())
             record = {'experiment_id': ident, 'created_at': now(), 'status': 'queued', 'request': request.model_dump(),
                       'candidates': [], 'attempts_used': 0, 'cleanup_status': 'not_started', 'rerun_of': rerun_of,
-                      'measurement_kind': 'measured' if request.mode == 'native_benchmark' else 'smoke_only', 'resource_limits_enforced': False}
+                      'measurement_kind': 'measured' if request.mode in MEASURED_MODES else 'smoke_only', 'resource_limits_enforced': False}
             for genome in request.genomes:
                 record['candidates'].append({'candidate_id': str(uuid4()), 'genome': genome.model_dump(),
                                               'genome_hash': genome_hash(genome), 'evaluations': []})
@@ -180,7 +189,10 @@ class Engine:
             # Retain the exact source inputs, including uncommitted files.
             source = root / 'source'
             source.mkdir()
-            files = list((ROOT / 'backend').rglob('*.py')) + [ROOT / name for name in ('Dockerfile', 'compose.yaml', 'pyproject.toml', 'requirements.lock.txt')]
+            files = list((ROOT / 'backend').rglob('*.py')) + [
+                ROOT / name for name in ('Dockerfile', '.dockerignore', 'compose.yaml',
+                                         'pyproject.toml', 'requirements.lock.txt')
+            ]
             hashes = {}
             for path in files:
                 self.check(stop, deadline)
@@ -197,7 +209,7 @@ class Engine:
                 offset = repetition % len(candidates)
                 for candidate in candidates[offset:] + candidates[:offset]:
                     attempt = request
-                    if request.mode == 'native_benchmark':
+                    if request.mode in MEASURED_MODES:
                         attempt = request.model_copy(update={'seed': (request.seed + repetition) % 2**32})
                     self.check(stop, deadline)
                     if record['attempts_used'] >= request.budget.real_test_budget:
@@ -208,12 +220,24 @@ class Engine:
                     candidate['evaluations'].append(evaluation)
                     folder = root / evaluation['evaluation_id']
                     folder.mkdir()
+                    if request.mode in FAULT_MODES:
+                        write_json(folder / 'replay-request.json', {**request.model_dump(), 'genomes': [candidate['genome']]})
+                        (folder / 'replay.ps1').write_text(
+                            "# Replays the same seeds and scenarios using the currently running DARWIN source.\n"
+                            "Invoke-RestMethod http://127.0.0.1:8000/api/experiments -Method Post -ContentType application/json "
+                            "-Body (Get-Content -Raw (Join-Path $PSScriptRoot 'replay-request.json'))\n", encoding='utf-8')
                     self.store.save(record, f'Starting attempt {record["attempts_used"]}')
                     adapter = None
                     check = lambda: self.check(stop, deadline)
                     try:
                         if self.factory:
                             adapter = self.factory(attempt, candidate, folder, source)
+                        elif request.mode.startswith('docker_'):
+                            from darwin.docker_sandbox import DockerSandbox
+                            adapter = DockerSandbox(attempt, candidate, folder, source)
+                        elif request.mode == 'native_faults':
+                            from darwin.fault_sandbox import FaultSandbox
+                            adapter = FaultSandbox(attempt, candidate, folder, source)
                         elif request.mode == 'native_benchmark':
                             from darwin.measured_sandbox import MeasuredSandbox
                             adapter = MeasuredSandbox(attempt, candidate, folder, source)
@@ -223,14 +247,19 @@ class Engine:
                         result = adapter.run(check)
                         record['resource_limits_enforced'] = bool(result.get('resource_limits_enforced', False))
                         check()
-                        if request.mode == 'native_benchmark':
+                        if request.mode in MEASURED_MODES:
                             evaluation.update(metrics=result['metrics'], tier='measured')
+                            if request.mode in FAULT_MODES:
+                                evaluation.update(gate=result['gate'], violations=result['violations'],
+                                                  gate_reasons=result['gate_reasons'], recovery=result['recovery'])
                             write_json(folder / 'measurement.json', result)
                         else:
                             write_json(folder / 'smoke.json', result)
                         evaluation['status'] = 'completed'
                     except BaseException as exc:
                         evaluation.update(status='cancelled' if isinstance(exc, Stopped) else 'failed', error=str(exc))
+                        if request.mode in FAULT_MODES:
+                            evaluation.update(gate='failed', gate_reasons=['execution_incomplete'])
                         raise
                     finally:
                         try:
@@ -239,11 +268,23 @@ class Engine:
                             record['cleanup_status'] = 'completed'
                         except Exception as cleanup_error:
                             record.update(cleanup_status='requires_review', cleanup_error=str(cleanup_error))
+                            if request.mode in FAULT_MODES:
+                                evaluation.update(gate='failed', gate_reasons=['cleanup_unverified'])
                             self.recovery_required = True
+                        if request.mode in FAULT_MODES:
+                            for name in ('fault-report.json', 'measurement.json'):
+                                report_path = folder / name
+                                if report_path.exists():
+                                    report = json.loads(report_path.read_text(encoding='utf-8'))
+                                    report.update(gate=evaluation['gate'], gate_reasons=evaluation.get('gate_reasons', []),
+                                                  cleanup_status=record['cleanup_status'])
+                                    write_json(report_path, report)
                         manifest = {'evaluation_id': evaluation['evaluation_id'], 'candidate': candidate['genome'],
                                     'source_hash': record['source_hash'], 'seed': attempt.seed, 'mode': request.mode,
                                     'status': evaluation['status'], 'cleanup_status': record['cleanup_status'],
-                                    'measurement_kind': record['measurement_kind'], 'workload_profile': request.workload_profile, 'gate': 'not_checked', 'files': {}}
+                                    'measurement_kind': record['measurement_kind'], 'workload_profile': request.workload_profile,
+                                    'fault_fixture': request.fault_fixture, 'fault_scenarios': request.fault_scenarios,
+                                    'gate': evaluation['gate'], 'files': {}}
                         for artifact in folder.iterdir():
                             if artifact.is_file():
                                 digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
@@ -255,10 +296,12 @@ class Engine:
                     if self.recovery_required:
                         raise RuntimeError('Sandbox cleanup failed; additional runs are blocked')
             self.check(stop, deadline)
-            if request.mode == 'native_benchmark':
+            if request.mode in MEASURED_MODES:
                 from darwin.performance import summarize
                 for candidate in candidates:
                     candidate['summary'] = summarize(candidate['evaluations'], request)
+                    if request.mode in FAULT_MODES:
+                        candidate['summary']['gate'] = 'passed' if all(e['gate'] == 'passed' for e in candidate['evaluations']) else 'failed'
                 write_json(root / 'comparison.json', {'experiment_id': ident, 'source_hash': record['source_hash'],
                            'request': record['request'], 'candidates': candidates})
             record['status'] = 'completed'

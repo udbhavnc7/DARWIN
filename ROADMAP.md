@@ -1,6 +1,6 @@
 # DARWIN — Phased Project Roadmap
 
-Status: Phases 1–5 implemented and verified locally. Phase 5 adds Windows resource limits, seeded Locust workloads, raw latency evidence and repeated configuration comparisons. All three workload profiles have completed real measurements. Docker execution acceptance remains pending Docker/WSL2 setup. See docs/PHASE_5.md (2026-11-08). Next is Phase 6, failure injection and correctness rejection.
+All ten MVP phases are complete. Native Windows validation covered four equal-budget searches. Docker Desktop acceptance verified smoke, paired benchmarks, fault gates, and two search generations. Both runtimes rejected the unsafe fixture for I-01 in all three repetitions. The Docker search produced an empty Pareto front after both candidates missed a recovery gate. See the [Phase 10 results](docs/PHASE_10.md) and [Docker acceptance results](docs/DOCKER_ACCEPTANCE.md).
 
 ## Project goal
 

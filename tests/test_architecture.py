@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import httpx
 import pytest
+import yaml
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -83,3 +84,16 @@ def test_preview_endpoint_does_not_claim_deployment():
     response = TestClient(app).post('/api/genomes/preview', json={'app_replicas': 3, 'notification_mode': 'queued'})
     assert response.status_code == 200
     assert response.json()['topology']['deployment_verified'] is False
+
+
+def test_export_compose_is_portable_and_matches_requested_topology():
+    genome = {'app_replicas': 2, 'catalog_cache_ttl_s': 30, 'notification_mode': 'queued'}
+    client = TestClient(app)
+    preview = client.post('/api/genomes/preview', json=genome).json()
+    response = client.post('/api/genomes/compose', json=genome)
+    assert response.status_code == 200
+    assert preview['genome_hash'][:12] in response.headers['content-disposition']
+    services = yaml.safe_load(response.text)['services']
+    assert set(services) == {'seed', *(node['id'] for node in preview['topology']['nodes'])}
+    assert {service['build'] for service in services.values() if 'build' in service} == {'.'}
+    assert client.post('/api/genomes/compose', json={'app_replicas': 4}).status_code == 422

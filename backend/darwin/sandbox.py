@@ -54,6 +54,7 @@ class Sandbox:
         self.docker = False
         self.project = 'darwin-run-' + folder.name.replace('-', '')
         self.env = {**os.environ, **runtime_environment(self.genome), 'PYTHONPATH': str(source / 'backend')}
+        self.env['PYTHONDONTWRITEBYTECODE'] = '1'
         self.env['DARWIN_CACHE_NAMESPACE'] = folder.name
         self.admin = os.environ.get('DARWIN_NATIVE_DATABASE_URL', DEFAULT_DSN)
         self.config = render_compose(self.genome)
@@ -67,7 +68,7 @@ class Sandbox:
         self.compose.write_text(yaml.safe_dump(self.config, sort_keys=False))
         write_json(folder / 'environment.json', {'python': sys.version, 'platform': platform.platform(),
                    'packages': {name: version(name) for name in ('fastapi', 'httpx', 'psycopg', 'redis')},
-                   'mode': request.mode, 'resource_limits_enforced': request.mode == 'docker_smoke'})
+                   'mode': request.mode, 'resource_limits_enforced': False})
 
     def launch(self, args, log, env, *, application):
         return subprocess.Popen(args, env=env, cwd=self.source, stdout=log, stderr=log,
@@ -201,7 +202,9 @@ class Sandbox:
             write_json(self.folder / 'requests.json', samples)
         command = [sys.executable, '-m', 'darwin.shop.cli', 'verify']
         if self.docker:
-            command = ['docker', 'compose', '-f', str(self.compose), 'exec', '-T', 'api-1', 'python', '-m', 'darwin.shop.cli', 'verify']
+            from darwin.docker_resources import docker_executable
+            command = [docker_executable() or 'docker', 'compose', '-p', self.project, '-f', str(self.compose),
+                       'exec', '-T', 'api-1', 'python', '-m', 'darwin.shop.cli', 'verify']
         # Quiescent queue drain; this is smoke evidence, not an adversarial gate.
         for _ in range(50):
             check()

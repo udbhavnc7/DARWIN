@@ -29,7 +29,7 @@ def check_business(data, history):
             continue
         capture = captures.get(key)
         evidence = [row for row in data['payment_effects'] if row['request_key'] == key]
-        if (not capture or capture['order_id'] != order['order_id'] or
+        if (not capture or capture.get('status') != 'captured' or capture['order_id'] != order['order_id'] or
                 capture['amount_cents'] != order['amount_cents'] or
                 not any(row['order_id'] == order['order_id'] and row['amount_cents'] == order['amount_cents'] for row in evidence)):
             reject('I-03', 'Confirmed order lacks matching successful payment evidence', key)
@@ -45,7 +45,9 @@ def check_business(data, history):
             reject('I-04', 'Replay changed response or business state', event['key'])
         if event['kind'] == 'notification_restart':
             key = event['key']
-            if not event['pending_before_crash'] or key not in outbox or key not in deliveries:
+            accepted = next((row for row in event.get('before', {}).get('outbox', []) if row['job_key'] == key), None)
+            if (not event['pending_before_crash'] or key not in outbox or key not in deliveries or
+                    not accepted or accepted['order_id'] != outbox[key]['order_id']):
                 reject('I-05', 'Accepted notification was not retained through restart', key)
     for key, job in outbox.items():
         delivery = deliveries.get(key)
@@ -63,6 +65,8 @@ def feasibility(result, constraints):
         reasons.append('business_invariant_failed')
     if not result.get('faults_verified'):
         reasons.append('fault_scenario_incomplete')
+    if set(result.get('invariant_coverage', [])) != {'I-01', 'I-02', 'I-03', 'I-04', 'I-05'}:
+        reasons.append('invariant_coverage_incomplete')
     metrics = result['metrics']
     if metrics['error_rate'] > constraints.max_error_rate:
         reasons.append('measurement_error_threshold')

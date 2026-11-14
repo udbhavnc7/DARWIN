@@ -63,6 +63,9 @@ PRODUCTS = [('darwin-notebook', 'DARWIN Notebook', 1299, 20),
 def initialize(reset=False):
     """Explicit CLI operation; never reset automatically at service startup."""
     with connection() as conn:
+        # Schema creation and TRUNCATE can flush several tables on slow disks.
+        # Keep the shorter request timeout on ordinary shop connections.
+        conn.execute("SET LOCAL statement_timeout = '15s'")
         conn.execute(SCHEMA)
         if reset:
             conn.execute('TRUNCATE payment_effects, deliveries, outbox, captures, reservations, orders, products')
@@ -100,9 +103,9 @@ def invariant_report():
         if job['status'] == 'completed' and (not delivery or delivery['order_id'] != job['order_id']):
             violations.append({'invariant_id': 'I-05', 'job_key': job['job_key']})
     # Uniqueness supplies static I-01/I-04 checks; replay tests verify business effects.
-    for table, key, invariant in [('captures', 'request_key', 'I-01'), ('orders', 'request_key', 'I-04'), ('deliveries', 'job_key', 'I-04')]:
+    for table, key, invariant in [('captures', 'request_key', 'I-01'), ('payment_effects', 'request_key', 'I-01'), ('orders', 'request_key', 'I-04'), ('deliveries', 'job_key', 'I-04')]:
         values = [r[key] for r in data[table]]
         if len(values) != len(set(values)):
             violations.append({'invariant_id': invariant, 'table': table})
     return {'violations': violations, 'pending_notifications': sum(j['status'] == 'pending' for j in data['outbox']),
-            'scope': 'Quiescent ledger checks; transient worker recovery tests arrive in Phase 6.'}
+            'scope': 'Ledger checks. Replay and crash evidence is checked by the isolated fault suite.'}

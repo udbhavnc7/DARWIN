@@ -3,7 +3,6 @@ import argparse
 import json
 import os
 import socket
-import subprocess
 from uuid import UUID
 
 from filelock import FileLock
@@ -34,7 +33,7 @@ def verify_absent(store, record):
                         sock.settimeout(.2)
                         if sock.connect_ex(('127.0.0.1', port)) == 0:
                             raise RuntimeError(f'Port {port} is occupied; inspect it before clearing recovery')
-                if record['request']['mode'] == 'native_benchmark':
+                if record['request']['mode'] in ('native_benchmark', 'native_faults'):
                     if (folder / 'private-pgdata').exists():
                         raise RuntimeError('Private database directory remains; review before clearing recovery')
                     continue
@@ -43,11 +42,9 @@ def verify_absent(store, record):
                     if conn.execute('SELECT 1 FROM pg_database WHERE datname=%s', (database,)).fetchone():
                         raise RuntimeError(f'Owned database {database} still exists')
             else:
+                from darwin.docker_sandbox import verify_docker_absent
                 project = 'darwin-run-' + ident.replace('-', '')
-                for command in (['docker', 'ps', '-aq'], ['docker', 'volume', 'ls', '-q'], ['docker', 'network', 'ls', '-q']):
-                    output = subprocess.check_output([*command, '--filter', f'label=com.docker.compose.project={project}'], timeout=10)
-                    if output.strip():
-                        raise RuntimeError(f'Docker resources still exist for {project}; use its saved Compose file to clean up')
+                verify_docker_absent(project, ownership.get('docker_engine_id'))
 
 
 def main():

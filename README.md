@@ -2,7 +2,7 @@
 
 DARWIN searches supported backend configurations, tests performance and business correctness, and records reproducible evidence of the best observed tradeoffs.
 
-**Current stage: Phase 5 performance measurements.** Run repeatable Locust workloads on Windows, compare real configurations across three repetitions, and inspect latency samples, errors, CPU time and peak memory. The smoke runner remains available. See the [benchmark guide](docs/PHASE_5.md), [execution guide](docs/PHASE_4.md) and [roadmap](ROADMAP.md).
+DARWIN runs the search and demonstration workflow locally on Windows. The dashboard can simulate a configuration, run fault experiments, and compare measured configurations that pass the feasibility gate. The safe configuration passed three full fault repetitions, and the duplicate-payment fixture was rejected in all three. The local simulator fit averaged 27.0% p95 error across nine held-out repetitions. See the [roadmap](ROADMAP.md), [search guide](docs/PHASE_8.md), and [validation and demonstration guide](docs/PHASE_10.md).
 
 ## Run locally (PowerShell)
 
@@ -15,14 +15,20 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --no-deps -e .
 npm --prefix frontend ci
 
+# Required for native Windows fault experiments and search
+.\scripts\setup_toxiproxy.ps1
+
 # Terminal 1: API
 .\.venv\Scripts\python.exe -m uvicorn darwin.main:app --host 127.0.0.1 --port 8000
 
 # Terminal 2: UI (from the repository root)
 npm --prefix frontend run dev
+
+# Terminal 3: interactive demo shop (from the repository root)
+.\.venv\Scripts\python.exe scripts/run_shop.py
 ```
 
-Open http://127.0.0.1:5173. Interactive API documentation: http://127.0.0.1:8000/docs. Use Ctrl+C in each terminal to stop. Start the separate shop with `.\.venv\Scripts\python.exe scripts/run_shop.py` (requires local PostgreSQL binaries); see the Phase 2 guide for Docker and integration-test commands. API keys are not required.
+Open [the dashboard](http://127.0.0.1:5173/) or the [interactive API documentation](http://127.0.0.1:8000/docs). Use Ctrl+C in each terminal to stop. The native shop and native experiments require PostgreSQL binaries on PATH. Cached native candidates require Redis. [Setup, reset, and integration tests](docs/PHASE_2.md)
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
@@ -47,10 +53,20 @@ npm --prefix frontend run build
 | POST /api/experiments | Queue a smoke check or measured comparison |
 | GET /api/experiments/{id} | Check progress, cleanup, and evidence |
 | POST /api/experiments/{id}/cancel | Cancel pending or running work |
+| POST /api/simulate | Estimate performance and show calibration scope |
+| POST /api/genomes/compose | Download a Compose file for the selected architecture |
+| POST /api/searches | Start bounded NSGA-II, random, or hill-climbing search |
+| GET /api/searches/{id} | Read generations, lineage, measured results, and the Pareto front |
 
 See the [Phase 4 execution guide](docs/PHASE_4.md) for event streaming, artifact downloads, and reruns.
 
-Docker is not installed on the inspected machine and WSL2 prerequisites are disabled. Local PostgreSQL allows shop verification now; the container acceptance checks still require a working Linux-container Docker engine and Compose. See [Phase 2 record](docs/PHASE_2.md).
+The dashboard selects Docker when it detects a local Linux engine and lets you switch to Native under **Run settings**. Docker measurements require cgroup v2. The Docker acceptance suite passed on Docker Desktop. See the [Docker acceptance results](docs/DOCKER_ACCEPTANCE.md).
+
+Use **Architecture** to adjust the checkout stack, see the service graph update, simulate it, or hand the selected configuration to **Experiments**. Save a downloaded Compose file at the repository root to run that configuration with Docker Compose.
+
+Use **Theme** to choose Greenhouse, Hazard, Rosewire, Terracotta, or Ink & Paper. The choice persists in your browser and also applies to the Three.js splash screen, which you can replay from the theme picker.
+
+The local release bundle is `artifacts/demo/darwin-workspace.zip`. It contains the app source, verified run evidence, and a recorded demonstration of the earlier interface. Extract it before opening `recorded-demo.html`.
 
 Implementation references: [FastAPI first steps](https://fastapi.tiangolo.com/tutorial/first-steps/) and [Vite setup](https://vite.dev/guide/).
 

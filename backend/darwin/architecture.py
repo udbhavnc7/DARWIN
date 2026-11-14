@@ -24,14 +24,14 @@ def runtime_environment(genome: Genome):
     return {'DARWIN_GENOME_JSON': canonical(genome), 'DARWIN_CACHE_NAMESPACE': genome_hash(genome)}
 
 
-def render_compose(genome: Genome):
+def render_compose(genome: Genome, *, build_context=None):
     config = yaml.safe_load((ROOT / 'compose.yaml').read_text())
     config.pop('x-shop', None)
     config['name'] = 'darwin-' + genome_hash(genome)[:12]
     services = config['services']
     for service in services.values():
         if 'build' in service:
-            service['build'] = str(ROOT)
+            service['build'] = str(ROOT) if build_context is None else build_context
             service['environment'] = {**service.get('environment', {}), **runtime_environment(genome)}
     prototype = services.pop('api')
     # Keep every allowed candidate within the MVP's 4-core / 4096-MiB envelope.
@@ -62,6 +62,11 @@ def render_compose(genome: Genome):
         worker['cpus'], worker['mem_limit'] = 0.25, '256m'
         services['worker'] = worker
     return config
+
+
+def deployment_resources(genome: Genome):
+    services = [service for name, service in render_compose(genome)['services'].items() if name != 'seed']
+    return sum(service['cpus'] for service in services), sum(int(service['mem_limit'][:-1]) for service in services)
 
 
 def topology(genome: Genome):

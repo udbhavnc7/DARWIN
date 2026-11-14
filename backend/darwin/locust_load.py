@@ -3,16 +3,16 @@ from locust import HttpUser
 from locust.env import Environment
 
 import argparse
+from contextlib import ExitStack
 import json
+import os
 from pathlib import Path
 import time
 
 import gevent
 import psutil
-import win32job
 
 from darwin.performance import schedule, WARMUP_S, WINDOW_S
-from darwin.windows_job import usage
 
 
 class Shopper(HttpUser):
@@ -59,6 +59,7 @@ def main():
     for argument in ('host', 'profile', 'job', 'folder'):
         parser.add_argument(argument)
     parser.add_argument('seed', type=int)
+    parser.add_argument('--docker', action='store_true', help='Read application counters from a container manifest')
     args = parser.parse_args()
     folder = Path(args.folder)
     environment = Environment(host=args.host)
@@ -71,20 +72,34 @@ def main():
     save('warmup.json', warm)
     if not all(row['ok'] for row in warm):
         raise RuntimeError('Catalog warm-up failed')
-    handle = win32job.OpenJobObject(win32job.JOB_OBJECT_QUERY, False, args.job)
-    try:
-        before = usage(handle)
+    with ExitStack() as stack:
+        if args.docker:
+            from darwin.docker_resources import check_counter_continuity, snapshot_cgroups
+            read_counters = lambda: snapshot_cgroups(args.job)
+        else:
+            import win32job
+            from darwin.windows_job import usage
+            handle = win32job.OpenJobObject(win32job.JOB_OBJECT_QUERY, False, args.job)
+            stack.callback(handle.Close)
+            read_counters = lambda: usage(handle)
+        before = read_counters()
         cpu = time.process_time()
         samples, elapsed = drive(environment, plan, WINDOW_S)
         harness_cpu = time.process_time() - cpu
-        after = usage(handle)
-    finally:
-        handle.Close()
+        after = read_counters()
+        if args.docker:
+            check_counter_continuity(before, after)
     save('samples.json', samples)
     lag = max(s['started_s'] - s['offset_s'] for s in samples)
+    if os.name == 'nt':
+        harness_peak = psutil.Process().memory_info().peak_wset / 2**20
+    else:
+        import resource
+        unit = 2**20 if os.sys.platform == 'darwin' else 1024
+        harness_peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / unit
     save('resources.json', {'application_start': before, 'application_end': after,
          'load_generator_cpu_seconds': harness_cpu,
-         'load_generator_peak_working_set_mb': psutil.Process().memory_info().peak_wset / 2**20,
+         'load_generator_peak_working_set_mb': harness_peak,
          'window_and_drain_s': elapsed, 'max_dispatch_lag_s': lag})
     if lag > .5 or elapsed > WINDOW_S + 8:
         raise RuntimeError('Load generator missed the fixed schedule; inspect resources.json')

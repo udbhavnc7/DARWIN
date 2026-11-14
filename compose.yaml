@@ -63,6 +63,7 @@ services:
     environment:
       DARWIN_SHOP_API_URL: http://api:8000
     ports: ['127.0.0.1:8010:8000']
+    networks: [sandbox, host_access]
     cpus: 0.5
     mem_limit: 256m
     healthcheck:
@@ -77,5 +78,6 @@ services:
 networks:
   sandbox:
     internal: true
+  host_access: {}
 volumes:
   shop-data:
