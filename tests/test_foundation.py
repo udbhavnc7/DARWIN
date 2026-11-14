@@ -15,7 +15,11 @@ def test_baseline_and_validation_agree():
     project = client.get('/api/project').json()
     assert project['name'] == 'DARWIN'
     assert project['execution_available'] is True
-    assert project['benchmarking_available'] is (os.name == 'nt')
+    assert project['benchmarking_available'] is any(
+        mode.endswith('_benchmark') for mode in project['execution_modes']
+    )
+    if os.name == 'nt':
+        assert 'native_faults' in project['execution_modes']
     response = client.post('/api/experiments/validate', json={})
     assert response.status_code == 200
     assert response.json()['budget'] == project['budget']
