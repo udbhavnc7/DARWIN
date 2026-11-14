@@ -1,6 +1,6 @@
 # Phase 2: baseline shop
 
-Status: implementation and local PostgreSQL verification complete; Docker execution acceptance remains pending because Docker/WSL2 is unavailable on this machine.
+Status: implementation and local PostgreSQL verification complete. Docker execution acceptance was pending at this phase because Docker/WSL2 was unavailable on the build machine; it passed later in Phase 10 (see [DOCKER_ACCEPTANCE.md](DOCKER_ACCEPTANCE.md)).
 
 ## Delivered
 
@@ -67,7 +67,7 @@ Only the gateway is published, on loopback port 8010. Internal services and Post
 
 To reset a stopped-traffic Compose demo, use `docker compose run --rm seed python -m darwin.shop.cli reset --confirm-reset`. Do not reset while workloads are running.
 
-The Docker image build, Compose startup/readiness, and container shutdown still need a machine with a working Docker engine. Phase 2's full exit gate stays open until those checks pass.
+The Docker image build, Compose startup/readiness, and container shutdown needed a machine with a working Docker engine at this phase. Those checks passed in Phase 10; see [DOCKER_ACCEPTANCE.md](DOCKER_ACCEPTANCE.md).
 
 ## Limits and next work
 

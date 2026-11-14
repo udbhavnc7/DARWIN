@@ -10,15 +10,16 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 [![Node](https://img.shields.io/badge/Node-20.19%2B-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Tests](https://img.shields.io/badge/tests-96%20passing%20%C2%B7%2013%20integration-2ea44f)](#testing)
-[![Status](https://img.shields.io/badge/status-MVP%20complete%20%C2%B7%20~75%25%20to%20production-176541)](#project-status)
+[![Tests](https://img.shields.io/badge/tests-108%20passing%20%C2%B7%2014%20integration-2ea44f)](#testing)
+[![CI](https://github.com/udbhavnc7/DARWIN/actions/workflows/ci.yml/badge.svg)](https://github.com/udbhavnc7/DARWIN/actions/workflows/ci.yml)
+[![Status](https://img.shields.io/badge/status-MVP%20complete%20%C2%B7%20~82%25%20to%20production-176541)](#project-status)
 [![License: MIT](https://img.shields.io/badge/license-MIT-176541.svg)](LICENSE)
 
 </div>
 
 ![DARWIN overview](docs/images/overview.png)
 
-> **Status:** all ten MVP phases are complete and the app is roughly **75% of the way to a production-ready release**. Everything described here runs locally today. The remaining work is hardening and generalization, not missing core functionality. See [Project status](#project-status) or the detailed [project context](CONTEXT.md).
+> **Status:** all ten MVP phases are complete and the app is roughly **82% of the way to a production-ready release**. Everything described here runs locally today. The remaining work is hardening and generalization, not missing core functionality. See [Project status](#project-status) or the detailed [project context](CONTEXT.md).
 
 ---
 
@@ -144,11 +145,21 @@ The React dashboard is the primary interface to the lab. A five-step product tou
 
 ![Architecture builder](docs/images/architecture.png)
 
+The Experiments workspace includes four judge-ready presets — quick smoke, normal comparison, flash-sale comparison, and an unsafe payment fixture — each showing whether its duration is live or recorded and which execution environments are actually available.
+
+![Judge-ready scenario presets](docs/images/scenarios.png)
+
 The search workspace separates **proposed**, **simulated**, and **measured** evidence. Rejected candidates expose their violated invariant, the trace, and the original artifact downloads. When no measured candidate passes every gate, the workspace shows a "No candidate passed all gates" verdict with the rejection reasons and safe next choices; it never promotes a rejected candidate. A saved-run fallback is labelled **Recorded run** and cannot be mistaken for a live execution.
 
 ![Search results](docs/images/search.png)
 
-Five palettes (Greenhouse, Hazard, Rosewire, Terracotta, Ink & Paper) persist per browser. The layout is responsive from desktop down to 360 px; the sidebar becomes a compact sticky header with a scrollable section bar.
+![No-feasible-candidate verdict with retained gate reasons](docs/images/rejection.png)
+
+The demo shop records the receipt, stock, order, capture, and payment effect for each request key. Resending the same key returns the original receipt and adds no second effect.
+
+![Repeated checkout keeps one order, one capture, and one payment effect](docs/images/shop-ledger.png)
+
+Three lab palettes persist per browser: **Green Texture** (green on brown beige), **Leather Red** (leather red on perfect beige), and **Carbon Black** (carbon black with linen grey). The workspace is styled as a backend-architecture bench — graph-paper ground, hairline rules, mono telemetry labels, and registration ticks — and stays responsive from desktop down to 360 px; the sidebar becomes a compact sticky header with a scrollable section bar.
 
 <p align="center">
   <img src="docs/images/mobile.png" width="300" alt="DARWIN on a phone-sized viewport" />
@@ -188,7 +199,15 @@ On Linux or macOS, use `.venv/bin/python` instead of `.\.venv\Scripts\python.exe
 
 ### Run
 
-Start these in three terminals from the repository root:
+Use the launcher for the whole stack. It checks readiness, reuses anything already listening, binds every service to loopback, and only stops processes it started:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/demo.py start
+.\.venv\Scripts\python.exe scripts/demo.py status
+.\.venv\Scripts\python.exe scripts/demo.py stop
+```
+
+Or start the three services manually:
 
 ```powershell
 # Terminal 1 — control plane
@@ -209,6 +228,19 @@ Then open:
 - Demo shop through Vite: [http://127.0.0.1:5173/#shop](http://127.0.0.1:5173/#shop)
 
 The demo shop uses simulated payments, synthetic credentials, and a dedicated PostgreSQL cluster under `.runtime/shop/` on loopback only. It never touches an existing database. Press `Ctrl+C` in each terminal to stop.
+
+### Local security model
+
+DARWIN is a trusted-operator lab, not a hosted service. Every service binds to `127.0.0.1` and refuses to invent multi-user isolation. Never expose the API or shop to a shared network or the internet, and never point the demo at real payment or customer data.
+
+For a jump host or a proxied deployment, set a shared bearer token before starting the API and the Vite server:
+
+```powershell
+$env:DARWIN_API_TOKEN = 'a-long-random-value'
+.\.venv\Scripts\python.exe scripts/demo.py start
+```
+
+Every `/api` route and experiment event WebSocket then requires `Authorization: Bearer …` or `X-DARWIN-Token`; only `/api/health` stays open. The Vite dev and preview proxies inject the header from the same environment variable, so the dashboard keeps working. This is a single shared secret, not user accounts, quotas, or project isolation; the demo shop proxy remains unchanged.
 
 ### Docker demo shop
 
@@ -235,7 +267,7 @@ For a timed presentation checklist and the captured baseline, use the [exhibitio
 
 ## Measured evidence
 
-These are actual results recorded by the project, not targets. They come from one search seed per strategy with three measured repetitions per configuration, so the ordering is evidence for these runs, not a general claim that one algorithm always wins.
+These are actual results recorded by the project, not targets. The first table is the original single-seed comparison with three measured repetitions per configuration; the second replays equal-budget searches across three seeds to test whether the ordering survives different workload schedules.
 
 | Strategy | Measured attempts | Feasible configs | Best feasible median p95 |
 | --- | ---: | ---: | ---: |
@@ -244,7 +276,18 @@ These are actual results recorded by the project, not targets. They come from on
 | Hill climbing | 6 | 1 | 586.8 ms |
 | NSGA-II without simulation | 6 | 2 | 410.9 ms |
 
-The winning NSGA-II configuration used queued notifications and reduced median p95 from 315.8 ms to 273.9 ms versus its paired baseline, at the cost of higher CPU time (6.30 s → 7.59 s) and slightly longer recovery (5.0 s → 5.5 s). Both configurations sit on that run's Pareto front.
+**Three-seed campaign (2026-11-14).** Seeds 72, 101, and 202; normal workload; two generations, population four; at most eight candidates and six measured attempts per search. Every search that finished used the same budget.
+
+| Strategy | Runs completed | Runs with a feasible candidate | Measured feasible configs | Best feasible p95 by seed (72 / 101 / 202) | Median of best |
+| --- | ---: | ---: | ---: | --- | ---: |
+| NSGA-II with simulation | 3 / 3 | 2 / 3 | 4 | 365.4 / — / 349.0 ms | **357.2 ms** |
+| Random search | 3 / 3 | 2 / 3 | 3 | 401.5 / 413.7 / — | 407.6 ms |
+| Hill climbing | 3 / 3 | 2 / 3 | 3 | 401.0 / 388.2 / — | 394.6 ms |
+| NSGA-II without simulation | 2 / 3 | 2 / 2 | 2 | 420.9 / 469.4 / failed | 445.1 ms |
+
+The campaign recorded 68 measured attempts across 11 completed searches in about 1.3 hours. The twelfth search (seed 202, NSGA-II without simulation) was interrupted twice by a connection timeout during a fault measurement; it produced no feasible candidate and is reported as interrupted rather than counted. Three simulator-assisted searches found no candidate that passed every gate (NSGA-II at seed 101; random and hill climbing at seed 202), so search variance is visible in the record. Seeds change workload schedules on one machine; they do not vary hardware. The campaign report is `artifacts/validation/search-multiseed.json` and is not committed.
+
+The winning single-seed NSGA-II configuration used queued notifications and reduced median p95 from 315.8 ms to 273.9 ms versus its paired baseline, at the cost of higher CPU time (6.30 s → 7.59 s) and slightly longer recovery (5.0 s → 5.5 s). Both configurations sit on that run's Pareto front.
 
 Other recorded findings:
 
@@ -303,7 +346,7 @@ One Python control-plane application runs the API and worker. The frontend talks
 | `frontend/` | React 19 + TypeScript + Vite dashboard, React Flow topology, Three.js overview art |
 | `tests/` | Contract, architecture, experiment, fault, performance, search, shop, and Docker checks |
 | `docs/` | Scope, architecture, contract semantics, phase acceptance records, guides, README screenshots |
-| `scripts/` | Setup, demo shop, Docker and search validation, evidence export, demo rendering |
+| `scripts/` | Launcher, setup, demo shop, Docker and search validation, evidence export, demo rendering |
 | `examples/` | Baseline and cached-queued genome examples |
 | `compose.yaml` | Containerized demo shop with resource limits and health checks |
 | `artifacts/` | Local run evidence and bundles (ignored by Git) |
@@ -365,15 +408,21 @@ npm --prefix frontend run build
 
 # Equal-budget search comparison
 .\.venv\Scripts\python.exe scripts/validate_searches.py --output artifacts/validation/search-comparison.json
+
+# Three-seed campaign on the normal workload (all four strategies, every search retained)
+.\.venv\Scripts\python.exe scripts/validate_searches.py --seeds 72,101,202 --workloads normal `
+  --output artifacts/validation/search-multiseed.json
 ```
+
+CI runs the backend suite (including PostgreSQL and Redis integrations) and the dashboard build on every push and pull request. Docker acceptance stays a manual workflow because it needs a Linux cgroup v2 engine and takes tens of minutes.
 
 Latest local run (2026-11-14):
 
-- **104 passed, 14 skipped.** The skipped tests are the PostgreSQL and Redis integrations; they are explicitly skipped, not silently passed.
+- **108 passed, 14 skipped.** The skipped tests are the PostgreSQL and Redis integrations; they are explicitly skipped, not silently passed.
 - **14 shop integration tests passed** against the dedicated `darwin_shop_test` database, including replay, concurrency, ledger, and reset.
 - **Frontend production build passed**, including `tsc --noEmit`.
 - **Quick checkout smoke completed in 18 s** with three measured attempts and verified cleanup; the unsafe-payment scenario rejected all three repetitions.
-- **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including cleanup verification. The Docker daemon was not running during the latest exhibition check, so Docker options are shown as disabled.
+- **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including recovery windows and cleanup. Fresh run: smoke 114 s, paired benchmark 328 s (median p95 102.75 ms baseline vs 77.65 ms candidate), safe faults 3/3 with every recovery window observed, unsafe fixture 3/3 rejected for I-01, and search completed two generations and six attempts with two feasible Pareto candidates.
 - **Product tour checks passed 10/10**: deep link, focus, step navigation, dots, link routing, and close behavior.
 
 Known build note: the Three.js overview scene produces a separate 528 kB chunk and Vite warns about the 500 kB threshold. It is lazy-loaded, so it does not block the dashboard.
@@ -382,7 +431,7 @@ Known build note: the Three.js overview scene produces a separate 528 kB chunk a
 
 ## Project status
 
-**MVP: complete (10/10 phases). Production readiness: ~75%.**
+**MVP: complete (10/10 phases). Production readiness: ~82%.**
 
 What is done:
 
@@ -392,18 +441,22 @@ What is done:
 - Fault injection and all five invariant checks, including a reproducible unsafe fixture
 - Calibrated simulator used only for screening
 - NSGA-II, random search, hill climbing, lineage, and measured Pareto ranking
+- Three-seed equal-budget search campaign on the normal workload, retaining every rejected candidate and its gate reasons
 - React dashboard with evidence inspection, reruns, search history, responsive layout, and a guided tour
 - Exhibition layer: machine preflight, four judge-ready scenarios, explicit no-feasible verdict, labelled saved-run fallback, and demo-shop ledger/reset
+- One-command start/stop/status launcher with readiness blockers and process ownership
+- GitHub Actions CI for the Linux backend suite (PostgreSQL and Redis services) and the dashboard build
+- Optional shared-token guard for `/api` routes and experiment event WebSockets
 - Saved evidence bundles with digest verification and replay instructions
 
 What remains to reach a production-ready v1:
 
-- **CI and release automation.** No workflow pipeline is committed yet; builds and tests are run locally.
-- **Control-plane security.** The API currently assumes a trusted local operator and has no authentication or project isolation.
-- **Broader validation.** Search comparisons currently use one seed per strategy; multi-seed, multi-host runs are needed before making general algorithm claims.
-- **Docker search depth.** The accepted Docker search ended with an empty Pareto front; a larger budget should confirm recovery behavior.
-- **Cross-platform native adapter.** Native fault experiments are Windows-specific; Docker is the route on Linux.
-- **Packaging.** A one-command installer or containerized control plane would remove the manual three-terminal setup.
+- **Per-user security and isolation.** `DARWIN_API_TOKEN` blocks anonymous HTTP and WebSocket access, but there are no individual accounts, quotas, audit attribution, or project isolation. The demo shop proxy is a separate service and is not behind that token.
+- **Release automation.** GitHub Actions runs the backend suite and dashboard build; Docker acceptance is a manual workflow, and there is no automated release publishing.
+- **Docker search depth.** The fresh accepted search measured six attempts over two generations and found two feasible candidates; a larger budget would cover more of the 36 genomes but is not required for the demo.
+- **Cross-platform native adapter.** Native fault experiments are Windows-specific; Docker is the route on Linux, and CI does not exercise Windows measured runs.
+- **Multi-host validation.** The multi-seed campaign varies schedules on one machine; it does not vary hardware or establish cross-host performance claims.
+- **Packaging.** The launcher removes manual three-terminal setup, but there is no installer, service manager, or containerized control plane.
 - **Demo assets.** The saved-search fallback is current, but the older walkthrough video predates the interface and should be re-recorded.
 - **Later extensions.** Cloud/Kubernetes adapters, broader scenario matrices, and optional LLM explanations.
 

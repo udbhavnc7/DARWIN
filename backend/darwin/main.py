@@ -2,7 +2,9 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from contextlib import asynccontextmanager
 import os
 from pathlib import Path
+import secrets
 from typing import Literal
+from fastapi.responses import JSONResponse
 from pydantic import Field
 import yaml
 from darwin.experiments import Engine, StartExperiment
@@ -32,6 +34,27 @@ async def lifespan(app):
 app = FastAPI(title="DARWIN API", version="0.10.0", description="Measured architecture search and correctness verification", lifespan=lifespan)
 app.include_router(router)
 app.include_router(search_router)
+
+
+@app.middleware('http')
+async def require_api_token(request: Request, call_next):
+    """Optional shared-token guard for deployments that are not local-only.
+
+    Local use stays unauthenticated and bound to 127.0.0.1. Setting
+    DARWIN_API_TOKEN requires a bearer token on every /api route except the
+    health probe, so the dashboard can sit behind a proxy that injects it.
+    """
+    token = os.environ.get('DARWIN_API_TOKEN')
+    path = request.url.path
+    if not token or not path.startswith('/api') or path == '/api/health':
+        return await call_next(request)
+    header = request.headers.get('authorization', '')
+    supplied = header[7:].strip() if header.lower().startswith('bearer ') \
+        else request.headers.get('x-darwin-token', '').strip()
+    if not supplied or not secrets.compare_digest(supplied.encode(), token.encode()):
+        return JSONResponse({'detail': 'A valid API token is required.'}, status_code=401,
+                            headers={'WWW-Authenticate': 'Bearer'})
+    return await call_next(request)
 
 
 @app.get("/api/health")

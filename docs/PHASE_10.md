@@ -60,6 +60,15 @@ For a fresh replay, restore the selected source snapshot into a separate checkou
 
 Budget five minutes for presenting saved results. A browser rehearsal of the unsafe result, completed search and live checkout replay took 44.7 seconds. The replay returned the same order and left one order, capture, payment effect, outbox job and delivery in the ledger. The captioned backup video runs for 40 seconds. A fresh full search is a separate operation whose measured duration is recorded in its start and finish timestamps.
 
+## Later re-verification (2026-11-14)
+
+The original records above are retained as written. On 2026-11-14 the same workspace was re-checked after the exhibition hardening and UI work:
+
+- A three-seed campaign (72, 101, 202; normal workload; four strategies, equal budget) completed 11 of 12 searches with 68 measured attempts in about 1.3 hours. NSGA-II with simulation had the lowest median-of-best p95 at 357.2 ms, then hill climbing at 394.6 ms, random search at 407.6 ms, and NSGA-II without simulation at 445.1 ms. Three simulator-assisted searches produced no fully feasible candidate. The remaining arm (seed 202, NSGA-II without simulation) was interrupted twice by a connection timeout during a fault measurement and is retained in the report as interrupted.
+- The default backend suite passed 108 tests with 14 integration tests skipped; with the dedicated PostgreSQL test database the suite passed 122. The dashboard production build passed.
+- The workspace was re-skinned as a backend-architecture bench. The palette register now offers Green Texture, Leather Red, and Carbon Black. Evidence states, gates, and promotion rules are unchanged.
+- A stale sandbox from an interrupted Docker run blocked new measurements with `cleanup_status=requires_review`. Its Compose project and image were removed, `darwin.recovery` verified the resources absent, and the API resumed. The experiment record was preserved.
+
 ## Environment limits
 
 The measured results in this report use the native Windows adapter with resource jobs and private PostgreSQL clusters. The Docker adapter supports the same workload and fault suite and records measurements from Linux container cgroups. See the [Docker acceptance results](DOCKER_ACCEPTANCE.md).

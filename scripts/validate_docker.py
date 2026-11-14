@@ -2,6 +2,7 @@
 import argparse
 import json
 from pathlib import Path
+from statistics import median
 import time
 
 from darwin.docker_resources import docker_status
@@ -21,6 +22,21 @@ def finish(worker, record, timeout):
     return record
 
 
+RECOVERY_SCENARIOS = {'database_latency', 'database_disconnect', 'application_outage'}
+
+
+def recovery_summary(record):
+    """Keep the recovery windows that the safe fault run actually observed."""
+    windows = {}
+    for candidate in record['candidates']:
+        for evaluation in candidate['evaluations']:
+            for item in evaluation.get('recovery', []):
+                windows.setdefault(item['scenario'], []).append(item['recovery_s'])
+    return {scenario: {'repetitions': len(values), 'median_s': round(median(values), 2),
+                       'max_s': round(max(values), 2)}
+            for scenario, values in sorted(windows.items()) if all(value is not None for value in values)}
+
+
 def validate_run(case, record):
     evaluations = [item for candidate in record['candidates'] for item in candidate['evaluations']]
     if record['status'] != 'completed' or record['cleanup_status'] != 'completed':
@@ -32,9 +48,17 @@ def validate_run(case, record):
         return
     if not record['resource_limits_enforced'] or any(row.get('tier') != 'measured' for row in evaluations):
         raise RuntimeError(f'{case} is missing verified measurements')
-    if case == 'safe' and any(row['gate'] != 'passed' for row in evaluations):
-        reasons = sorted({reason for row in evaluations for reason in row.get('gate_reasons', [])})
-        raise RuntimeError(f'The safe Docker configuration failed a fault gate: {", ".join(reasons)}')
+    if case == 'safe':
+        if any(row['gate'] != 'passed' for row in evaluations):
+            reasons = sorted({reason for row in evaluations for reason in row.get('gate_reasons', [])})
+            raise RuntimeError(f'The safe Docker configuration failed a fault gate: {", ".join(reasons)}')
+        for row in evaluations:
+            claims = {item['scenario']: item for item in row.get('recovery', [])}
+            if set(claims) != RECOVERY_SCENARIOS:
+                raise RuntimeError('The safe Docker run did not observe every recovery window')
+            if any(not item.get('fault_observed') or not item.get('schedule_valid')
+                   or item.get('recovery_s') is None for item in claims.values()):
+                raise RuntimeError('A Docker recovery window was missing, censored or unverified')
     if case == 'unsafe' and any(
             row['gate'] != 'failed' or not any(item['invariant_id'] == 'I-01' for item in row['violations'])
             for row in evaluations):
@@ -109,6 +133,8 @@ def main():
             write_json(report_path, report)
             result = finish(engine, result, request.budget.wall_clock_s + 90)
             validate_run(name, result)
+        report['recovery'] = recovery_summary(engine.store.get(report['cases']['safe']))
+        write_json(report_path, report)
         search = SearchEngine(engine)
         request = SearchRequest(runtime='docker', promotions_per_generation=1,
                                 budget={'real_test_budget': 6, 'wall_clock_s': 1800})

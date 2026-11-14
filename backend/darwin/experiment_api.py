@@ -1,5 +1,7 @@
 import asyncio
 import hashlib
+import os
+import secrets
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
@@ -92,8 +94,22 @@ def artifact(ident: UUID, evaluation_id: UUID, name: str, request: Request):
     return FileResponse(path, filename=name)
 
 
+def token_guard(websocket):
+    """Match the HTTP token guard so event streams are not an anonymous bypass."""
+    token = os.environ.get('DARWIN_API_TOKEN')
+    if not token:
+        return True
+    header = websocket.headers.get('authorization', '')
+    supplied = header[7:].strip() if header.lower().startswith('bearer ') \
+        else websocket.headers.get('x-darwin-token', '').strip()
+    return bool(supplied) and secrets.compare_digest(supplied.encode(), token.encode())
+
+
 @router.websocket('/ws/experiments/{ident}')
 async def stream(websocket: WebSocket, ident: UUID, after: int = 0):
+    if not token_guard(websocket):
+        await websocket.close(code=1008)
+        return
     worker = getattr(websocket.app.state, 'engine', None)
     if worker is None:
         await websocket.close(code=1013)

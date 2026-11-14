@@ -22,7 +22,30 @@ Cleanup removes the run's containers, project network, volumes, and application 
 
 ## Verification status
 
-The official Compose 2.40.3 validator accepted all 108 smoke, benchmark, and fault configurations across the 36 supported genomes. All 108 Python tests passed, including the PostgreSQL and Redis integrations and the Docker Desktop credential-helper regression. The frontend build passed. The native regression run `a5f70ae4-a29e-44c5-9be7-5b6b9c2ad9d9` rejected the duplicate-payment fixture in all three repetitions and completed cleanup.
+Two live captures are recorded below. The fresh capture supersedes the earlier numbers for current-engine claims, but both evidence directories are retained.
+
+### Fresh acceptance (2026-11-14)
+
+The full suite passed end to end on Docker Desktop Engine 29.9.3, Compose 5.7.0, Linux containers, and cgroup v2. All 21 repetitions passed and every case completed cleanup. Evidence: `artifacts/docker-acceptance-2026-11-14/acceptance.json`.
+
+| Case | Run ID | Result |
+| --- | --- | --- |
+| Smoke | `2402ec1b…` | 3 measured attempts, cleanup completed |
+| Paired benchmark | `be0b66dd…` | 6 evaluations, zero errors, resource limits verified |
+| Safe faults | `89843b9b…` | 3 of 3 passed every gate; every recovery window observed |
+| Unsafe fixture | `ec829cdc…` | 3 of 3 rejected for I-01, three payment effects per key, cleanup completed |
+| Search | `33de44e9…` | 2 generations, 6 measured attempts, 2 feasible candidates on the Pareto front |
+
+| Configuration | Median p95 | Median CPU time | Median sum of container memory peaks |
+| --- | ---: | ---: | ---: |
+| Baseline | 102.75 ms | 2.73 s | 333.16 MiB |
+| Three replicas, 10-second cache, queued notifications | 77.65 ms | 4.15 s | 535.83 MiB |
+
+Every safe repetition observed all three recovery windows: database latency had a median of 5.0 s (max 6.97 s), database disconnect 5.0 s, and application outage 5.0 s. The search completed in 12 minutes 52 seconds. Its baseline candidate measured 102.87 ms median p95, 2.81 s CPU, and 5.02 s recovery; the queued candidate measured 80.16 ms, 3.37 s, and 5.0 s. Both passed all gates and remained on the Pareto front. The earlier empty-front result stays in its own artifact directory as historical evidence; it is not overwritten.
+
+### Earlier capture
+
+The official Compose 2.40.3 validator accepted all 108 smoke, benchmark, and fault configurations across the 36 supported genomes. The full Python suite passed at that capture, including the PostgreSQL and Redis integrations and the Docker Desktop credential-helper regression. The frontend build passed. The native regression run `a5f70ae4-a29e-44c5-9be7-5b6b9c2ad9d9` rejected the duplicate-payment fixture in all three repetitions and completed cleanup.
 
 Live acceptance passed all 21 repetitions on Windows with Docker Desktop Engine 29.9.3, Compose 5.7.0, Linux containers, and cgroup v2. The smoke run completed all three repetitions. The paired benchmark completed all six with zero measured request errors and verified resource limits.
 

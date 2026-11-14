@@ -17,9 +17,9 @@ Captured **2026-11-14** on branch `exhibition-readiness` (base `d486677`). Re-ru
 | PostgreSQL | 18.4 (`initdb`, `pg_ctl` on `PATH`) |
 | Redis | 8.8.0 |
 | Toxiproxy | 2.13.0 (bundled at `.runtime/tools/toxiproxy-server.exe`) |
-| Docker engine | **not running** (Linux engine pipe unavailable) |
+| Docker engine | **29.9.3, Linux engine, cgroup v2** (Docker Desktop) |
 
-Docker measurements and the containerized shop are therefore unavailable on this machine. Native smoke, benchmark, and fault runs are available. The UI disables Docker-only options instead of failing part-way.
+Both native and Docker measurements are available on this machine. Run the full acceptance suite with `scripts/validate_docker.py`; the UI only disables a runtime when preflight reports it unavailable.
 
 ### Readiness snapshot
 
@@ -31,8 +31,9 @@ Observed summary:
 
 ```text
 ready true
-execution_modes native_smoke, native_benchmark, native_faults
-capabilities     smoke=true benchmark=true faults=true docker=false
+execution_modes native_smoke, native_benchmark, native_faults,
+                docker_smoke, docker_benchmark, docker_faults
+capabilities     smoke=true benchmark=true faults=true docker=true
 
 python          ready  3.11.15
 node            ready  v20.20.1
@@ -40,9 +41,9 @@ postgres        ready  initdb (PostgreSQL) 18.4
 redis           ready  Redis server v=8.8.0
 demo_database   ready  The demo shop cluster is running.
 demo_shop       ready  The interactive checkout shop is running.
-docker          optional_missing  Docker measurements are disabled.
+docker          ready  Linux engine, cgroup v2
 toxiproxy       ready  toxiproxy-server version 2.13.0
-disk            ready  (free space at capture; value varies)
+disk            ready  128.4 GB free
 memory          ready  24283 MiB
 ```
 
@@ -54,24 +55,30 @@ The Overview page renders the same data as the **Machine readiness** panel. A mi
 
 The four judge-facing presets are ordinary experiment requests. They use the same isolated sandboxes, repetitions, fault injection, and invariant gates as a manual run.
 
-| Preset | Mode | Workload | What it proves | Duration source at capture |
+| Preset | Modes | Workload | What it proves | Observed duration at capture |
 | --- | --- | --- | --- | --- |
-| Quick checkout smoke | `native_smoke` | normal | One order, one payment effect after a repeated request | 29 s recorded; **18 s live** |
-| Normal baseline vs candidate | `native_benchmark` | normal | Measured latency, CPU, and recovery for two configurations | 184 s recorded |
-| Flash sale comparison | `native_benchmark` | flash sale | Behavior under sustained concurrent checkout traffic | 88 s recorded; 180 s estimate |
-| Payment timeout with unsafe retry | `native_faults` | normal | I-01 rejection and three payment effects for one key | 100 s recorded |
+| Quick checkout smoke | `native_smoke`, `docker_smoke` | normal | One order, one payment effect after a repeated request | native 27 s recorded; **18 s live**; Docker 140 s recorded; **114 s live** |
+| Normal baseline vs candidate | `native_benchmark`, `docker_benchmark` | normal | Measured latency, CPU, and recovery for two configurations | native 184 s recorded; Docker 446 s recorded; **328 s live** |
+| Flash sale comparison | `native_benchmark`, `docker_benchmark` | flash sale | Behavior under sustained concurrent checkout traffic | native 88 s recorded; Docker 180 s estimate |
+| Payment timeout with unsafe retry | `native_faults`, `docker_faults` | normal | I-01 rejection and three payment effects for one key | native 98 s recorded; Docker 222 s recorded; **197 s live** |
 
-Durations come from matching completed records in the local experiment store; otherwise the UI says "estimated". A live run is always labelled as live evidence and can differ from these values.
+Durations come from matching completed records in the local experiment store; otherwise the UI says "estimated". A live run is always labelled as live evidence and can differ from these values. Docker runs take longer because each repetition deploys and tears down an isolated Compose project.
 
 ```powershell
 curl.exe "http://127.0.0.1:8000/api/exhibition/scenarios?runtime=native"
-curl.exe -X POST "http://127.0.0.1:8000/api/exhibition/scenarios/quick_smoke?runtime=native"
+curl.exe "http://127.0.0.1:8000/api/exhibition/scenarios?runtime=docker"
+curl.exe -X POST "http://127.0.0.1:8000/api/exhibition/scenarios/quick_smoke?runtime=docker"
 ```
 
 Live validation on 2026-11-14:
 
-- `quick_smoke` (`0054ab6c-7eac-436f-b6ec-885b25974084`) completed in **18 s** with 3 measured attempts and `cleanup_status: completed`.
-- `unsafe_payment` (`ba096ae7-89d1-48e7-9dfb-6c141c06b820`) completed in **66 s**; all three repetitions were rejected by the gate with `business_invariant_failed`. The candidate has no objectives and is not ranked — the same honest rejection path used for the saved rejected example.
+- `quick_smoke` (`0054ab6c-7eac-436f-b6ec-885b25974084`) completed in **18 s** natively with 3 measured attempts and `cleanup_status: completed`.
+- `unsafe_payment` (`ba096ae7-89d1-48e7-9dfb-6c141c06b820`) completed in **66 s** natively; all three repetitions were rejected by the gate with `business_invariant_failed`. The candidate has no objectives and is not ranked — the same honest rejection path used for the saved rejected example.
+- Docker smoke (`2402ec1b…`) completed in **114 s** with 3 measured attempts and cleanup.
+- Docker benchmark (`be0b66dd…`) completed in **328 s** with 6 evaluations, zero measured errors, and verified resource limits. Median p95 was **102.75 ms** for the baseline and **77.65 ms** for the three-replica cached candidate.
+- Docker safe faults (`89843b9b…`) passed all three repetitions. Every repetition observed all three recovery windows; the recovered times were 5.0–6.97 s.
+- Docker unsafe fixture (`ec829cdc…`) was rejected for I-01 in all three repetitions and completed cleanup.
+- Docker search (`33de44e9…`) completed two generations and six measured attempts in **12 min 52 s**. Both measured candidates passed every gate and remained on the Pareto front: baseline 102.87 ms median p95 versus queued 80.16 ms. The earlier empty-front search remains a separate historical record.
 
 ---
 
@@ -131,10 +138,10 @@ The Shop page shows the same counters after a repeat and includes **Reset demo s
 
 ## 6. Presentation script (about 10 minutes)
 
-1. **Overview → Machine readiness.** Point out required checks, execution modes, and any optional tool that is disabled. Press **Run preflight again** if the shop was just started.
-2. **Experiments → Quick checkout smoke.** Start it; (~30 s) show the completed run, three repetitions, and gate status.
+1. **Overview → Machine readiness.** Point out required checks, the six execution modes, and any optional tool that is disabled. Press **Run preflight again** if the shop was just started.
+2. **Experiments → Quick checkout smoke.** Choose the runtime that matches the story: native finishes in about 30 s here, Docker takes about 2–3 minutes because it deploys an isolated Compose project. Show the completed run, three repetitions, and gate status.
 3. **Search → Open recorded feasible run.** Show the Pareto plot, 6 of 24 measured feasible, and candidate evidence. Then **Open recorded rejection** to show the honest no-feasible verdict and its gate reasons.
-4. **Optional:** run **Normal baseline vs candidate** or **Flash sale comparison** if time allows (2–3 minutes). Do not promise a specific ordering; report what the run produces.
+4. **Optional:** run **Normal baseline vs candidate**, **Flash sale comparison**, or **Payment timeout with unsafe retry** if time allows. Native comparisons take 1–3 minutes; Docker benchmark records took 5–7 minutes. Do not promise a specific ordering; report what the run produces.
 5. **Demo shop.** Reset, place an order, resend the same request. Show the identical receipt, unchanged stock, and ledger at 1 order / 1 capture / 1 payment effect.
 6. Close with the boundary: local trusted-operator tool, measured evidence separated from simulation, and negative results retained.
 
@@ -146,7 +153,7 @@ If a live result differs from a recorded number, say so and investigate. Do not 
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Fast test suite | `.venv\Scripts\python.exe -m pytest -q -rs` | **104 passed, 14 skipped** |
+| Fast test suite | `.venv\Scripts\python.exe -m pytest -q -rs` | **108 passed, 14 skipped** |
 | Shop integration | `DARWIN_TEST_DATABASE_URL=…/darwin_shop_test pytest tests/test_shop.py` | **14 passed** |
 | Type-check + production build | `npm --prefix frontend run build` | **passed** (`tsc --noEmit` + Vite) |
 | Preflight API | `GET /api/preflight?refresh=true` | **ready: true**, required checks green |
@@ -161,12 +168,12 @@ Build note: the lazy-loaded Three.js scene is a separate 528 kB chunk, so Vite w
 
 ## 8. Known limits and risks
 
-- **No authentication or isolation.** The API and shop bind to `127.0.0.1` and assume a trusted operator. Never expose them to a shared network or the internet.
-- **Docker is optional here.** Docker measurements and the containerized shop stay disabled while the daemon is unavailable. The preflight panel says so rather than failing mid-run.
+- **Shared token, not user accounts.** The API and shop bind to `127.0.0.1`. Setting `DARWIN_API_TOKEN` blocks anonymous calls, but there are no per-user accounts, quotas, or project isolation. Never expose them to a shared network or the internet.
+- **Docker depends on the engine.** The path is verified on Docker Desktop Engine 29.9.3 with a Linux engine and cgroup v2. Another engine may enforce different limits; preflight reports if it is unavailable rather than failing mid-run.
 - **Native faults are Windows-specific.** On Linux, use the Docker runtime.
-- **Single-seed search evidence.** Recorded comparisons use one seed per strategy; they support the demo, not a general algorithm ranking.
+- **Search evidence is multi-seed on one host.** The retained campaign ran seeds 72, 101, and 202 of the normal workload across four strategies: 11 of 12 searches completed, with 68 measured attempts in about 1.3 hours. NSGA-II with simulation had the lowest median-of-best p95 (357.2 ms), followed by hill climbing (394.6 ms), random search (407.6 ms), and NSGA-II without simulation (445.1 ms). One arm (seed 202, no simulation) was interrupted twice by a fault-measurement connection timeout and is reported as interrupted. The result supports a bounded comparison, not a general algorithm ranking or a hardware claim; flash-sale and checkout-heavy searches remain separate runs.
 - **Recorded bundle timestamp.** It reflects the local store on 2026-11-13. Regenerate it if the store gains a better example.
-- **No CI yet.** Tests and builds are run locally; CI and packaging are the next phase.
+- **CI covers Linux, not Windows native runs.** GitHub Actions runs the backend suite with PostgreSQL and Redis plus the dashboard build. Windows native measured runs remain a local acceptance step.
 - **Historical artifacts are evidence.** Do not delete or overwrite `artifacts/` while troubleshooting.
 
 ---

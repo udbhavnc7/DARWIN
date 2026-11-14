@@ -2,7 +2,7 @@
 
 > **Snapshot:** 14 November 2026
 > **Repository:** [github.com/udbhavnc7/DARWIN](https://github.com/udbhavnc7/DARWIN) (public, MIT)
-> **Short version:** the ten-phase MVP is functionally complete. DARWIN is roughly **75% of the way to a production-ready release**; the remaining quarter is hardening, validation breadth, security, packaging, and CI — not missing core features.
+> **Short version:** the ten-phase MVP is functionally complete. DARWIN is roughly **82% of the way to a production-ready release**; the remainder is multi-host validation, per-user security, deeper packaging, and refreshed demo assets — not missing core features.
 
 This file is the single place to answer: *What is DARWIN, exactly? What has been built? How finished is it? What is still missing?*
 
@@ -118,11 +118,11 @@ Every run stores its configuration, source snapshot, seeds, manifests, logs, fau
 | --- | --- |
 | MVP phases | **10 / 10 complete** |
 | Core user workflows | **All working locally** |
-| Production readiness | **~75% (judgment, not a computed metric)** |
-| Tests | **104 passing, 14 skipped** without PostgreSQL/Redis; **14 shop integration tests pass** against a dedicated `*_test` database |
-| Frontend production build | **Passing** |
-| Docker acceptance | **21 / 21 repetitions passed** (Docker daemon was not running at the latest exhibition check) |
-| Exhibition path | **Conditional:** native smoke, benchmark, and fault scenarios verified; Docker options disabled when the engine is absent |
+| Production readiness | **~82% (judgment, not a computed metric)** |
+| Tests | **108 passing, 14 skipped** locally; **14 shop integration tests pass** against a dedicated `*_test` database, and CI runs them with PostgreSQL and Redis services |
+| Frontend production build | **Passing**, checked by CI on every push |
+| Docker acceptance | **Re-verified on 2026-11-14** on Docker Desktop Engine 29.9.3 (Linux, cgroup v2), including recovery windows and cleanup |
+| Exhibition path | **Verified on both runtimes:** native smoke, benchmark, and fault scenarios, plus Docker smoke, benchmark, faults, and search |
 
 ### Completion by area
 
@@ -137,19 +137,19 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 | Measurement | Done | 90% | Seeded workloads, raw samples, p95, CPU, memory, paired repetitions |
 | Faults and invariants | Done | 95% | Three fault families, five checkers, reproducible unsafe fixture |
 | Simulator | Done, limited accuracy | 85% | SimPy model calibrated to 27.0% mean p95 error across nine holdouts; some misses are large |
-| Search | Done, validation thin | 85% | NSGA-II, random, hill climbing, lineage, Pareto ranking; only one seed per strategy validated |
+| Search | Done, validation broader | 90% | NSGA-II, random, hill climbing, lineage, Pareto ranking; multi-seed campaign retained with every rejection |
 | Dashboard | Done | 95% | Five workspaces, machine-readiness panel, judge scenario presets, saved-run fallback, no-feasible verdict, evidence inspection, reruns, tour, themes, responsive down to 360 px; formal accessibility audit pending |
 | Evidence and replay | Done | 90% | SQLite history, artifact digests, source snapshots, export bundle, replay instructions |
-| Docker path | Done | 85% | Full acceptance passed; the accepted search ended with an empty Pareto front |
+| Docker path | Done | 85% | Full acceptance passed; the fresh search found two feasible candidates on its Pareto front |
 | Native path | Done on Windows | 80% | Windows resource jobs and private PostgreSQL clusters; not cross-platform |
-| Tests | Strong locally | 82% | 104 pass; 14 service integrations skip by default and pass with a dedicated `*_test` database; no CI |
-| Security and multi-user | Not started | 10% | Loopback-only trusted operator; no authentication or project isolation |
-| Packaging and distribution | Partial | 40% | Manual three-terminal setup; no installer or containerized control plane |
-| Documentation | Strong | 92% | README, contracts, phase records, and an exhibition runbook; a few early-phase status lines are stale |
+| Tests | Strong locally and in CI | 90% | 108 pass locally; 14 service integrations skip by default and run in CI with PostgreSQL and Redis; Windows native paths remain local-only |
+| Security and multi-user | Partial | 35% | Loopback-only default, optional shared bearer token, no per-user accounts, quotas, or project isolation |
+| Packaging and distribution | Partial | 65% | One-command start/stop launcher with readiness checks; no installer, service manager, or containerized control plane |
+| Documentation | Strong | 92% | README, contracts, phase records, and an exhibition runbook; phase notes are annotated where later work closed their gaps |
 | Demo assets | Partial | 80% | Recorded feasible/rejected search fallback is current; the older walkthrough video still predates the interface |
-| CI and release automation | Not started | 0% | No workflow pipeline; validation is run manually |
+| CI and release automation | Partial | 55% | GitHub Actions runs the backend suite and dashboard build; Docker acceptance is a manual workflow; no automated release publishing |
 
-**Why 75% and not 100%:** the MVP is feature-complete for the defined scope, but a production release also needs authentication, CI, packaging, multi-host validation, cross-platform support, and refreshed demo assets. Those are real work, not polish.
+**Why 82% and not 100%:** the MVP is feature-complete for the defined scope, but a production release also needs per-user authentication and isolation, quotas, multi-host validation, cross-platform native support, a packaged control plane, and refreshed demo assets. Those are real work, not polish.
 
 ---
 
@@ -162,7 +162,7 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 - **Experiments** for smoke checks, benchmarks, fault verification, request validation, and four judge-ready scenario presets with observed durations
 - **Search** for NSGA-II, random, and hill-climbing runs with lineage, gates, the Pareto plot, an explicit no-feasible verdict, and a saved feasible/rejected run fallback
 - **Demo shop** where the same request key can be replayed against the real local shop
-- Five themes, persisted per browser
+- Three lab themes — Green Texture, Leather Red, Carbon Black — persisted per browser
 - A five-step product tour at `?tour=1`, from the sidebar, or from the overview
 
 ### From the CLI and API
@@ -173,21 +173,24 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 - Simulate a genome with explicit calibration scope
 - Export a digest-verified evidence bundle
 - Run the Docker acceptance suite and equal-budget search comparison
+- Start, inspect, and stop the whole local stack with `scripts/demo.py`
+- Protect every `/api` route with an optional shared bearer token
 - Reset, reconcile, drain, and inspect the local demo shop
 
 ### Verified in the current environment
 
 | Check | Result |
 | --- | --- |
-| Backend suite | 104 passed, 14 skipped; shop integrations 14 passed with `darwin_shop_test` |
-| Frontend build | Passed, including `tsc --noEmit` |
-| Preflight | Ready; required checks green, Docker optional-missing, bundled Toxiproxy detected |
+| Backend suite | 108 passed, 14 skipped; shop integrations 14 passed with `darwin_shop_test` |
+| Frontend build | Passed, including `tsc --noEmit`; CI workflow committed |
+| Preflight | Ready; required checks green, Docker and bundled Toxiproxy detected |
 | Judge scenarios | Quick smoke completed in 18 s; unsafe payment rejected all 3 repetitions |
 | Shop proof | Repeated request returned one order, one capture, one payment effect; reset cleared the ledger |
-| Docker acceptance | 21 of 21 repetitions passed, including cleanup |
+| Docker acceptance | 21 of 21 repetitions passed, including recovery windows and cleanup; the fresh search kept two feasible Pareto candidates |
+| Docker benchmark | Median p95 102.75 ms baseline vs 77.65 ms for three replicas with a 10 s cache and queued notifications; zero measured errors |
 | Unsafe fixture | Rejected for I-01 in all repetitions, with three payment effects per key |
 | Product tour | 10 of 10 interaction checks passed |
-| Search comparison | NSGA-II + simulation best at 273.9 ms median p95; single seed per strategy |
+| Search comparison | Single seed: NSGA-II + simulation best at 273.9 ms median p95. Three-seed campaign: 11 / 12 searches completed; NSGA-II + simulation median-of-best 357.2 ms, random 407.6 ms, hill climbing 394.6 ms, NSGA-II without simulation 445.1 ms (2 / 3 completed); one seed-202 arm interrupted by a fault-measurement connection timeout |
 | Simulator calibration | 27.0% mean absolute p95 error across nine held-out repetitions |
 | Responsive layout | Verified at 1440, 900, 430, 390, and 360 px |
 
@@ -199,27 +202,27 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 
 | Gap | Why it matters |
 | --- | --- |
-| No authentication or authorization | Anyone who can reach the API can start expensive experiments and read evidence |
+| No per-user authentication or isolation | The optional shared token blocks anonymous access but cannot attribute, scope, or revoke a single operator |
+| No quotas or rate limits | A token holder can still start expensive runs and consume the artifact disk |
 | No project or tenant isolation | One control plane, one artifact root, one operator |
-| No CI pipeline | Regressions are caught only when someone remembers to run tests |
-| Single-seed search validation | The algorithm ordering is evidence for these runs, not a general claim |
 
 ### Priority 1 — required for a credible v1
 
 | Gap | Why it matters |
 | --- | --- |
-| 14 integration tests skip by default | PostgreSQL/Redis behavior is unverified without manual service setup; the 14 shop tests pass when pointed at a dedicated `*_test` database |
-| Docker search produced an empty Pareto front | Both promoted candidates missed a recovery window; needs a larger budget |
+| 14 integration tests skip by default locally | CI runs them with PostgreSQL and Redis, but a bare local checkout still skips them unless `DARWIN_TEST_DATABASE_URL` is set |
+| Docker search is intentionally small | Two generations and six measured attempts found two feasible candidates; a larger budget would cover more of the 36 genomes |
 | Native fault adapter is Windows-only | Linux users must use Docker for measured/fault runs |
-| Manual three-terminal setup | No installer, no containerized control plane, no service manager |
+| Packaging stops at the launcher | No installer, containerized control plane, or service manager |
 | Recorded walkthrough video is outdated | It shows an earlier interface; the in-app tour and saved-search fallback are current |
 | One host, one environment | No multi-host or cross-platform performance validation |
+| CI does not exercise Windows native paths | The Linux CI suite skips Windows-only measured runs; those remain a local acceptance step |
 
 ### Priority 2 — cleanup and polish
 
 | Gap | Why it matters |
 | --- | --- |
-| Early docs contain stale status lines | `docs/ARCHITECTURE.md` and `docs/PHASE_2.md` still describe Docker acceptance as open |
+| Phase records keep their historical numbers | `docs/PHASE_10.md` and earlier phase notes preserve what was true at that capture; current results live in README, CONTEXT, and DOCKER_ACCEPTANCE |
 | 528 kB Three.js chunk | Vite warns above 500 kB; the scene is lazy-loaded, so the dashboard still loads |
 | No formal accessibility audit | Keyboard and focus behavior are implemented, but no WCAG review has been recorded |
 | No contributor guide or code of conduct | Fine for a solo project; needed for outside contributors |
@@ -279,8 +282,13 @@ A fresh checkout has the code and the written results, but not the historical ru
 ## 10. How to verify this status yourself
 
 ```powershell
-# Fast suite: expect 104 passed, 14 skipped in a clean local environment
+# Fast suite: expect 108 passed, 14 skipped in a clean local environment
 .\.venv\Scripts\python.exe -m pytest -q
+
+# Start, inspect, and stop the whole local stack
+.\.venv\Scripts\python.exe scripts/demo.py start
+.\.venv\Scripts\python.exe scripts/demo.py status
+.\.venv\Scripts\python.exe scripts/demo.py stop
 
 # Shop integration against a dedicated disposable database (name must end in _test)
 $env:DARWIN_TEST_DATABASE_URL = 'postgresql://darwin:darwin_demo@127.0.0.1:55432/darwin_shop_test'
@@ -294,6 +302,10 @@ npm --prefix frontend run build
 
 # Equal-budget search comparison (requires native prerequisites)
 .\.venv\Scripts\python.exe scripts/validate_searches.py --output artifacts/validation/search-comparison.json
+
+# Three-seed campaign on the normal workload
+.\.venv\Scripts\python.exe scripts/validate_searches.py --seeds 72,101,202 --workloads normal `
+  --output artifacts/validation/search-multiseed.json
 ```
 
 To exercise the UI:

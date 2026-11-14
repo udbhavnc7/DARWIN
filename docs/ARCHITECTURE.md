@@ -16,7 +16,7 @@ flowchart TD
     Evidence --> API
 ```
 
-Through Phase 4, the worker runs manually supplied configurations, persists smoke results and events in SQLite, and retains artifact files. Local native execution has been verified; Docker acceptance remains open. Load testing, adversarial verification, simulation, and search are later phases.
+Through Phase 4, the worker runs manually supplied configurations, persists smoke results and events in SQLite, and retains artifact files. Local native execution has been verified; Docker acceptance remained open at this phase and was closed in Phase 10 (see [DOCKER_ACCEPTANCE.md](DOCKER_ACCEPTANCE.md)). Load testing, adversarial verification, simulation, and search were later phases.
 
 ## Shop behavior decisions
 
