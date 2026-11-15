@@ -28,7 +28,7 @@ export function setLive(on: boolean) {
 }
 
 /** Probe the stack on 127.0.0.1. Returns null when it answers as DARWIN. */
-export async function probeLive(timeout = 4000): Promise<string | null> {
+export async function probeLive(timeout = 20000): Promise<string | null> {
   try {
     const response = await nativeFetch(`${apiBase}/api/health`, {
       mode: 'cors', cache: 'no-store', signal: AbortSignal.timeout(timeout),
@@ -37,7 +37,7 @@ export async function probeLive(timeout = 4000): Promise<string | null> {
     const body = await response.json();
     return body?.project === 'DARWIN' ? null : 'That address answered, but it is not a DARWIN API.';
   } catch {
-    return 'No DARWIN bench found on 127.0.0.1:8000. Start it with scripts/demo.py start, keep it running, then connect again.';
+    return 'No DARWIN bench found on 127.0.0.1:8000. Start it with scripts/demo.py start, keep it running, and try again. If Chrome asked whether this site may access your local network, choose Allow first.';
   }
 }
 
