@@ -24,6 +24,9 @@ export function computeCategorySpending() { return new Map(); }
 export function computeCategoryBreakdown() { return []; }
 export function computePayeeBreakdown() { return []; }
 ''')
+    write(root, 'web/src/utils/money.ts', 'export function addMoney() { return 0; }')
+    write(root, 'web/src/utils/categories.ts', 'export const CATEGORIES = [];')
+    write(root, 'web/src/types/finance.ts', 'export type Transaction = { id: string };')
     write(root, 'web/src/components/ReportsTab.tsx',
           "export function ReportsTab(){ return computeReportTotals([], 'INR'); }")
     write(root, 'web/src/data/persistence.ts',

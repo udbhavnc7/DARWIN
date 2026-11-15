@@ -512,7 +512,10 @@ class RepositoryEngine:
             'fixtures': prepared.fixtures,
             'measurement_scope': evidence.get('measurement_scope'),
         })
-        shutil.copy2(prepared.candidate_diff, folder / 'candidate.diff')
+        source_diff = prepared.candidate_diff.resolve()
+        target_diff = (folder / 'candidate.diff').resolve()
+        if source_diff != target_diff:
+            shutil.copy2(source_diff, target_diff)
         benchmark = measurements.get('benchmark') or {}
         _write_json(folder / 'benchmark.json', benchmark)
         _write_json(folder / 'parity.json', {

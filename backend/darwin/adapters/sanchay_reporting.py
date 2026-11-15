@@ -410,6 +410,19 @@ def _node_binary() -> str:
     return binary
 
 
+def _test_counts(output: str) -> dict:
+    """Extract Vitest's pass/fail totals from its human-readable tail."""
+    line = next((item for item in output.splitlines() if re.match(r'\s*Tests\s+', item)), '')
+    if not line:
+        return {}
+    def count(word: str) -> int:
+        match = re.search(rf'(\d+)\s+{word}', line)
+        return int(match.group(1)) if match else 0
+    passed, failed, skipped = count('passed'), count('failed'), count('skipped')
+    return {'tests_passed': passed, 'tests_failed': failed, 'tests_skipped': skipped,
+            'tests_total': passed + failed + skipped}
+
+
 class SanchayReportingAdapter:
     id = SANCHAY_ADAPTER_ID
     version = SANCHAY_ADAPTER_VERSION
@@ -417,6 +430,7 @@ class SanchayReportingAdapter:
 
     def detect(self, source_root: Path, commit_sha: str, pinned: bool) -> SupportAssessment:
         required = ('web/src/utils/reporting.ts', 'web/src/utils/money.ts',
+                    'web/src/utils/categories.ts', 'web/src/types/finance.ts',
                     'web/src/components/ReportsTab.tsx', 'web/src/data/persistence.ts')
         missing = [item for item in required if not (source_root / item).is_file()]
         reporting = (source_root / 'web/src/utils/reporting.ts').read_text(encoding='utf-8', errors='replace') \
@@ -751,7 +765,7 @@ class SanchayReportingAdapter:
                     return {'status': 'failed', 'reason': 'Source test overlay exceeded 240 s.'}
                 time.sleep(0.2)
             output = process.communicate(timeout=10)[0] or ''
-            return {
+            result = {
                 'status': 'passed' if process.returncode == 0 else 'failed',
                 'command': command,
                 'duration_s': round(time.monotonic() - started, 3),
@@ -759,6 +773,8 @@ class SanchayReportingAdapter:
                 'output_tail': output.strip()[-6000:],
                 'suite': 'web/src/utils/reporting.test.ts',
             }
+            result.update(_test_counts(output))
+            return result
         finally:
             link.unlink(missing_ok=True)
 

@@ -34,8 +34,9 @@ def _per_size(summaries: list[dict]) -> list[dict]:
         baseline_median = median(baseline)
         candidate_median = median(candidate)
         improvement = ((baseline_median - candidate_median) / baseline_median * 100) if baseline_median else 0.0
-        wins = sum(1 for base, cand in zip(baseline, candidate) if cand < base)
-        paired = [((base - cand) / base * 100) for base, cand in zip(baseline, candidate) if base > 0]
+        pairs = list(zip(baseline, candidate))
+        wins = sum(1 for base, cand in pairs if cand < base)
+        paired = [((base - cand) / base * 100) for base, cand in pairs if base > 0]
         result.append({
             'size': size,
             'seeds': sorted({item['seed'] for item in rows}),
@@ -46,7 +47,7 @@ def _per_size(summaries: list[dict]) -> list[dict]:
             'baseline_range_ms': [min(baseline) / 1_000_000, max(baseline) / 1_000_000],
             'candidate_range_ms': [min(candidate) / 1_000_000, max(candidate) / 1_000_000],
             'change_pct': round(improvement, 2),
-            'paired_win_rate': round(wins / len(baseline), 3),
+            'paired_win_rate': round(wins / len(pairs), 3) if pairs else 0.0,
             'paired_lower_decile_pct': round(percentile(paired, 0.10) or 0.0, 2),
             'samples': len(baseline),
         })
@@ -84,10 +85,15 @@ def decide(*, parity_passed: bool, checks: list[dict], summaries: list[dict],
         }
     failed = [item for item in checks if not item.get('passed')]
     if not parity_passed:
-        faster = any(
-            item.get('candidate_median_ns', 0) < item.get('baseline_median_ns', 0)
-            for item in summaries
-        )
+        faster = False
+        for item in summaries:
+            baseline_values = item.get('baseline_samples_ns') or []
+            candidate_values = item.get('candidate_samples_ns') or []
+            base = median(baseline_values) if baseline_values else item.get('baseline_median_ns')
+            cand = median(candidate_values) if candidate_values else item.get('candidate_median_ns')
+            if base and cand and cand < base:
+                faster = True
+                break
         detail = failed[0]['name'] + (f": {failed[0]['detail']}" if failed and failed[0].get('detail') else '') if failed else 'correctness comparison failed'
         prefix = 'faster, but ' if faster else ''
         return {
@@ -181,13 +187,24 @@ def decide(*, parity_passed: bool, checks: list[dict], summaries: list[dict],
             **common,
         }
     if primary['paired_win_rate'] < MIN_PAIRED_WIN_RATE or primary['paired_lower_decile_pct'] <= 0:
+        if primary['paired_win_rate'] < MIN_PAIRED_WIN_RATE and primary['paired_lower_decile_pct'] <= 0:
+            uncertainty = (
+                f'only {primary["paired_win_rate"] * 100:.0f}% of paired repetitions favoured the candidate '
+                'and the lower paired decile did not stay above zero'
+            )
+        elif primary['paired_win_rate'] < MIN_PAIRED_WIN_RATE:
+            uncertainty = (
+                f'only {primary["paired_win_rate"] * 100:.0f}% of paired repetitions favoured the candidate '
+                f'(policy requires {MIN_PAIRED_WIN_RATE * 100:.0f}%)'
+            )
+        else:
+            uncertainty = 'the lower paired decile did not stay above zero'
         return {
             'status': 'INCONCLUSIVE',
             'label': 'Inconclusive',
             'reason': (
-                f'The median improved by {primary["change_pct"]:.1f}%, but only '
-                f'{primary["paired_win_rate"] * 100:.0f}% of paired repetitions favoured the candidate '
-                'and the lower decile did not stay above zero.'
+                f'The median improved by {primary["change_pct"]:.1f}%, but {uncertainty}. '
+                'The evidence is too inconsistent to call a winner.'
             ),
             **common,
         }

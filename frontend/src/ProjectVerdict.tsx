@@ -21,8 +21,11 @@ function speedLabel(value?: number | null): string {
 
 function checkLabel(test?: Evaluation['source_tests']): {text: string; tone: 'good' | 'bad' | 'warn' | 'muted'} {
   if (!test) return {text: 'Not run', tone: 'muted'};
-  if (test.status === 'passed') return {text: 'Sanchay reporting tests passed', tone: 'good'};
-  if (test.status === 'failed') return {text: 'Source tests failed', tone: 'bad'};
+  const counts = test.tests_total
+    ? ` (${test.tests_passed ?? 0}/${test.tests_total})`
+    : '';
+  if (test.status === 'passed') return {text: `Sanchay reporting tests passed${counts}`, tone: 'good'};
+  if (test.status === 'failed') return {text: `Source tests failed${counts}`, tone: 'bad'};
   if (test.status === 'skipped') return {text: 'Source tests skipped', tone: 'warn'};
   return {text: 'Not run in this mode', tone: 'muted'};
 }

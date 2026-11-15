@@ -128,6 +128,10 @@ export type SourceTest = {
   command?: string[];
   duration_s?: number;
   exit_code?: number;
+  tests_passed?: number;
+  tests_failed?: number;
+  tests_skipped?: number;
+  tests_total?: number;
   output_tail?: string;
   suite?: string;
 };

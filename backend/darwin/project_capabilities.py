@@ -74,6 +74,8 @@ def _sanchay_adapter(root: Path, pinned: bool) -> dict | None:
     expected = [
         'web/src/utils/reporting.ts',
         'web/src/utils/money.ts',
+        'web/src/utils/categories.ts',
+        'web/src/types/finance.ts',
         'web/src/components/ReportsTab.tsx',
         'web/src/data/persistence.ts',
     ]

@@ -66,8 +66,7 @@ def test_below_product_threshold_is_inconclusive():
 def test_low_paired_win_rate_is_inconclusive():
     verdict = decide(
         parity_passed=True, checks=[passed_check()],
-        summaries=[summary(baseline=[8_000_000, 8_100_000, 8_200_000, 8_300_000],
-                           candidate=[3_000_000, 8_500_000, 8_600_000, 8_700_000])],
+        summaries=[summary(candidate=[3_000_000, 3_100_000, 3_200_000, 9_000_000])],
     )
     assert verdict['status'] == 'INCONCLUSIVE'
     assert 'paired' in verdict['reason']
