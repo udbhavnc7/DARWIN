@@ -2,8 +2,8 @@ import {useRef, type CSSProperties} from 'react';
 import {themes, type ThemeId} from './themes';
 import {Action, Icon} from './Action';
 
-export function ThemePicker({theme, onChange}: {
-  theme: ThemeId; onChange: (id: ThemeId) => void;
+export function ThemePicker({theme, onChange, onReplay}: {
+  theme: ThemeId; onChange: (id: ThemeId) => void; onReplay?: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -39,7 +39,14 @@ export function ThemePicker({theme, onChange}: {
           </label>;
         })}
       </fieldset>
-      <div className="theme-dialog-footer"><span className="muted"><Icon name="check"/> Saved on this device</span><span className="theme-dialog-hint">Applies immediately</span></div>
+      <div className="theme-dialog-footer">
+        <span className="muted"><Icon name="check"/> Saved on this device</span>
+        <span className="theme-dialog-footer-actions">
+          {onReplay && <Action variant="quiet" className="compact-action" icon="play"
+            onClick={() => {dialog.current?.close(); onReplay();}}>Replay calibration</Action>}
+          <span className="theme-dialog-hint">Applies immediately</span>
+        </span>
+      </div>
     </dialog>
   </>;
 }

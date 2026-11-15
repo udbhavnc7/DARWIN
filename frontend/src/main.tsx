@@ -7,6 +7,7 @@ import {Experiments} from './Experiments';
 import {Search} from './Search';
 import {Status} from './Status';
 import {BrandMark} from './Brand';
+import {Splash} from './Splash';
 import {Tour} from './Demo';
 import {ArchitectureArt} from './ArchitectureArt';
 import {ThemePicker} from './ThemePicker';
@@ -40,6 +41,15 @@ function currentPage(): Page {
   return params.has('experiment') ? 'experiments' : params.has('search') ? 'search' : 'overview';
 }
 
+// The calibration intro runs once per browser session, so reconnecting the
+// live bench (which reloads) does not replay it. ?splash=1 forces it back on.
+function shouldShowSplash() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('splash') === '1') return true;
+  if (params.get('nosplash') === '1') return false;
+  try {return sessionStorage.getItem('darwin-splash') !== 'seen';} catch {return true;}
+}
+
 function App() {
   const [project, setProject] = useState<Project | null>(null);
   const [preflight, setPreflight] = useState<Preflight | null>(null);
@@ -49,6 +59,7 @@ function App() {
   const [selectedRuntime, setSelectedRuntime] = useState<Runtime | null>(null);
   const [page, setPage] = useState<Page>(currentPage);
   const [tourOpen, setTourOpen] = useState(() => new URLSearchParams(location.search).has('tour'));
+  const [intro, setIntro] = useState(shouldShowSplash);
   const [themeId, setThemeId] = useState(readTheme);
   const theme = themes[themeId];
   const [builderDraft, setBuilderDraft] = useState(() => readDraft('builder') ?? baseline);
@@ -77,6 +88,12 @@ function App() {
     setThemeId(id);
     saveTheme(id);
   }
+
+  const dismissIntro = useCallback(() => {
+    try {sessionStorage.setItem('darwin-splash', 'seen');} catch { /* Storage can be disabled. */ }
+    setIntro(false);
+    requestAnimationFrame(() => title.current?.focus({preventScroll: true}));
+  }, []);
 
   const connect = useCallback(async () => {
     setConnecting(true);
@@ -151,7 +168,7 @@ function App() {
 
   const runtimeLabel = runtime === 'docker' ? 'Docker' : 'Native';
   return <>
-    <div className="app-frame">
+    <div className="app-frame" inert={intro}>
       <a className="skip-link" href="#workspace" onClick={event => {event.preventDefault(); title.current?.focus();}}>Skip to workspace</a>
       <aside className="app-sidebar">
         <a className="brand" href="#overview"><BrandMark/><span>DARWIN<small>Architecture lab</small></span></a>
@@ -179,7 +196,7 @@ function App() {
       <main id="workspace">
         <header className="workspace-header">
           <div><p className="workspace-breadcrumb"><span>Workspace</span> <span aria-hidden="true">/</span> <span> {pages[page].label}</span></p><h1 ref={title} tabIndex={-1}>{pages[page].title}</h1></div>
-          <div className="header-tools"><span className="workspace-index" aria-hidden="true">{String(pageOrder.indexOf(page) + 1).padStart(2, '0')} <i>/</i> 05</span><ThemePicker theme={themeId} onChange={changeTheme}/></div>
+          <div className="header-tools"><span className="workspace-index" aria-hidden="true">{String(pageOrder.indexOf(page) + 1).padStart(2, '0')} <i>/</i> 05</span><ThemePicker theme={themeId} onChange={changeTheme} onReplay={() => setIntro(true)}/></div>
         </header>
         {showcase && <aside className={`showcase-banner${live ? ' showcase-banner-live' : ''}`} aria-label={live ? 'Live bench connection' : 'About this showcase'}>
           <span className="showcase-banner-mark" aria-hidden="true"><Icon name={live ? 'play' : 'book'}/></span>
@@ -267,7 +284,8 @@ function App() {
         <div hidden={page !== 'shop'}><Shop/></div>
       </main>
     </div>
-    <Tour open={tourOpen} onClose={() => setTourOpen(false)}/>
+    <Tour open={tourOpen && !intro} onClose={() => setTourOpen(false)}/>
+    {intro && <Splash theme={theme} onDone={dismissIntro}/>}
   </>;
 }
 

@@ -164,6 +164,7 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 - **Demo shop** where the same request key can be replayed against the real local shop
 - Six lab themes — Green Texture (green + white default), Leather Red, Blueprint, Amethyst, Carbon Black, Midnight — persisted per browser
 - A five-step product tour at `?tour=1`, from the sidebar, or from the overview
+- A three.js calibration intro on first load: the gate stack assembles over the test deck, four genome controls sit on the bench, and a measuring beam verifies I-01…I-05 before the workspace takes over. Skippable with Escape, replayed from **Lab appearance → Replay calibration** or `?splash=1`, and static under reduced motion
 
 ### Hosted showcase
 
@@ -200,6 +201,7 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 | Docker benchmark | Median p95 102.75 ms baseline vs 77.65 ms for three replicas with a 10 s cache and queued notifications; zero measured errors |
 | Unsafe fixture | Rejected for I-01 in all repetitions, with three payment effects per key |
 | Product tour | 10 of 10 interaction checks passed |
+| Calibration intro | Lifecycle check passed: shows on first load, auto-dismisses, remembers the session, replays from the palette register, and skips without console errors. Rendered on desktop and 390 px mobile in light and dark themes, plus reduced motion |
 | Search comparison | Single seed: NSGA-II + simulation best at 273.9 ms median p95. Three-seed campaign: 11 / 12 searches completed; NSGA-II + simulation median-of-best 357.2 ms, random 407.6 ms, hill climbing 394.6 ms, NSGA-II without simulation 445.1 ms (2 / 3 completed); one seed-202 arm interrupted by a fault-measurement connection timeout |
 | Simulator calibration | 27.0% mean absolute p95 error across nine held-out repetitions |
 | Responsive layout | Verified at 1440, 900, 430, 390, and 360 px |

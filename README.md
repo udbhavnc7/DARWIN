@@ -134,7 +134,11 @@ Each run preserves its generated configuration, source snapshot, seeds, manifest
 
 ## The dashboard
 
-The React dashboard is the primary interface to the lab. A five-step product tour explains the whole system, from the design-measure-verify-evolve loop to the correctness gate and measured search. Open it from the sidebar, from **How DARWIN works** on the overview, or directly with [`?tour=1`](http://127.0.0.1:5173/?tour=1).
+The React dashboard is the primary interface to the lab. It opens with a short, skippable calibration intro built with three.js: the gate stack assembles over the test deck and a measuring beam verifies each invariant before the bench hands over. It runs once per browser session; replay it from **Lab appearance → Replay calibration** or force it with `?splash=1`, and skip it with Escape or the button.
+
+![Bench calibration intro](docs/images/splash.png)
+
+A five-step product tour explains the whole system, from the design-measure-verify-evolve loop to the correctness gate and measured search. Open it from the sidebar, from **How DARWIN works** on the overview, or directly with [`?tour=1`](http://127.0.0.1:5173/?tour=1).
 
 ![Product tour](docs/images/tour.png)
 
