@@ -1,5 +1,5 @@
 import {Icon, type IconName} from './Action';
-import type {Guess, Inspection, ProjectFact, UnsupportedCapability} from './projectEvaluation';
+import type {Guess, Inspection, ProjectFact, UnsupportedCapability} from './projectApi';
 
 type Props = {
   project: Inspection['project'];

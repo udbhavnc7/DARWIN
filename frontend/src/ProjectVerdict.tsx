@@ -3,7 +3,7 @@ import {Action, Icon} from './Action';
 import {
   api, artifactUrl, bundleUrl, changeLabel, formatDate, formatDuration, formatMs, formatRows,
   tone, type Evaluation, type Measurement,
-} from './projectEvaluation';
+} from './projectApi';
 
 type Props = {
   evaluation: Evaluation;

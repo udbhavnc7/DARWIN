@@ -9,9 +9,9 @@ import {Status} from './Status';
 import {BrandMark} from './Brand';
 import {Splash} from './Splash';
 import {Tour} from './Demo';
-import {ArchitectureArt} from './ArchitectureArt';
 import {ThemePicker} from './ThemePicker';
 import {Readiness, type Preflight} from './Preflight';
+import {ProjectEvaluation} from './ProjectEvaluation';
 import {Action, Icon} from './Action';
 import {applyTheme, onThemeStorage, readTheme, saveTheme, themes, type ThemeId} from './themes';
 import {baseline, readDraft, saveDraft, type Genome} from './genome';
@@ -20,6 +20,7 @@ import {installShowcase, isLive, manifest, probeLive, setLive, setupUrl, showcas
 type Project = {execution_modes: string[]; baseline: Genome};
 type Runtime = 'native' | 'docker';
 const pages = {
+  project: {label: 'Real project', title: 'Try a real project'},
   overview: {label: 'Overview', title: 'Overview'},
   configuration: {label: 'Architecture', title: 'Architecture builder'},
   experiments: {label: 'Experiments', title: 'Experiments'},
@@ -27,7 +28,7 @@ const pages = {
   shop: {label: 'Demo shop', title: 'Demo shop'},
 };
 type Page = keyof typeof pages;
-const pageOrder: Page[] = ['overview', 'configuration', 'experiments', 'search', 'shop'];
+const pageOrder: Page[] = ['project', 'overview', 'configuration', 'experiments', 'search', 'shop'];
 const workflow = [
   {page: 'configuration', title: 'Design your system', detail: 'Shape the services, caching, and retry behavior.', action: 'Open builder'},
   {page: 'experiments', title: 'Put it to the test', detail: 'Measure performance. Inject faults. Verify recovery.', action: 'Run an experiment'},
@@ -173,8 +174,14 @@ function App() {
       <aside className="app-sidebar">
         <a className="brand" href="#overview"><BrandMark/><span>DARWIN<small>Architecture lab</small></span></a>
         <nav className="section-nav" aria-label="Workspace">
-          {pageOrder.map((id, index) => <a key={id} href={`#${id}`} aria-current={page === id ? 'page' : undefined}>
-            <span className="nav-index" aria-hidden="true">0{index + 1}</span>
+          <span className="nav-group">Exhibition</span>
+          <a href="#project" aria-current={page === 'project' ? 'page' : undefined}>
+            <span className="nav-index" aria-hidden="true">01</span>
+            <Icon name="project"/><span>{pages.project.label}</span><span className="nav-current" aria-hidden="true">›</span>
+          </a>
+          <span className="nav-group">Advanced lab</span>
+          {pageOrder.slice(1).map((id, offset) => <a key={id} href={`#${id}`} aria-current={page === id ? 'page' : undefined}>
+            <span className="nav-index" aria-hidden="true">0{offset + 2}</span>
             <Icon name={id}/><span>{pages[id].label}</span><span className="nav-current" aria-hidden="true">›</span>
           </a>)}
         </nav>
@@ -196,7 +203,7 @@ function App() {
       <main id="workspace">
         <header className="workspace-header">
           <div><p className="workspace-breadcrumb"><span>Workspace</span> <span aria-hidden="true">/</span> <span> {pages[page].label}</span></p><h1 ref={title} tabIndex={-1}>{pages[page].title}</h1></div>
-          <div className="header-tools"><span className="workspace-index" aria-hidden="true">{String(pageOrder.indexOf(page) + 1).padStart(2, '0')} <i>/</i> 05</span><ThemePicker theme={themeId} onChange={changeTheme} onReplay={() => setIntro(true)}/></div>
+          <div className="header-tools"><span className="workspace-index" aria-hidden="true">{String(pageOrder.indexOf(page) + 1).padStart(2, '0')} <i>/</i> {String(pageOrder.length).padStart(2, '0')}</span><ThemePicker theme={themeId} onChange={changeTheme} onReplay={() => setIntro(true)}/></div>
         </header>
         {showcase && <aside className={`showcase-banner${live ? ' showcase-banner-live' : ''}`} aria-label={live ? 'Live bench connection' : 'About this showcase'}>
           <span className="showcase-banner-mark" aria-hidden="true"><Icon name={live ? 'play' : 'book'}/></span>
@@ -219,7 +226,7 @@ function App() {
           </>}
           {liveError && <p className="showcase-banner-error" role="alert">{liveError}</p>}
         </aside>}
-        {page !== 'shop' && page !== 'overview' && <div className="context-bar" role="group" aria-label="Run settings">
+        {page !== 'shop' && page !== 'overview' && page !== 'project' && <div className="context-bar" role="group" aria-label="Run settings">
           <div className="context-heading"><Icon name="settings"/><span>Run settings</span></div>
           <div className="header-controls">
             <div><label htmlFor="runtime">Runtime</label>
@@ -238,20 +245,30 @@ function App() {
           <Action variant="quiet" icon="refresh" pending={connecting} onClick={connect}>{connecting ? 'Checking runtimes…' : 'Refresh runtimes'}</Action>
         </div>}
         {!connecting && !project && <p className="notice" role="alert">{live ? 'This computer’s bench is not answering. Start it with scripts/demo.py start, then refresh runtimes.' : showcase ? 'The recorded snapshot could not be loaded. Reload the page to try again.' : 'The API is offline. Start the backend and refresh runtimes to reconnect.'}</p>}
+        <div hidden={page !== 'project'}><ProjectEvaluation/></div>
         <div hidden={page !== 'overview'}>
           <section className="overview" aria-labelledby="overview-title">
             <div className="hero-copy">
-              <span className="section-kicker hero-kicker"><span/>The backend architecture lab</span>
-              <h2 id="overview-title">Better backends.{' '}<br/><em>Built on evidence.</em></h2>
-              <p>Design your system, see where it breaks, and discover architectures that recover.</p>
+              <span className="section-kicker hero-kicker"><span/>Real Project Mode · exhibition</span>
+              <h2 id="overview-title">Find a faster report.{' '}<br/><em>Prove it is correct.</em></h2>
+              <p>Inspect a real GitHub project, test one scoped change against its actual source, and get a verdict backed by correctness checks and measured evidence.</p>
               <div className="shop-actions">
-                <a className="primary action-link" href="#configuration">Open architecture builder <Icon name="arrow"/></a>
-                <button type="button" className="hero-secondary" aria-haspopup="dialog" onClick={() => setTourOpen(true)}><Icon name="play"/>How DARWIN works</button>
+                <a className="primary action-link" href="#project">Try a real project <Icon name="arrow"/></a>
+                <a className="hero-secondary" href="#configuration">Open the backend lab <Icon name="arrow"/></a>
               </div>
             </div>
-            <div className="hero-visual"><ArchitectureArt theme={theme}/><div className="visual-caption"><span className="visual-caption-line"/>Design <span>→</span> Measure <span>→</span> Evolve</div></div>
+            <div className="hero-visual project-hero-visual">
+              <div className="project-hero-stack">
+                <span className="project-hero-label"><span/>Verified source path</span>
+                <div className="project-hero-row"><span>React UI</span><i>→</i><span>Finance logic</span></div>
+                <div className="project-hero-row"><span>localStorage</span><i>→</i><span>Android WebView</span></div>
+                <strong>Local app · reporting pipeline</strong>
+                <small>Not server architecture</small>
+              </div>
+              <div className="visual-caption"><span className="visual-caption-line"/>Choose <span>→</span> Understand <span>→</span> Test <span>→</span> Verdict</div>
+            </div>
           </section>
-          <div className="workflow-heading"><div><span className="section-kicker">From idea to evidence</span><h2>Your next move</h2></div><span className="muted">One workspace. Three steps.</span></div>
+          <div className="workflow-heading"><div><span className="section-kicker">Beyond the real-project demo</span><h2>Explore the backend lab</h2></div><span className="muted">Existing workflows. Fully intact.</span></div>
           <nav className="workflow" aria-label="Architecture workflow">
             {workflow.map((step, index) => <a className="panel workflow-link" href={`#${step.page}`} key={step.page}>
               <span className="workflow-top"><span className="workflow-icon"><Icon name={step.page}/></span><span className="workflow-number">0{index + 1}</span></span>
