@@ -3,9 +3,15 @@ from itertools import count
 
 import httpx
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
+SHOWCASE_ORIGINS = ('https://udbhavnc7.github.io', 'http://127.0.0.1:4173', 'http://localhost:4173')
+
 app = FastAPI(title='DARWIN Shop Gateway')
+app.add_middleware(CORSMiddleware, allow_origins=list(SHOWCASE_ORIGINS),
+                   allow_methods=['*'], allow_headers=['*'], expose_headers=['*'],
+                   allow_private_network=True)
 sequence = count()
 
 

@@ -852,11 +852,18 @@ body:has(.tour[open]) { overflow: hidden; }
 .showcase-banner strong { color: var(--warn); }
 .showcase-banner-mark { display: grid; flex: none; place-items: center; width: 30px; height: 30px; border-radius: 2px; background: var(--surface); color: var(--warn); }
 .showcase-banner-link { flex: none; white-space: nowrap; }
+.showcase-banner-actions { display: flex; flex: none; align-items: center; flex-wrap: wrap; gap: 8px; }
+.showcase-banner code { padding: 1px 4px; border-radius: 2px; background: var(--surface); font-family: var(--mono); font-size: 11px; }
+.showcase-banner-live { border-color: color-mix(in srgb, var(--good) 30%, var(--line)); border-left-color: var(--good); background: var(--good-bg); }
+.showcase-banner-live strong { color: var(--good); }
+.showcase-banner-live .showcase-banner-mark { color: var(--good); }
+.showcase-banner-error { flex-basis: 100%; margin: 0; padding: 7px 9px; border-radius: 2px; background: var(--surface); color: var(--bad); font-size: 12px; }
 .artifact-name, .artifact-name:hover { color: var(--muted); border-style: dashed; text-decoration: none; cursor: default; }
 @media (max-width: 700px) {
   .showcase-banner { flex-wrap: wrap; margin-top: -4px; }
   .showcase-banner-mark { display: none; }
-  .showcase-banner-link { width: 100%; justify-content: center; }
+  .showcase-banner-actions { width: 100%; }
+  .showcase-banner-link { flex: 1; justify-content: center; }
 }
 
 .verdict-panel { margin-top: 18px; padding: 18px; border: 1px solid color-mix(in srgb, var(--bad) 30%, var(--line)); border-radius: 2px; background: var(--field); }

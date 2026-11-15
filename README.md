@@ -175,8 +175,9 @@ Six lab palettes persist per browser. Four are light: **Green Texture** (laborat
 To look around without installing anything, open **[udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/)** on any laptop or phone. It is the same dashboard, built in a read-only showcase mode over evidence recorded on a local DARWIN bench.
 
 - **What works:** every saved experiment and search, with metrics, gate results, violated invariants, events, lineage, and the Pareto plot. You can also use the architecture builder's topology preview, the simulator for all 36 configurations, and Compose export, plus all six themes and the product tour.
-- **What needs a local install:** starting experiments or searches, reruns, demo-shop checkouts and resets, and artifact downloads. These controls are disabled and labelled **Needs a local install**. Artifact names and hashes are shown, but the files stay on the machine that recorded them.
-- **Honest labelling:** a permanent banner reads *"Recorded evidence from <date>, not a live run."* No DARWIN API, shop, or database is hosted. The page is static files, which keeps the [local security model](#local-security-model) intact.
+- **Running things live:** start the stack on your own machine with `scripts/demo.py start`, open the showcase, and choose **Connect this computer**. The page then drives your local bench over `127.0.0.1`: experiments, searches, reruns, shop checkouts and artifact downloads all run for real on that machine. Nothing is exposed to the network and no backend is hosted. Chrome may ask once for permission to reach devices on your local network. **Disconnect** returns to the recorded evidence.
+- **What still needs a local install:** without a connected bench, starting experiments or searches, reruns, demo-shop checkouts and resets, and artifact downloads stay disabled and labelled **Needs a local install**. Artifact names and hashes are always shown; files stay on the machine that recorded them.
+- **Honest labelling:** a permanent banner reads *"Recorded evidence from <date>, not a live run."* Once connected to a local bench it switches to a green **Live bench** banner. No DARWIN API, shop, or database is hosted. Only the browser's connection back to your own bench uses loopback, which keeps the [local security model](#local-security-model) intact.
 
 To refresh the snapshot, start the local stack, then run:
 
@@ -254,7 +255,7 @@ The demo shop uses simulated payments, synthetic credentials, and a dedicated Po
 
 ### Local security model
 
-DARWIN is a trusted-operator lab, not a hosted service. Every service binds to `127.0.0.1` and refuses to invent multi-user isolation. Never expose the API or shop to a shared network or the internet, and never point the demo at real payment or customer data.
+DARWIN is a trusted-operator lab, not a hosted service. Every service binds to `127.0.0.1` and refuses to invent multi-user isolation. Never expose the API or shop to a shared network or the internet, and never point the demo at real payment or customer data. The public showcase follows the same rule: it can drive the bench on your own machine over loopback, but no API or shop is ever hosted.
 
 For a jump host or a proxied deployment, set a shared bearer token before starting the API and the Vite server:
 

@@ -8,6 +8,42 @@ export const showcase = import.meta.env.VITE_SHOWCASE === '1';
 export const setupUrl = 'https://github.com/udbhavnc7/DARWIN#quickstart';
 export const localOnly = 'Needs a local install. Follow the README quickstart to run this yourself.';
 
+// Live mode: the public page drives the DARWIN stack on the viewer's own machine.
+// The API stays bound to 127.0.0.1; the browser reaches it over loopback with CORS,
+// so nothing is exposed to the network and no hosted backend is needed.
+export const apiBase = 'http://127.0.0.1:8000';
+export const shopBase = 'http://127.0.0.1:8010';
+const liveKey = 'darwin-live-bench';
+let live = false;
+try {live = showcase && sessionStorage.getItem(liveKey) === '1';} catch { /* Storage can be disabled. */ }
+
+export const isLive = () => live;
+
+export function setLive(on: boolean) {
+  live = showcase && on;
+  try {
+    if (live) sessionStorage.setItem(liveKey, '1');
+    else sessionStorage.removeItem(liveKey);
+  } catch { /* Storage can be disabled. */ }
+}
+
+/** Probe the stack on 127.0.0.1. Returns null when it answers as DARWIN. */
+export async function probeLive(timeout = 4000): Promise<string | null> {
+  try {
+    const response = await nativeFetch(`${apiBase}/api/health`, {
+      mode: 'cors', cache: 'no-store', signal: AbortSignal.timeout(timeout),
+    });
+    if (!response.ok) return `The bench answered with HTTP ${response.status}.`;
+    const body = await response.json();
+    return body?.project === 'DARWIN' ? null : 'That address answered, but it is not a DARWIN API.';
+  } catch {
+    return 'No DARWIN bench found on 127.0.0.1:8000. Start it with scripts/demo.py start, keep it running, then connect again.';
+  }
+}
+
+/** Absolute URL for a live API or shop path; relative in recorded mode. */
+export const liveUrl = (path: string) => showcase && live ? `${path.startsWith('/shop/') ? shopBase : apiBase}${path}` : path;
+
 export type Manifest = {captured_at: string; commit: string; experiments: number; searches: number};
 type Genome = {app_replicas: number; catalog_cache_ttl_s: number; notification_mode: string; retry_policy: string};
 type Keyed = {experiment_id?: string; search_id?: string};
@@ -95,6 +131,10 @@ export function installShowcase() {
       return nativeFetch(`${import.meta.env.BASE_URL}recorded-example.json`, init);
     }
     if (url.origin !== location.origin || !/^\/(api|shop)\//.test(url.pathname)) return nativeFetch(input, init);
+    if (live) {
+      const base = url.pathname.startsWith('/shop/') ? shopBase : apiBase;
+      return nativeFetch(`${base}${url.pathname}${url.search}`, {...init, mode: 'cors', cache: 'no-store'});
+    }
     const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase();
     // A short, realistic delay keeps loading states visible without slowing browsing.
     await new Promise(resolve => setTimeout(resolve, 120));

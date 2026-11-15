@@ -4,7 +4,7 @@ import {Action, Icon} from './Action';
 import {Status} from './Status';
 import {rememberRunInUrl} from './runLink';
 import {baseline, cached, describeGenome, isBaseline, type Genome} from './genome';
-import {localOnly, showcase} from './showcase';
+import {isLive, localOnly, showcase} from './showcase';
 
 type Artifact={name:string;sha256:string};
 type Evaluation={evaluation_id:string;status:string;repetition:number;artifacts:Artifact[];gate?:string;gate_reasons?:string[];violations?:{invariant_id:string;detail:string;key?:string}[];recovery?:{scenario:string;recovery_s:number|null}[]};
@@ -33,6 +33,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
   const [activeScenario,setActiveScenario]=useState<Scenario|null>(null);
   const [scenarioError,setScenarioError]=useState('');
   const [validating,setValidating]=useState(false);
+  const recorded = showcase && !isLive();
   const [validatedRequest,setValidatedRequest]=useState('');
   const selectedGenome = candidate==='custom' && draft ? draft.genome
     : candidate==='baseline' ? baseline : faults ? {...baseline, notification_mode: 'queued' as const} : cached;
@@ -179,10 +180,10 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
     <div className="panel experiment-controls">
     <div className="section-title panel-heading"><div><p className="section-kicker">Experiment setup</p><h2>New experiment</h2></div></div>
     <div className="scenario-block">
-      <div className="scenario-head"><span className="section-kicker">Judge-ready scenarios</span><span className="muted">{showcase ? 'Recorded durations · run locally' : 'Canned requests · live evidence'}</span></div>
+      <div className="scenario-head"><span className="section-kicker">Judge-ready scenarios</span><span className="muted">{recorded ? 'Recorded durations · run locally' : 'Canned requests · live evidence'}</span></div>
       {scenarios.length > 0 && <div className="scenario-list" role="group" aria-label="Exhibition scenarios">
         {scenarios.map(scenario => {
-          const supported = !showcase && scenario.available && (scenario.kind === 'smoke' ? canStart : canMeasure);
+          const supported = !recorded && scenario.available && (scenario.kind === 'smoke' ? canStart : canMeasure);
           const seconds = scenario.recorded_seconds ?? scenario.estimated_seconds;
           return <button type="button" key={scenario.id} className="scenario-card"
             disabled={locked || !supported || !!scenarioBusy} onClick={() => void startScenario(scenario)}>
@@ -191,7 +192,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
             <strong>{scenario.title}</strong>
             <span className="scenario-description">{scenario.description}</span>
             <span className="scenario-expect">{scenarioBusy === scenario.id ? 'Starting scenario…' : scenario.expectation}</span>
-            {!supported && <span className="scenario-unavailable">{showcase ? 'Needs a local install' : `Not available for ${runtime} on this machine`}</span>}
+            {!supported && <span className="scenario-unavailable">{recorded ? 'Needs a local install' : `Not available for ${runtime} on this machine`}</span>}
           </button>;
         })}
       </div>}
@@ -216,12 +217,12 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
     {duplicateBaseline && <p role="alert">Choose a configuration that differs from the baseline to compare performance.</p>}
     <div className="shop-actions form-actions">{!terminal(run)
       ? <Action variant="danger" icon="stop" pending={busy} onClick={cancel}>{busy?'Cancelling…':'Cancel experiment'}</Action>
-      : <><Action variant="primary" icon="play" disabled={showcase||!canStart||validating||historyState==='loading'||duplicateBaseline} aria-describedby={showcase?'experiment-showcase-hint':!canStart?'experiment-runtime-hint':undefined} pending={busy} onClick={start}>{busy?'Submitting…':faults?(mode==='unsafe'?'Run unsafe retry fixture':'Start fault verification'):measure?'Start performance comparison':'Start smoke experiment'}</Action>
-        <Action icon="check" disabled={showcase||!canStart||busy||historyState==='loading'||duplicateBaseline} pending={validating} onClick={validate}>{validating?'Validating…':'Validate request'}</Action></>}
+      : <><Action variant="primary" icon="play" disabled={recorded||!canStart||validating||historyState==='loading'||duplicateBaseline} aria-describedby={recorded?'experiment-showcase-hint':!canStart?'experiment-runtime-hint':undefined} pending={busy} onClick={start}>{busy?'Submitting…':faults?(mode==='unsafe'?'Run unsafe retry fixture':'Start fault verification'):measure?'Start performance comparison':'Start smoke experiment'}</Action>
+        <Action icon="check" disabled={recorded||!canStart||busy||historyState==='loading'||duplicateBaseline} pending={validating} onClick={validate}>{validating?'Validating…':'Validate request'}</Action></>}
     </div>
-    {showcase && <p id="experiment-showcase-hint" className="field-help">{localOnly}</p>}
-    {!showcase && !canStart && <p id="experiment-runtime-hint" className="field-help">The selected runtime is unavailable. Refresh runtimes above before starting an experiment.</p>}
-    {!showcase && canStart && !canMeasure && <p className="field-help">This runtime currently supports smoke checks. Performance and recovery tests need a runtime with measurement support.</p>}
+    {recorded && <p id="experiment-showcase-hint" className="field-help">{localOnly}</p>}
+    {!recorded && !canStart && <p id="experiment-runtime-hint" className="field-help">The selected runtime is unavailable. Refresh runtimes above before starting an experiment.</p>}
+    {!recorded && canStart && !canMeasure && <p className="field-help">This runtime currently supports smoke checks. Performance and recovery tests need a runtime with measurement support.</p>}
     {validatedRequest===requestBody && <p role="status" className="result">Experiment request validated.</p>}
     {error&&<p role="alert">{error}</p>}
     </div>
@@ -274,7 +275,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
           </div>)}</dl>}
           <EvidenceLinks experimentId={run.experiment_id} evaluationId={e.evaluation_id} artifacts={e.artifacts}/>
         </details>)}
-        <div className="shop-actions"><Action variant="quiet" icon="refresh" disabled={locked||showcase} title={showcase?localOnly:undefined} onClick={()=>rerun(c.candidate_id)}>Rerun this configuration</Action></div>
+        <div className="shop-actions"><Action variant="quiet" icon="refresh" disabled={locked||recorded} title={recorded?localOnly:undefined} onClick={()=>rerun(c.candidate_id)}>Rerun this configuration</Action></div>
       </div>)}</div>}
     </div></div>
   </section>;

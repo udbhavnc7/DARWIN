@@ -171,7 +171,8 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 
 - **How it is built:** `npm run build:showcase` (Vite mode `showcase`, base `/DARWIN/`) bundles the JSON snapshots that `scripts/capture_showcase.py` reads from a running local API. A fetch shim in `frontend/src/showcase.ts` answers `/api` and `/shop` GETs from those snapshots, along with previews and simulations for all 36 genomes. Every other request returns 503 with "Needs a local install".
 - **What is hosted:** nothing on the backend. No API, shop, database, or WebSocket. That keeps the Priority-0 "no shared deployment" rule intact.
-- **Labelling:** a permanent "Recorded evidence from <date>, not a live run" banner appears on every page. Run, rerun, checkout, reset, and artifact-download controls are disabled.
+- **Live bench:** from the hosted page, **Connect this computer** probes `127.0.0.1:8000` and, if the local stack answers, the fetch shim forwards `/api` to the API and `/shop` to the shop gateway instead of the snapshots. The API allows the published origin through CORS (with private-network access) but still binds to loopback. Measured smoke runs and shop checkouts were driven this way from the hosted page during verification.
+- **Labelling:** a permanent "Recorded evidence from <date>, not a live run" banner appears on every page, switching to a green "Live bench" banner when connected. Without a bench, run, rerun, checkout, reset, and artifact-download controls are disabled.
 - **Publishing:** the snapshot lives in `frontend/showcase/`, and `.github/workflows/pages.yml` redeploys on every push to `master`. The current snapshot holds 63 experiments and 12 searches, captured 2026-11-15 from commit `a23e2c1` on the native runtime.
 
 ### From the CLI and API

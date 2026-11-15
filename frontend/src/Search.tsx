@@ -5,7 +5,7 @@ import {Graph, Topology} from './Graph';
 import {Status} from './Status';
 import {rememberRunInUrl} from './runLink';
 import {describeGenome, type Genome} from './genome';
-import {localOnly, showcase} from './showcase';
+import {isLive, localOnly, showcase} from './showcase';
 
 type Evaluation = {
   evaluation_id: string; status: string; gate: string;
@@ -79,6 +79,7 @@ export function Search({workload, runtime, canMeasure, onEditCandidate, onWorklo
   const dialog = useRef<HTMLDialogElement>(null);
   const inspectTrigger = useRef<HTMLButtonElement | SVGCircleElement>(null);
   const [preview, setPreview] = useState<{hash: string; topology: TopologyPreview | null} | null>(null);
+  const recorded = showcase && !isLive();
   function remember(value: SearchRecord) {
     setRun(value);
     setHistory(rows => [value, ...rows.filter(row => row.search_id !== value.search_id)]);
@@ -245,18 +246,18 @@ export function Search({workload, runtime, canMeasure, onEditCandidate, onWorklo
     </div>
     <p className="muted">Three repetitions per measured configuration. Each generation uses completed fault checks to select parents. The selected workload is {workload.replace('_', ' ')}.</p>
     <div className="shop-actions form-actions">
-      <Action variant="primary" icon="play" pending={pendingAction === 'start'} disabled={showcase || !canMeasure || busy || historyState === 'loading' || !Number.isInteger(seed) || seed < 0 || seed > 4294967295} aria-describedby={showcase ? 'search-showcase-hint' : !canMeasure ? 'search-runtime-hint' : undefined} onClick={() => action('/api/searches', {
+      <Action variant="primary" icon="play" pending={pendingAction === 'start'} disabled={recorded || !canMeasure || busy || historyState === 'loading' || !Number.isInteger(seed) || seed < 0 || seed > 4294967295} aria-describedby={recorded ? 'search-showcase-hint' : !canMeasure ? 'search-runtime-hint' : undefined} onClick={() => action('/api/searches', {
         algorithm, runtime, workload_profile: workload, seed, generations: budget / 3,
         promotions_per_generation: 1, population_size: 4,
         budget: {real_test_budget: budget, max_candidates: Math.min(36, budget / 3 * 4), wall_clock_s: Math.min(14400, budget * 240)},
       })}>{pendingAction === 'start' ? 'Starting search…' : 'Start measured search'}</Action>
     </div>
-    {showcase && <p id="search-showcase-hint" className="field-help">{localOnly}</p>}
-    {!showcase && !canMeasure && <p id="search-runtime-hint" className="field-help">Measured search is unavailable for the selected runtime. Refresh runtimes above to check availability.</p>}
+    {recorded && <p id="search-showcase-hint" className="field-help">{localOnly}</p>}
+    {!recorded && !canMeasure && <p id="search-runtime-hint" className="field-help">Measured search is unavailable for the selected runtime. Refresh runtimes above to check availability.</p>}
     </div>
     <div className="panel search-results">
     <div className="section-title"><h2>Search results</h2>
-      {run && terminal(run) && !recordedMode && !showcase && <Action variant="quiet" icon="refresh" pending={pendingAction === 'rerun'} disabled={busy} onClick={() => action(`/api/searches/${run.search_id}/rerun`, undefined, 'rerun')}>{pendingAction === 'rerun' ? 'Starting rerun…' : 'Rerun search'}</Action>}
+      {run && terminal(run) && !recordedMode && !recorded && <Action variant="quiet" icon="refresh" pending={pendingAction === 'rerun'} disabled={busy} onClick={() => action(`/api/searches/${run.search_id}/rerun`, undefined, 'rerun')}>{pendingAction === 'rerun' ? 'Starting rerun…' : 'Rerun search'}</Action>}
       {run && !terminal(run) && <Action variant="danger" icon="stop" pending={pendingAction === 'cancel'} disabled={busy} onClick={() => action(`/api/searches/${run.search_id}/cancel`, undefined, 'cancel')}>{pendingAction === 'cancel' ? 'Cancelling…' : 'Cancel search'}</Action>}
     </div>
     {error && <p role="alert">{error}</p>}
@@ -315,7 +316,7 @@ export function Search({workload, runtime, canMeasure, onEditCandidate, onWorklo
           </div>
         </div>
         <div className="verdict-actions">
-          <Action icon="refresh" disabled={showcase || !canMeasure || busy} title={showcase ? localOnly : undefined} pending={pendingAction === 'start'} onClick={() => retryWith(12)}>Retry with 12 measured attempts</Action>
+          <Action icon="refresh" disabled={recorded || !canMeasure || busy} title={recorded ? localOnly : undefined} pending={pendingAction === 'start'} onClick={() => retryWith(12)}>Retry with 12 measured attempts</Action>
           {run.request.workload_profile !== 'flash_sale' && <Action disabled={!canMeasure || busy} onClick={() => onWorkloadChange('flash_sale')}>Try the flash-sale workload</Action>}
           <Action variant="quiet" icon="book" pending={recordedState === 'loading'} onClick={() => void loadRecorded('feasible')}>Open a recorded feasible run</Action>
         </div>

@@ -14,7 +14,7 @@ import {Readiness, type Preflight} from './Preflight';
 import {Action, Icon} from './Action';
 import {applyTheme, onThemeStorage, readTheme, saveTheme, themes, type ThemeId} from './themes';
 import {baseline, readDraft, saveDraft, type Genome} from './genome';
-import {installShowcase, manifest, setupUrl, showcase} from './showcase';
+import {installShowcase, isLive, manifest, probeLive, setLive, setupUrl, showcase} from './showcase';
 
 type Project = {execution_modes: string[]; baseline: Genome};
 type Runtime = 'native' | 'docker';
@@ -57,6 +57,9 @@ function App() {
     return genome ? {genome} : null;
   });
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
+  const live = isLive();
+  const [liveProbe, setLiveProbe] = useState<'idle' | 'probing' | 'error'>('idle');
+  const [liveError, setLiveError] = useState('');
   const title = useRef<HTMLHeadingElement>(null);
   const modes = project?.execution_modes ?? [];
   const dockerAvailable = modes.includes('docker_smoke');
@@ -103,8 +106,23 @@ function App() {
 
   useEffect(() => {void loadPreflight();}, [loadPreflight]);
   useEffect(() => {
-    if (showcase) manifest().then(value => setCapturedAt(value.captured_at)).catch(() => setCapturedAt(null));
-  }, []);
+    if (showcase && !live) manifest().then(value => setCapturedAt(value.captured_at)).catch(() => setCapturedAt(null));
+  }, [live]);
+
+  // Switches the published page from recorded evidence to the stack running on this
+  // computer. A reload re-runs every request against 127.0.0.1 instead of the snapshot.
+  async function connectBench() {
+    setLiveProbe('probing'); setLiveError('');
+    const problem = await probeLive();
+    if (problem) { setLiveError(problem); setLiveProbe('error'); return; }
+    setLive(true);
+    location.reload();
+  }
+
+  function disconnectBench() {
+    setLive(false);
+    location.reload();
+  }
 
   useEffect(() => {
     void connect();
@@ -143,7 +161,7 @@ function App() {
             <Icon name={id}/><span>{pages[id].label}</span><span className="nav-current" aria-hidden="true">›</span>
           </a>)}
         </nav>
-        <p className="sidebar-readout" aria-hidden="true"><span>{showcase ? 'RECORDED BENCH' : 'LOCAL BENCH'}</span><span>v0.1.0</span></p>
+        <p className="sidebar-readout" aria-hidden="true"><span>{live ? 'LIVE BENCH' : showcase ? 'RECORDED BENCH' : 'LOCAL BENCH'}</span><span>v0.1.0</span></p>
         <button type="button" className="sidebar-guide" aria-haspopup="dialog" onClick={() => setTourOpen(true)}>
           <span className="sidebar-guide-icon"><Icon name="play"/></span>
           <strong>What is DARWIN?</strong>
@@ -151,7 +169,7 @@ function App() {
           <span className="sidebar-guide-link">Take the tour <Icon name="arrow"/></span>
         </button>
         <div className="sidebar-status">
-          {showcase ? <Status value="showcase" label="Showcase · recorded"/>
+          {showcase ? <Status value={live ? 'connected' : 'showcase'} label={live ? 'Live · this computer' : 'Showcase · recorded'}/>
             : <Status value={connecting ? 'running' : project ? 'connected' : 'offline'}
               label={connecting ? 'Checking API' : project ? 'API connected' : 'API offline'}/>}
           <Action variant="quiet" className="mobile-tour" icon="play" aria-haspopup="dialog"
@@ -163,11 +181,26 @@ function App() {
           <div><p className="workspace-breadcrumb"><span>Workspace</span> <span aria-hidden="true">/</span> <span> {pages[page].label}</span></p><h1 ref={title} tabIndex={-1}>{pages[page].title}</h1></div>
           <div className="header-tools"><span className="workspace-index" aria-hidden="true">{String(pageOrder.indexOf(page) + 1).padStart(2, '0')} <i>/</i> 05</span><ThemePicker theme={themeId} onChange={changeTheme}/></div>
         </header>
-        {showcase && <aside className="showcase-banner" aria-label="About this showcase">
-          <span className="showcase-banner-mark" aria-hidden="true"><Icon name="book"/></span>
-          <p><strong>Recorded evidence{capturedAt ? ` from ${new Date(capturedAt).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'})}` : ''}, not a live run.</strong>{' '}
-            Every result here was measured on a local DARWIN bench and saved. You can browse runs, simulate configurations and export Compose files. Starting experiments, searches and checkouts needs a local install.</p>
-          <a className="action-link showcase-banner-link" href={setupUrl} target="_blank" rel="noreferrer">Run it locally <Icon name="arrow"/></a>
+        {showcase && <aside className={`showcase-banner${live ? ' showcase-banner-live' : ''}`} aria-label={live ? 'Live bench connection' : 'About this showcase'}>
+          <span className="showcase-banner-mark" aria-hidden="true"><Icon name={live ? 'play' : 'book'}/></span>
+          {live ? <>
+            <p><strong>Live bench: this page is driving the DARWIN stack on this computer.</strong>{' '}
+              Experiments, searches and shop checkouts now run for real on this machine at 127.0.0.1 and nothing is exposed to the network. Keep <code>scripts/demo.py</code> running for the whole session; disconnect to go back to the recorded evidence.</p>
+            <span className="showcase-banner-actions">
+              <button type="button" className="action-link showcase-banner-link" onClick={disconnectBench}>Disconnect</button>
+            </span>
+          </> : <>
+            <p><strong>Recorded evidence{capturedAt ? ` from ${new Date(capturedAt).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'})}` : ''}, not a live run.</strong>{' '}
+              Every result here was measured on a local DARWIN bench and saved. To run experiments, searches or checkouts live, start the stack on this computer with <code>\.venv\Scripts\python.exe scripts/demo.py start</code> and connect.</p>
+            <span className="showcase-banner-actions">
+              <button type="button" className="action-link showcase-banner-link" aria-busy={liveProbe === 'probing'}
+                disabled={liveProbe === 'probing'} onClick={() => void connectBench()}>
+                {liveProbe === 'probing' ? 'Looking for your bench…' : 'Connect this computer'} <Icon name="arrow"/>
+              </button>
+              <a className="action-link showcase-banner-link" href={setupUrl} target="_blank" rel="noreferrer">Set it up <Icon name="arrow"/></a>
+            </span>
+          </>}
+          {liveError && <p className="showcase-banner-error" role="alert">{liveError}</p>}
         </aside>}
         {page !== 'shop' && page !== 'overview' && <div className="context-bar" role="group" aria-label="Run settings">
           <div className="context-heading"><Icon name="settings"/><span>Run settings</span></div>
@@ -187,7 +220,7 @@ function App() {
           </div>
           <Action variant="quiet" icon="refresh" pending={connecting} onClick={connect}>{connecting ? 'Checking runtimes…' : 'Refresh runtimes'}</Action>
         </div>}
-        {!connecting && !project && <p className="notice" role="alert">{showcase ? 'The recorded snapshot could not be loaded. Reload the page to try again.' : 'The API is offline. Start the backend and refresh runtimes to reconnect.'}</p>}
+        {!connecting && !project && <p className="notice" role="alert">{live ? 'This computer’s bench is not answering. Start it with scripts/demo.py start, then refresh runtimes.' : showcase ? 'The recorded snapshot could not be loaded. Reload the page to try again.' : 'The API is offline. Start the backend and refresh runtimes to reconnect.'}</p>}
         <div hidden={page !== 'overview'}>
           <section className="overview" aria-labelledby="overview-title">
             <div className="hero-copy">
@@ -219,7 +252,7 @@ function App() {
               <a href="#configuration">Open architecture builder <span aria-hidden="true">→</span></a>
             </article>
             <article className="panel runtime-card">
-              <div className="section-title"><div className="panel-heading"><span className="section-kicker">{showcase ? 'Where this evidence was measured' : 'Ready for your next run'}</span><h2>Execution environment</h2></div>{showcase ? <Status value="showcase" label="Recorded"/> : <Status value={connecting ? 'running' : project ? 'connected' : 'offline'}/>}</div>
+              <div className="section-title"><div className="panel-heading"><span className="section-kicker">{showcase && !live ? 'Where this evidence was measured' : 'Ready for your next run'}</span><h2>Execution environment</h2></div>{showcase && !live ? <Status value="showcase" label="Recorded"/> : <Status value={connecting ? 'running' : project ? 'connected' : 'offline'}/>}</div>
               <dl><div><dt>Runtime</dt><dd>{project ? runtimeLabel : '—'}</dd></div>
                 <div><dt>Capabilities</dt><dd>{connecting ? 'Checking' : canMeasure ? 'Smoke, benchmarks, fault tests' : project ? 'Smoke checks' : 'Unavailable'}</dd></div></dl>
               <a href="#search">Explore measured search <span aria-hidden="true">→</span></a>

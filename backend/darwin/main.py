@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import secrets
 from typing import Literal
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import Field
 import yaml
@@ -35,6 +36,14 @@ app = FastAPI(title="DARWIN API", version="0.10.0", description="Measured archit
 app.include_router(router)
 app.include_router(search_router)
 
+# The hosted showcase can drive the stack on the viewer's own machine over loopback.
+# Only the published origin and the local preview origin are allowed; the API still
+# binds to 127.0.0.1 and is never reachable from the network.
+SHOWCASE_ORIGINS = ('https://udbhavnc7.github.io', 'http://127.0.0.1:4173', 'http://localhost:4173')
+app.add_middleware(CORSMiddleware, allow_origins=list(SHOWCASE_ORIGINS),
+                   allow_methods=['*'], allow_headers=['*'], expose_headers=['*'],
+                   allow_private_network=True)
+
 
 @app.middleware('http')
 async def require_api_token(request: Request, call_next):
@@ -46,7 +55,7 @@ async def require_api_token(request: Request, call_next):
     """
     token = os.environ.get('DARWIN_API_TOKEN')
     path = request.url.path
-    if not token or not path.startswith('/api') or path == '/api/health':
+    if not token or request.method == 'OPTIONS' or not path.startswith('/api') or path == '/api/health':
         return await call_next(request)
     header = request.headers.get('authorization', '')
     supplied = header[7:].strip() if header.lower().startswith('bearer ') \

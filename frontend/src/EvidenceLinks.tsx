@@ -1,5 +1,5 @@
 import {Icon} from './Action';
-import {showcase} from './showcase';
+import {isLive, liveUrl, showcase} from './showcase';
 
 const primaryReports = new Set(['fault-report.json', 'measurement.json', 'smoke.json', 'manifest.json']);
 
@@ -8,12 +8,13 @@ export function EvidenceLinks({experimentId, evaluationId, artifacts}: {
   evaluationId: string;
   artifacts: {name: string}[];
 }) {
+  const recorded = showcase && !isLive();
   const primary = artifacts.filter(({name}) => primaryReports.has(name));
   const other = artifacts.filter(({name}) => !primaryReports.has(name));
   function links(files: {name: string}[]) {
     return <ul className="evidence-links">{files.map(({name}) => <li key={name}>
-      {showcase ? <span className="artifact-link artifact-name" title="Artifact files stay on the machine that recorded them"><Icon name="book"/>{name}</span> :
-      <a className="artifact-link" href={`/api/experiments/${experimentId}/artifacts/${evaluationId}/${encodeURIComponent(name)}`}><Icon name="download"/>{name}</a>}
+      {recorded ? <span className="artifact-link artifact-name" title="Artifact files stay on the machine that recorded them"><Icon name="book"/>{name}</span> :
+      <a className="artifact-link" href={liveUrl(`/api/experiments/${experimentId}/artifacts/${evaluationId}/${encodeURIComponent(name)}`)}><Icon name="download"/>{name}</a>}
     </li>)}</ul>;
   }
 
