@@ -10,7 +10,7 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 [![Node](https://img.shields.io/badge/Node-20.19%2B-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Tests](https://img.shields.io/badge/tests-108%20passing%20%C2%B7%2014%20integration-2ea44f)](#testing)
+[![Tests](https://img.shields.io/badge/tests-158%20passing%20%C2%B7%2014%20integration-2ea44f)](#testing)
 [![CI](https://github.com/udbhavnc7/DARWIN/actions/workflows/ci.yml/badge.svg)](https://github.com/udbhavnc7/DARWIN/actions/workflows/ci.yml)
 [![Status](https://img.shields.io/badge/status-MVP%20complete%20%C2%B7%20~82%25%20to%20production-176541)](#project-status)
 [![License: MIT](https://img.shields.io/badge/license-MIT-176541.svg)](LICENSE)
@@ -61,9 +61,39 @@ The result is a lab where a backend decision can be argued with data instead of 
 
 ---
 
-## What it does
+## Two distinct modes
 
-DARWIN runs one checkout application under controlled variation and adversarial conditions.
+DARWIN provides two complementary modes with strict separation of concerns:
+
+| Mode | Real Target | Candidate Variation | Evaluation Type |
+|---|---|---|---|
+| **Real Project Mode** (New / Exhibition) | Genuine GitHub repositories (pinned SHA) | Audited code transformations (e.g. single-pass aggregation) | **Client-side data processing & report pipeline** |
+| **Backend Architecture Lab** (Existing) | DARWIN checkout service stack | API replicas, Redis cache TTL, transactional outbox, retries | **Distributed backend architecture evolution** |
+
+---
+
+## Real Project Mode
+
+A visitor or judge can select a genuine external GitHub repository, understand its actual architecture, run a scoped experiment, and inspect a defensible verdict.
+
+1. **Choose a project:** Select a trusted catalog example (e.g. **Sanchay**) or inspect any public GitHub repository URL.
+2. **Understand it:** DARWIN inspects the source at a pinned commit SHA and produces an honest architecture map (separating proven facts from unsupported features).
+3. **Test the change:** Runs the baseline and candidate on identical deterministic fixtures in an isolated overlay.
+4. **Read the verdict:** Conservative policy yields one of `VERIFIED_IMPROVEMENT`, `BASELINE_RETAINED`, `INCONCLUSIVE`, `REJECTED_INCORRECT`, or `NO_FEASIBLE_CANDIDATE`.
+
+### First Reference Adapter: Sanchay (`sanchay-reporting-v1`)
+
+- **Target:** Sanchay personal finance application (pinned commit `7e1bc4cd`).
+- **Architecture Reality:** React 19 + TypeScript in an Android WebView with browser-local `localStorage` persistence — **not** a cloud backend or microservice.
+- **Candidate:** Replaces three independent report traversals in `ReportsTab.tsx` with a unified single-pass aggregation (`reportBundle.ts`).
+- **Correctness Gate:** 68/68 checks passing, including refund deductions, transfer exclusions, currency scoping, and 29/29 Sanchay unit tests passing against the candidate overlay.
+- **Measured Result:** **+20.9%** latency reduction on 50,000 rows with a 100% paired win rate. See [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
+
+---
+
+## What it does (Backend Architecture Lab)
+
+DARWIN's checkout lab runs a multi-service e-commerce backend under controlled variation and adversarial conditions.
 
 ### Four supported controls
 
@@ -413,6 +443,18 @@ The control plane exposes a JSON API with versioned Pydantic contracts. Unknown 
 | `GET /api/searches/{id}/events` | Replay search events |
 | `POST /api/searches/{id}/cancel` | Cancel a running search |
 | `POST /api/searches/{id}/rerun` | Rerun a search as a new run |
+| `GET /api/repositories/catalog` | Trusted adapter catalog, pinned commits, and preset configurations |
+| `POST /api/repositories/inspect` | Pin and classify a public GitHub repository read-only |
+| `GET /api/repositories/inspections` | List repository inspection records |
+| `GET /api/repositories/inspections/{id}` | Retrieve factual architecture map and supported adapters |
+| `POST /api/project-evaluations` | Submit a bounded real-project evaluation (`quick` or `full`) |
+| `GET /api/project-evaluations` | List saved real-project evaluations |
+| `GET /api/project-evaluations/{id}` | Evaluation status, stage progress, verdict, and evidence links |
+| `POST /api/project-evaluations/{id}/cancel` | Cancel a running project evaluation |
+| `GET /api/project-evaluations/{id}/events` | Monotonic stage event stream |
+| `GET /api/project-evaluations/{id}/diff` | Download candidate unified source diff |
+| `GET /api/project-evaluations/{id}/bundle` | Download digest-verified evidence `.zip` archive |
+| `WS /ws/project-evaluations/{id}` | Live WebSocket stage progress stream |
 
 Interactive schema: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). Execution and event-stream details: [Phase 4 guide](docs/PHASE_4.md).
 
@@ -444,9 +486,10 @@ npm --prefix frontend run build
 
 CI runs the backend suite (including PostgreSQL and Redis integrations) and the dashboard build on every push and pull request. Docker acceptance stays a manual workflow because it needs a Linux cgroup v2 engine and takes tens of minutes.
 
-Latest local run (2026-11-14):
+Latest local run (2026-11-15):
 
-- **108 passed, 14 skipped.** The skipped tests are the PostgreSQL and Redis integrations; they are explicitly skipped, not silently passed.
+- **158 passed, 14 skipped.** Added full test suites for repository import, Sanchay reporting adapter, verdict policy, project capabilities, and project evaluation API. The 14 skipped tests are optional PostgreSQL/Redis integration tests.
+- **Real Project Mode verified**: Sanchay evaluation completed with 68/68 correctness checks passing, 29/29 Vitest tests passing on the candidate overlay, and +20.9% latency improvement on 50,000 rows. See [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
 - **14 shop integration tests passed** against the dedicated `darwin_shop_test` database, including replay, concurrency, ledger, and reset.
 - **Frontend production build passed**, including `tsc --noEmit`.
 - **Quick checkout smoke completed in 18 s** with three measured attempts and verified cleanup; the unsafe-payment scenario rejected all three repetitions.
