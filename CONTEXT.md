@@ -202,6 +202,8 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 | Search comparison | Single seed: NSGA-II + simulation best at 273.9 ms median p95. Three-seed campaign: 11 / 12 searches completed; NSGA-II + simulation median-of-best 357.2 ms, random 407.6 ms, hill climbing 394.6 ms, NSGA-II without simulation 445.1 ms (2 / 3 completed); one seed-202 arm interrupted by a fault-measurement connection timeout |
 | Simulator calibration | 27.0% mean absolute p95 error across nine held-out repetitions |
 | Responsive layout | Verified at 1440, 900, 430, 390, and 360 px |
+| Showcase deploy | Live at [udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/); all five screens checked on desktop and mobile in all six themes, with no `/api` or `/shop` requests leaving the static bundle |
+| Fresh-clone quickstart | Cloned from GitHub and followed the README: dependencies installed, Toxiproxy verified, `demo.py start` brought up shop, API, and dashboard |
 
 ---
 
