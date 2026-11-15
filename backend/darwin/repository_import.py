@@ -14,11 +14,19 @@ import os
 from pathlib import Path
 import re
 import shutil
+import ssl
+import stat
 import subprocess
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from uuid import uuid4
+
+try:
+    import certifi
+except ImportError:
+    certifi = None
 
 from darwin.repository_catalog import catalog_entry, canonical_repository
 
@@ -192,10 +200,44 @@ class GitClient:
                     f'The retrieved commit {head[:12]} does not match the requested pinned commit {sha[:12]}.',
                     'commit_mismatch', 409,
                 )
-            os.replace(temporary, target)
+            if target.exists():
+                _safe_rmtree(target)
+            for attempt in range(5):
+                try:
+                    if target.exists():
+                        _safe_rmtree(target)
+                    temporary.rename(target)
+                    break
+                except OSError:
+                    if attempt == 4:
+                        shutil.copytree(temporary, target, dirs_exist_ok=True)
+                        _safe_rmtree(temporary)
+                    else:
+                        time.sleep(0.2)
         except BaseException:
-            shutil.rmtree(temporary, ignore_errors=True)
+            _safe_rmtree(temporary)
             raise
+
+
+def _remove_readonly(func, path, _):
+    try:
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+    except OSError:
+        pass
+
+
+def _safe_rmtree(path: Path | str) -> None:
+    p = Path(path)
+    if not p.exists() and not p.is_symlink():
+        return
+    for root, dirs, files in os.walk(p):
+        for f in files:
+            try:
+                os.chmod(os.path.join(root, f), stat.S_IWRITE)
+            except OSError:
+                pass
+    shutil.rmtree(p, onerror=_remove_readonly)
 
 
 def _bounded_tree(root: Path, skip: tuple[str, ...] = ()) -> tuple[int, int, list[str]]:
@@ -234,8 +276,9 @@ def _github_metadata(owner: str, name: str, timeout: int = 12) -> dict:
         'User-Agent': 'DARWIN-Real-Project-Mode',
         'Accept': 'application/vnd.github+json',
     })
+    ctx = ssl.create_default_context(cafile=certifi.where()) if certifi else None
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with urllib.request.urlopen(request, context=ctx, timeout=timeout) as response:
             return json.loads(response.read(1_000_000).decode('utf-8'))
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
@@ -377,7 +420,7 @@ class RepositoryImporter:
                     return target
             except (OSError, ValueError):
                 pass
-            shutil.rmtree(target, ignore_errors=True)
+        _safe_rmtree(target)
         self.git.checkout(repository.url, ref, sha, target)
         marker.write_text(json.dumps({
             'url': repository.url,

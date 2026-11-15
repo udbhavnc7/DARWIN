@@ -70,11 +70,6 @@ export function ProjectEvaluation() {
       const value = await api.catalog();
       setCatalog(value);
       setCatalogError('');
-      const example = value.examples[0];
-      if (example) {
-        setUrl(current => current || example.repository_url);
-        setRef(example.default_ref || 'main');
-      }
     } catch (reason) {
       setCatalogError(message(reason));
     }
