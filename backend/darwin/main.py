@@ -16,6 +16,9 @@ from darwin.calibration import calibrated_simulation
 from darwin.docker_resources import docker_status
 from darwin.exhibition import scenario_catalog, scenario_request
 from darwin.preflight import collect_preflight
+from darwin.repository_api import router as repository_router
+from darwin.repository_evaluations import RepositoryEngine
+from darwin.repository_catalog import adapter_catalog
 from darwin.search import SearchEngine
 from darwin.search_api import router as search_router
 
@@ -24,17 +27,20 @@ async def lifespan(app):
     app.state.engine = Engine(os.environ.get('DARWIN_EXPERIMENT_DIR', 'artifacts/experiments'))
     try:
         app.state.search = SearchEngine(app.state.engine)
+        app.state.repositories = RepositoryEngine(app.state.engine.store.root)
         try:
             yield
         finally:
+            app.state.repositories.close()
             app.state.search.close()
     finally:
         app.state.engine.close()
 
 
-app = FastAPI(title="DARWIN API", version="0.10.0", description="Measured architecture search and correctness verification", lifespan=lifespan)
+app = FastAPI(title="DARWIN API", version="0.11.0", description="Measured architecture search, correctness verification and real-project evaluation", lifespan=lifespan)
 app.include_router(router)
 app.include_router(search_router)
+app.include_router(repository_router)
 
 # The hosted showcase can drive the stack on the viewer's own machine over loopback.
 # Only the published origin and the local preview origin are allowed; the API still
@@ -96,6 +102,21 @@ def project():
         "baseline": Genome().model_dump(),
         "budget": Budget().model_dump(),
         "workloads": ["normal", "flash_sale", "checkout_heavy"],
+        "real_project_mode": {
+            "available": True,
+            "inspection": "Public HTTPS GitHub repositories, read-only.",
+            "execution": "Only a catalogued repository at its pinned commit.",
+            "examples": [
+                {
+                    "id": example['id'],
+                    "name": example['name'],
+                    "repository_url": example['repository_url'],
+                    "pinned_commit": example['pinned_commit'],
+                }
+                for example in adapter_catalog()['examples']
+            ],
+            "policy": adapter_catalog()['policy'],
+        },
     }
 
 

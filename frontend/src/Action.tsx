@@ -19,6 +19,9 @@ const paths = {
   settings: 'M4 7h9 M17 7h3 M4 17h3 M11 17h9 M13 4v6 M7 14v6',
   shield: 'm12 3 8 3v6c0 4-5 7-8 9-3-2-8-5-8-9V6l8-3Z m-4 9 3 3 5-6',
   book: 'M12 5v15 M3 4c4-1 7 0 9 1 2-1 5-2 9-1v15c-4-1-7 0-9 1-2-1-5-2-9-1V4Z',
+  project: 'M3 7h7l2 2h9v11H3V7Z M3 7V4h6l2 3',
+  phone: 'M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z M11 18h2',
+  code: 'm8 7-5 5 5 5 M16 7l5 5-5 5',
 } as const;
 
 export type IconName = keyof typeof paths;
