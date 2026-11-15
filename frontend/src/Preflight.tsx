@@ -1,5 +1,6 @@
 import {Action, Icon} from './Action';
 import {Status} from './Status';
+import {showcase} from './showcase';
 
 export type PreflightCheck = {
   id: string; label: string; required: boolean; status: string;
@@ -22,7 +23,7 @@ export function Readiness({preflight, loading, onRefresh}: {
   return <section className="panel readiness" aria-labelledby="readiness-title">
     <div className="section-title">
       <div className="panel-heading">
-        <span className="section-kicker">Before you present</span>
+        <span className="section-kicker">{showcase ? 'Recorded on the capture machine' : 'Before you present'}</span>
         <h2 id="readiness-title">Machine readiness</h2>
       </div>
       <Status value={loading ? 'running' : !preflight ? 'offline' : blockers.length ? 'failed' : 'connected'}
@@ -53,8 +54,8 @@ export function Readiness({preflight, loading, onRefresh}: {
         Optional on this machine: {optionalMissing.map(check => check.label).join(', ')}. Runs that need them stay disabled instead of failing halfway.
       </p>}
       <div className="readiness-footer">
-        <span className="muted">Checked {new Date(preflight.generated_at).toLocaleTimeString()}</span>
-        <Action variant="quiet" icon="refresh" pending={loading} onClick={onRefresh}>{loading ? 'Checking…' : 'Run preflight again'}</Action>
+        <span className="muted">Checked {showcase ? new Date(preflight.generated_at).toLocaleString() : new Date(preflight.generated_at).toLocaleTimeString()}</span>
+        {!showcase && <Action variant="quiet" icon="refresh" pending={loading} onClick={onRefresh}>{loading ? 'Checking…' : 'Run preflight again'}</Action>}
       </div>
     </>}
   </section>;

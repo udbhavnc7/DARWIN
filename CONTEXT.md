@@ -165,6 +165,15 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 - Six lab themes — Green Texture (green + white default), Leather Red, Blueprint, Amethyst, Carbon Black, Midnight — persisted per browser
 - A five-step product tour at `?tour=1`, from the sidebar, or from the overview
 
+### Hosted showcase
+
+A read-only build of the same dashboard is published at [udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/) so teammates can browse it without installing anything.
+
+- **How it is built:** `npm run build:showcase` (Vite mode `showcase`, base `/DARWIN/`) bundles the JSON snapshots that `scripts/capture_showcase.py` reads from a running local API. A fetch shim in `frontend/src/showcase.ts` answers `/api` and `/shop` GETs from those snapshots, along with previews and simulations for all 36 genomes. Every other request returns 503 with "Needs a local install".
+- **What is hosted:** nothing on the backend. No API, shop, database, or WebSocket. That keeps the Priority-0 "no shared deployment" rule intact.
+- **Labelling:** a permanent "Recorded evidence from <date>, not a live run" banner appears on every page. Run, rerun, checkout, reset, and artifact-download controls are disabled.
+- **Publishing:** the snapshot lives in `frontend/showcase/`, and `.github/workflows/pages.yml` redeploys on every push to `master`. The current snapshot holds 63 experiments and 12 searches, captured 2026-11-15 from commit `a23e2c1` on the native runtime.
+
 ### From the CLI and API
 
 - Start, list, inspect, cancel, and rerun experiments

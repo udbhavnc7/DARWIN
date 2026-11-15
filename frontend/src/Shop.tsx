@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {Status} from './Status';
 import {Action, Icon} from './Action';
+import {localOnly, showcase} from './showcase';
 
 type Product = {sku: string; name: string; price_cents: number; available: number};
 type Receipt = {order_id: string; status: 'confirmed'; sku: string; quantity: number; amount_cents: number};
@@ -30,7 +31,7 @@ export function Shop() {
   const product = products.find(item => item.sku === sku) ?? products[0];
   const units = Number(quantity);
   const validQuantity = Number.isInteger(units) && units >= 1 && units <= 100;
-  const canOrder = catalogState === 'connected' && product && validQuantity && units <= product.available;
+  const canOrder = !showcase && catalogState === 'connected' && product && validQuantity && units <= product.available;
 
   async function loadCatalog(): Promise<Product[] | null> {
     try {
@@ -138,11 +139,13 @@ export function Shop() {
 
   return <section id="shop" className="page-content shop-demo" aria-label="Demo shop walkthrough">
     <div className="shop-intro">
-      <p className="page-intro">Try a real checkout in DARWIN’s test shop with sample products and simulated payments. Then resend the order to see how the backend handles a duplicate request.</p>
+      <p className="page-intro">{showcase
+        ? 'DARWIN’s test shop sells sample products with simulated payments. On a local install you can place an order, then resend it to see how the backend handles a duplicate request.'
+        : 'Try a real checkout in DARWIN’s test shop with sample products and simulated payments. Then resend the order to see how the backend handles a duplicate request.'}</p>
       <div className="shop-intro-actions">
         <Status value={catalogState === 'loading' ? 'running' : catalogState}
-          label={catalogState === 'loading' ? 'Checking shop' : catalogState === 'connected' ? 'Shop connected' : 'Catalog unavailable'}/>
-        <Action variant="quiet" icon="refresh" pending={resetting} disabled={busy || catalogState !== 'connected'}
+          label={catalogState === 'loading' ? 'Checking shop' : catalogState === 'connected' ? (showcase ? 'Recorded catalog' : 'Shop connected') : 'Catalog unavailable'}/>
+        <Action variant="quiet" icon="refresh" pending={resetting} disabled={showcase || busy || catalogState !== 'connected'}
           onClick={() => void resetDemo()}>{resetting ? 'Resetting…' : 'Reset demo shop'}</Action>
       </div>
     </div>
@@ -158,6 +161,7 @@ export function Shop() {
         <div className="section-title"><div className="panel-heading"><span className="section-kicker">Your test order</span><h2>Checkout</h2></div><span className="baseline-badge">Simulated payments</span></div>
         {catalogState === 'offline' && <p role="alert">The catalog is offline. {attempt ? 'You can still retry the saved request.' : 'Start the local shop if it’s stopped, then refresh the catalog.'}</p>}
         {catalogState === 'loading' && <p className="muted" role="status">Loading sample products…</p>}
+        {showcase && <p className="field-help">This is the recorded catalog. Placing and resending orders needs the local demo shop. Follow the README quickstart to try the duplicate-request check yourself.</p>}
         {!attempt && <div className="shop-controls">
           <div><label htmlFor="product">Product</label><select id="product" disabled={busy || catalogState !== 'connected'} value={product?.sku ?? ''} onChange={event => setSku(event.target.value)}>
             {!products.length && <option value="">No products loaded</option>}

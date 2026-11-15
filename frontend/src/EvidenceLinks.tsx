@@ -1,4 +1,5 @@
 import {Icon} from './Action';
+import {showcase} from './showcase';
 
 const primaryReports = new Set(['fault-report.json', 'measurement.json', 'smoke.json', 'manifest.json']);
 
@@ -11,7 +12,8 @@ export function EvidenceLinks({experimentId, evaluationId, artifacts}: {
   const other = artifacts.filter(({name}) => !primaryReports.has(name));
   function links(files: {name: string}[]) {
     return <ul className="evidence-links">{files.map(({name}) => <li key={name}>
-      <a className="artifact-link" href={`/api/experiments/${experimentId}/artifacts/${evaluationId}/${encodeURIComponent(name)}`}><Icon name="download"/>{name}</a>
+      {showcase ? <span className="artifact-link artifact-name" title="Artifact files stay on the machine that recorded them"><Icon name="book"/>{name}</span> :
+      <a className="artifact-link" href={`/api/experiments/${experimentId}/artifacts/${evaluationId}/${encodeURIComponent(name)}`}><Icon name="download"/>{name}</a>}
     </li>)}</ul>;
   }
 

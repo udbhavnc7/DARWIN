@@ -846,6 +846,19 @@ body:has(.tour[open]) { overflow: hidden; }
 .recorded-actions { margin-top: 9px; }
 .recorded-banner { margin: 10px 0 0; padding: 9px 11px; border-left: 3px solid var(--warn); border-radius: 0 2px 2px 0; background: var(--warn-bg); color: var(--warn); font-size: 12px; line-height: 1.45; }
 
+/* Hosted showcase: recorded snapshots only, never a live run */
+.showcase-banner { display: flex; align-items: center; gap: 12px; margin: -8px 0 18px; padding: 11px 14px; border: 1px solid color-mix(in srgb, var(--warn) 28%, var(--line)); border-left: 3px solid var(--warn); border-radius: 0 2px 2px 0; background: var(--warn-bg); color: var(--text); }
+.showcase-banner p { flex: 1; margin: 0; font-size: 12.5px; line-height: 1.5; }
+.showcase-banner strong { color: var(--warn); }
+.showcase-banner-mark { display: grid; flex: none; place-items: center; width: 30px; height: 30px; border-radius: 2px; background: var(--surface); color: var(--warn); }
+.showcase-banner-link { flex: none; white-space: nowrap; }
+.artifact-name, .artifact-name:hover { color: var(--muted); border-style: dashed; text-decoration: none; cursor: default; }
+@media (max-width: 700px) {
+  .showcase-banner { flex-wrap: wrap; margin-top: -4px; }
+  .showcase-banner-mark { display: none; }
+  .showcase-banner-link { width: 100%; justify-content: center; }
+}
+
 .verdict-panel { margin-top: 18px; padding: 18px; border: 1px solid color-mix(in srgb, var(--bad) 30%, var(--line)); border-radius: 2px; background: var(--field); }
 .verdict-header h3 { margin: 2px 0 6px; font-family: var(--display); font-size: 20px; }
 .verdict-header p { margin: 0; font-size: 12.5px; line-height: 1.5; }

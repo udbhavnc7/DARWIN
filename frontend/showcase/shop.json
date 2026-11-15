@@ -1,0 +1,1 @@
+{"catalog":[{"sku":"darwin-mug","name":"DARWIN Mug","price_cents":899,"available":15},{"sku":"darwin-notebook","name":"DARWIN Notebook","price_cents":1299,"available":19},{"sku":"darwin-shirt","name":"DARWIN T-shirt","price_cents":2499,"available":0}],"ledger":{"orders":6,"captures":6,"payment_effects":6,"outbox":6,"deliveries":6}}

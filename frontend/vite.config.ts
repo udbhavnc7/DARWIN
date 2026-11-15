@@ -13,6 +13,9 @@ export default defineConfig(({mode}) => {
   };
   const proxy = {'/api': api, '/shop': 'http://127.0.0.1:8010', '/ws': ws};
 
+  // The showcase is published as a GitHub Pages project site and never talks to a backend.
+  if (mode === 'showcase') return {base: '/DARWIN/', preview: {port: 4173, strictPort: true}};
+
   return {
     server: {port: 5173, strictPort: true, proxy},
     preview: {proxy},

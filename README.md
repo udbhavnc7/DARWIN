@@ -15,6 +15,8 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 [![Status](https://img.shields.io/badge/status-MVP%20complete%20%C2%B7%20~82%25%20to%20production-176541)](#project-status)
 [![License: MIT](https://img.shields.io/badge/license-MIT-176541.svg)](LICENSE)
 
+**[Open the hosted showcase →](https://udbhavnc7.github.io/DARWIN/)** · recorded evidence, read-only, no install needed
+
 </div>
 
 ![DARWIN overview](docs/images/overview.png)
@@ -29,6 +31,7 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 - [What it does](#what-it-does)
 - [How it works](#how-it-works)
 - [The dashboard](#the-dashboard)
+- [Hosted showcase](#hosted-showcase)
 - [Quickstart](#quickstart)
 - [Measured evidence](#measured-evidence)
 - [Architecture](#architecture)
@@ -164,6 +167,26 @@ Six lab palettes persist per browser. Four are light: **Green Texture** (laborat
 <p align="center">
   <img src="docs/images/mobile.png" width="300" alt="DARWIN on a phone-sized viewport" />
 </p>
+
+---
+
+## Hosted showcase
+
+To look around without installing anything, open **[udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/)** on any laptop or phone. It is the same dashboard, built in a read-only showcase mode over evidence recorded on a local DARWIN bench.
+
+- **What works:** every saved experiment and search, with metrics, gate results, violated invariants, events, lineage, and the Pareto plot. You can also use the architecture builder's topology preview, the simulator for all 36 configurations, and Compose export, plus all six themes and the product tour.
+- **What needs a local install:** starting experiments or searches, reruns, demo-shop checkouts and resets, and artifact downloads. These controls are disabled and labelled **Needs a local install**. Artifact names and hashes are shown, but the files stay on the machine that recorded them.
+- **Honest labelling:** a permanent banner reads *"Recorded evidence from <date>, not a live run."* No DARWIN API, shop, or database is hosted. The page is static files, which keeps the [local security model](#local-security-model) intact.
+
+To refresh the snapshot, start the local stack, then run:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/capture_showcase.py   # read-only GETs + previews/simulations → frontend/showcase/
+npm --prefix frontend run build:showcase                  # optional local check
+npm --prefix frontend run preview:showcase                # http://127.0.0.1:4173/DARWIN/
+```
+
+Commit `frontend/showcase/` and push to `master`. The [Showcase workflow](.github/workflows/pages.yml) rebuilds and redeploys the site. The capture never writes to the shop, and it redacts home-directory paths. It also records the capture time and source commit in `manifest.json`. The normal `npm run build` and dev server are unaffected.
 
 ---
 
