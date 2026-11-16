@@ -67,7 +67,8 @@ DARWIN provides two complementary modes with strict separation of concerns:
 
 | Mode | Real Target | Candidate Variation | Evaluation Type |
 |---|---|---|---|
-| **Real Project Mode** (New / Exhibition) | Genuine GitHub repositories (pinned SHA) | Audited code transformations (e.g. single-pass aggregation) | **Client-side data processing & report pipeline** |
+| **Real Project Mode · External backend** (New / Exhibition) | Genuine public GitHub backends (pinned SHA) | Reviewed deployable topology changes (replicas, workers) | **Measured backend architecture evolution** |
+| **Real Project Mode · Client pipeline** (New / Exhibition) | Genuine GitHub repositories (pinned SHA) | Audited code transformations (e.g. single-pass aggregation) | **Client-side data processing & report pipeline** |
 | **Backend Architecture Lab** (Existing) | DARWIN checkout service stack | API replicas, Redis cache TTL, transactional outbox, retries | **Distributed backend architecture evolution** |
 
 ---
@@ -88,6 +89,34 @@ A visitor or judge can select a genuine external GitHub repository, understand i
 - **Candidate:** Replaces three independent report traversals in `ReportsTab.tsx` with a unified single-pass aggregation (`reportBundle.ts`).
 - **Correctness Gate:** 68/68 checks passing in both recorded and live full runs, including refund deductions, transfer exclusions, currency scoping, determinism, and input immutability. When the checkout has installed dependencies, the harness also runs Sanchay's real `reporting.test.ts` (29/29 passing in the recorded full run). A fetched cache without an installed Vitest runtime reports source tests as skipped, with the reason shown in the verdict; DARWIN does not run package installation.
 - **Measured Result:** The recorded full run was **28.5% faster** at 50,000 rows with a 100% paired win rate and 29/29 source tests. A live full run from the fetched cache was **22.4% faster** at 50,000 rows with a 97% paired win rate and 68/68 correctness checks. Both are `VERIFIED_IMPROVEMENT`; see the [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
+
+### External backends (`flask-redis-compose-v1`, `node-redis-compose-v1`)
+
+DARWIN also evaluates the actual topology of genuine public backends. It pins
+the repository to a reviewed commit, copies only allowlisted application
+source into its **own** image and Compose stack, and never executes the
+repository's Compose file, Dockerfile or nginx config. The stack runs on a
+local Linux Docker engine with an internal network, loopback-only publish,
+read-only root filesystem, dropped capabilities, non-root users and resource
+limits. If no Linux engine is available, inspection still works but measured
+execution is refused rather than run on the host.
+
+| Target | Challenge | Verdict | Headline |
+| --- | --- | --- | --- |
+| [docker/awesome-compose `flask-redis`](https://github.com/docker/awesome-compose) (CC0, `30f4b7f6`) | Faster | `TRADEOFF_REQUIRES_CHOICE` | p95 **29.9% better**, but CPU **+39.0%** and memory **+82.7%** |
+| [dockersamples/nginx-node-redis](https://github.com/dockersamples/nginx-node-redis) (Apache-2.0, `2cd75d3b`) | Recover | `TRADEOFF_REQUIRES_CHOICE` | Recovery **0.464 s → 0 s**, but CPU **+39.6%** and memory **+63.6%** |
+
+Added replicas do not always win: a quick Flask run and a quick Node run both
+returned `BASELINE_RETAINED`. The change document for a tradeoff asks the
+operator to choose; for a retained baseline it proposes no deployment change.
+Correctness is a business oracle, not HTTP 200 — the Redis counter must
+strictly increase through the gateway and a restarted replica must recover.
+
+See [External backend evolution](docs/EXTERNAL_BACKEND_EVOLUTION.md),
+[security boundary](docs/EXTERNAL_BACKEND_SECURITY.md),
+[validation report](docs/EXTERNAL_BACKEND_VALIDATION.md) and the
+[judge script](docs/JUDGE_SCRIPT.md).
+
 
 ---
 
