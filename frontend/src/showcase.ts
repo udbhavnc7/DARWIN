@@ -100,6 +100,9 @@ async function answer(method: string, url: URL, init?: RequestInit): Promise<Res
     }
     if (path === '/api/repositories/catalog') return json(await load('project-catalog.json'));
     if (path === '/api/repositories/inspections') return json(await load('project-inspections.json'));
+    if ((match = path.match(/^\/api\/repositories\/inspections\/([^/]+)\/candidates$/))) {
+      return json(await load(`project-candidates/${encodeURIComponent(decodeURIComponent(match[1]))}.json`));
+    }
     if ((match = path.match(/^\/api\/repositories\/inspections\/([^/]+)$/))) {
       return find('project-inspections.json', 'inspection_id', decodeURIComponent(match[1]));
     }
@@ -109,6 +112,9 @@ async function answer(method: string, url: URL, init?: RequestInit): Promise<Res
     }
     if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)\/diff$/))) {
       return text(`project-diffs/${encodeURIComponent(decodeURIComponent(match[1]))}.diff`);
+    }
+    if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)\/change$/))) {
+      return text(`project-changes/${encodeURIComponent(decodeURIComponent(match[1]))}.md`);
     }
     if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)\/artifacts\/([^/]+)$/))) {
       return text(`project-artifacts/${encodeURIComponent(decodeURIComponent(match[1]))}/${encodeURIComponent(decodeURIComponent(match[2]))}`);

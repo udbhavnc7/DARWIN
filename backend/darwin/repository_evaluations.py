@@ -1028,7 +1028,10 @@ class RepositoryEngine:
             'files': {},
         }
         for path in sorted(folder.iterdir()):
-            if not path.is_file() or path.name in ('manifest.json', 'evidence.zip'):
+            # Only reviewed artifacts are ever registered. Stray or partial files in
+            # the working folder must never become downloadable evidence.
+            if not path.is_file() or path.name not in ARTIFACT_NAMES \
+                    or path.name in ('manifest.json', 'evidence.zip'):
                 continue
             digest = _digest(path)
             files.append({'name': path.name, 'sha256': digest, 'bytes': path.stat().st_size})
@@ -1052,11 +1055,16 @@ class RepositoryEngine:
                 'No measured architecture change is exported for verdict '
                 f'{verdict.get("status") or record.get("status")}.'
             )
-        folder = self.store.root / record['evidence']['dir']
-        path = folder / 'change.md'
-        if path.is_file():
-            return path.read_text(encoding='utf-8')
-        return _change_text(record, verdict)
+        try:
+            return self.evidence_path(ident, 'change.md').read_text(encoding='utf-8')
+        except (KeyError, OSError):
+            pass
+        try:
+            return _change_text(record, verdict)
+        except (KeyError, TypeError):
+            raise ValueError(
+                'The recorded change is incomplete; no deployment change is exported.'
+            ) from None
 
     def list_evaluations(self) -> list[dict]:
         return self.store.all_evaluations()
@@ -1066,37 +1074,50 @@ class RepositoryEngine:
 
     def evidence_path(self, ident: str, name: str) -> Path:
         record = self.store.get_evaluation(ident)
-        registered = next((item for item in record.get('evidence', {}).get('files', [])
-                           if item['name'] == name), None)
-        if name not in ARTIFACT_NAMES or not registered:
+        evidence = record.get('evidence') or {}
+        registered = next((item for item in (evidence.get('files') or [])
+                           if isinstance(item, dict) and item.get('name') == name), None)
+        if name not in ARTIFACT_NAMES or not registered or not evidence.get('dir'):
             raise KeyError(name)
-        folder = (self.store.root / record['evidence']['dir']).resolve()
+        digest = registered.get('sha256')
+        folder = (self.store.root / evidence['dir']).resolve()
         path = (folder / name).resolve()
-        if not path.is_relative_to(folder) or not path.is_file() or _digest(path) != registered['sha256']:
+        if not digest or not path.is_relative_to(folder) or not path.is_file() \
+                or _digest(path) != digest:
             raise KeyError(name)
         return path
 
     def bundle(self, ident: str) -> Path:
         record = self.store.get_evaluation(ident)
-        folder = (self.store.root / record['evidence']['dir']).resolve()
+        evidence = record.get('evidence') or {}
+        if not evidence.get('dir'):
+            raise KeyError('manifest')
+        folder = (self.store.root / evidence['dir']).resolve()
         manifest_path = folder / 'manifest.json'
         if not manifest_path.is_file():
             raise KeyError('manifest')
         manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-        for name, digest in manifest['files'].items():
+        files = manifest.get('files')
+        if not isinstance(files, dict):
+            raise ValueError('The evidence manifest has no file table.')
+        # Only reviewed artifacts may leave the host. A stray manifest entry is
+        # ignored rather than packed, so the bundle cannot widen the download surface.
+        packed = {name: digest for name, digest in files.items() if name in ARTIFACT_NAMES}
+        for name, digest in packed.items():
             path = (folder / name).resolve()
             if not path.is_file() or not path.is_relative_to(folder) or _digest(path) != digest:
                 raise ValueError(f'Evidence file failed digest verification: {name}')
+        source = record.get('source') or {}
         target = folder / f'darwin-project-evidence-{ident}.zip'
         temporary = folder / f'.bundle-{uuid4().hex}.zip'
         with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED) as archive:
-            for name in sorted(manifest['files']):
+            for name in sorted(packed):
                 archive.write(folder / name, arcname=name)
             archive.write(manifest_path, arcname='manifest.json')
             archive.writestr('README.txt',
                              'DARWIN Real Project Mode evidence bundle.\n'
                              f'Evaluation: {ident}\n'
-                             f'Source commit: {record["source"]["commit_sha"]}\n'
+                             f'Source commit: {source.get("commit_sha", "unknown")}\n'
                              'Verify every file against manifest.json before trusting it.\n')
         os.replace(temporary, target)
         return target

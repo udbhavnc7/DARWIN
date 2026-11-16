@@ -1,0 +1,69 @@
+{
+  "status": "NOT_MEASURED",
+  "label": "Simulated architecture recommendation",
+  "reason": "Cache TTL 0→90 + Background offload False→True models p95 latency 18.2% lower with a 1.60× cost index. This is a SIMULATED candidate; validate it on a real deployment before changing production.",
+  "policy": {
+    "evidence_kind": "simulated",
+    "label": "SIMULATED",
+    "not_measured": true,
+    "minimum_improvement_pct": 8.0,
+    "regression_limit_pct": 2.0,
+    "maximum_error_rate_pct": 2.0,
+    "maximum_cost_multiplier": 2.5,
+    "primary_rule": "modelled p95 latency, gated by error rate and cost index"
+  },
+  "per_size": [],
+  "correctness": {
+    "passed": true,
+    "checks_passed": 0,
+    "checks_total": 0,
+    "failures": [],
+    "note": "No repository code was executed. Model assumptions are listed in screening.assumptions."
+  },
+  "recommendation": {
+    "status": "IMPROVEMENT_CANDIDATE",
+    "label": "Architecture improvement candidate",
+    "summary": "Cache TTL 0→90 + Background offload False→True models p95 latency 18.2% lower with a 1.60× cost index. This is a SIMULATED candidate; validate it on a real deployment before changing production.",
+    "candidate_id": "cache_ttl_s=90|offload_jobs=True|rate_limit=0|replicas=1|retry_policy=none",
+    "controls": {
+      "replicas": 1,
+      "cache_ttl_s": 90,
+      "offload_jobs": true,
+      "retry_policy": "none",
+      "rate_limit": 0
+    },
+    "changes": [
+      {
+        "control": "cache_ttl_s",
+        "label": "Cache TTL",
+        "from": 0,
+        "to": 90,
+        "unit": "s"
+      },
+      {
+        "control": "offload_jobs",
+        "label": "Background offload",
+        "from": false,
+        "to": true,
+        "unit": "enabled"
+      }
+    ],
+    "modelled_change_pct": 18.21,
+    "baseline_p95_ms": 11.09,
+    "candidate_p95_ms": 9.07,
+    "error_rate_pct": 0.75,
+    "cost_multiplier": 1.6,
+    "measured": false,
+    "evidence_kind": "simulated",
+    "seed_sensitivity": {
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "min_change_pct": 17.76,
+      "max_change_pct": 20.83
+    },
+    "mode": "full"
+  }
+}

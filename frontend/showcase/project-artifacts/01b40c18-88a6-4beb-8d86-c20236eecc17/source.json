@@ -1,0 +1,32 @@
+{
+  "source": {
+    "url": "https://github.com/docker/awesome-compose",
+    "owner": "docker",
+    "repo": "awesome-compose",
+    "requested_ref": "30f4b7f6a6c3b0c0ecf4d4efb0de203c48d11562",
+    "commit_sha": "30f4b7f6a6c3b0c0ecf4d4efb0de203c48d11562",
+    "short_sha": "30f4b7f6a6c3",
+    "trusted": true,
+    "cache_key": "docker__awesome-compose__30f4b7f6a6c3",
+    "file_count": 16,
+    "size_bytes": 97199,
+    "metadata": {
+      "size": 11676,
+      "default_branch": "master",
+      "language": "HTML",
+      "license": {
+        "key": "cc0-1.0",
+        "name": "Creative Commons Zero v1.0 Universal",
+        "spdx_id": "CC0-1.0",
+        "url": "https://api.github.com/licenses/cc0-1.0",
+        "node_id": "MDc6TGljZW5zZTY="
+      },
+      "pushed_at": "2026-11-14T00:46:37Z"
+    }
+  },
+  "adapter": {
+    "adapter_id": "flask-redis-compose-v1",
+    "adapter_version": "1.0.0"
+  },
+  "inspection_id": "8c4e7902-5475-44dc-a702-158bffb765d8"
+}

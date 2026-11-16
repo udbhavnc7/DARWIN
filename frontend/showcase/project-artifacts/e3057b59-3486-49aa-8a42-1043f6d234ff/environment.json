@@ -1,0 +1,28 @@
+{
+  "benchmark_environment": {
+    "node_version": "v26.13.1",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13450HX",
+    "total_memory_bytes": 25463480320,
+    "heap_limit_bytes": 637534208,
+    "forced_gc": false
+  },
+  "harness": {
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "--no-warnings",
+      "--max-old-space-size=512",
+      "runner.mjs",
+      "config.json"
+    ],
+    "duration_s": 2.219,
+    "stdout_tail": "{\"ok\":true,\"parity\":true,\"checks\":\"65/65\",\"summaries\":[{\"fixture_id\":\"seed7-size1000\",\"seed\":7,\"size\":1000,\"currency\":\"GBP\",\"baseline_median_ns\":137100,\"candidate_median_ns\":119400,\"baseline_p95_ns\":176300,\"candidate_p95_ns\":181200,\"baseline_min_ns\":131200,\"baseline_max_ns\":176300,\"candidate_min_ns\":116000,\"candidate_max_ns\":181200,\"change_pct\":12.910284463894966,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed7-size10000\",\"seed\":7,\"size\":10000,\"currency\":\"EUR\",\"baseline_median_ns\":1331600,\"candidate_median_ns\":1173100,\"baseline_p95_ns\":2217100,\"candidate_p95_ns\":3694800,\"baseline_min_ns\":1277600,\"baseline_max_ns\":2217100,\"candidate_min_ns\":1148600,\"candidate_max_ns\":3694800,\"change_pct\":11.902973866025834,\"paired_candidate_wins\":7,\"samples\":10},{\"fixture_id\":\"seed7-size50000\",\"seed\":7,\"size\":50000,\"currency\":\"EUR\",\"baseline_median_ns\":8239500,\"candidate_median_ns\":6069100,\"baseline_p95_ns\":9134000,\"candidate_p95_ns\":6375100,\"baseline_min_ns\":7708400,\"baseline_max_ns\":9134000,\"candidate_min_ns\":5885100,\"candidate_max_ns\":6375100,\"change_pct\":26.341404211420596,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed21-size1000\",\"seed\":21,\"size\":1000,\"currency\":\"EUR\",\"baseline_median_ns\":128500,\"candidate_median_ns\":118400,\"baseline_p95_ns\":148600,\"candidate_p95_ns\":155600,\"baseline_min_ns\":125400,\"baseline_max_ns\":148600,\"candidate_min_ns\":115200,\"candidate_max_ns\":155600,\"change_pct\":7.8599221789883265,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed21-size10000\",\"seed\":21,\"size\":10000,\"currency\":\"USD\",\"baseline_median_ns\":1388500,\"candidate_median_ns\":1219600,\"baseline_p95_ns\":2363000,\"candidate_p95_ns\":2311400,\"baseline_min_ns\":1302200,\"baseline_max_ns\":2363000,\"candidate_min_ns\":1140800,\"candidate_max_ns\":2311400,\"change_pct\":12.164205977673749,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed21-size50000\",\"seed\":21,\"size\":50000,\"currency\":\"USD\",\"baseline_median_ns\":9057800,\"candidate_median_ns\":7086200,\"baseline_p95_ns\":12304900,\"candidate_p95_ns\":8845200,\"baseline_min_ns\":7880900,\"baseline_max_ns\":12304900,\"candidate_min_ns\":5924100,\"candidate_max_ns\":8845200,\"change_pct\":21.76687495859922,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed2026-size1000\",\"seed\":2026,\"size\":1000,\"currency\":\"EUR\",\"baseline_median_ns\":130400,\"candidate_median_ns\":120700,\"baseline_p95_ns\":247000,\"candidate_p95_ns\":300900,\"baseline_min_ns\":124600,\"baseline_max_ns\":247000,\"candidate_min_ns\":115400,\"candidate_max_ns\":300900,\"change_pct\":7.438650306748467,\"paired_candidate_wins\":8,\"samples\":10},{\"fixture_id\":\"seed2026-size10000\",\"seed\":2026,\"size\":10000,\"currency\":\"USD\",\"baseline_median_ns\":1256300,\"candidate_median_ns\":1115900,\"baseline_p95_ns\":2589800,\"candidate_p95_ns\":2352800,\"baseline_min_ns\":1223200,\"baseline_max_ns\":2589800,\"candidate_min_ns\":1093300,\"candidate_max_ns\":2352800,\"change_pct\":11.17567460001592,\"paired_candidate_wins\":8,\"samples\":10},{\"fixture_id\":\"seed2026-size50000\",\"seed\":2026,\"size\":50000,\"currency\":\"USD\",\"baseline_median_ns\":7845600,\"candidate_median_ns\":6434300,\"baseline_p95_ns\":8270600,\"candidate_p95_ns\":11341300,\"baseline_min_ns\":7599500,\"baseline_max_ns\":8270600,\"candidate_min_ns\":6055000,\"candidate_max_ns\":11341300,\"change_pct\":17.988426634036912,\"paired_candidate_wins\":9,\"samples\":10}],\"node\":\"v26.13.1\"}",
+    "stderr_tail": ""
+  },
+  "source_tests": {
+    "status": "skipped",
+    "reason": "The pinned checkout has no installed Vitest runtime; DARWIN did not install packages."
+  },
+  "measurement_scope": "pure report aggregation functions; currency filtering and React rendering are outside the timed region"
+}

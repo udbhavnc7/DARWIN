@@ -3,7 +3,10 @@
 These tests never start Docker. They cover the decisions that protect the host
 and the rules that prevent a forced winner.
 """
+import hashlib
+import io
 import json
+import zipfile
 from pathlib import Path
 from uuid import uuid4
 
@@ -344,6 +347,23 @@ def test_change_is_not_exported_for_baseline_retained(api):
     assert 'No measured architecture change' in response.json()['detail']
 
 
+def recorded_evaluation(ident: str, directory: str,
+                        verdict: str = 'BASELINE_RETAINED') -> dict:
+    """A minimal completed record that can own a real evidence folder."""
+    return {
+        'evaluation_id': ident, 'created_at': '2026-11-16T10:00:00+00:00',
+        'status': 'completed', 'stage': 'completed',
+        'inspection_id': str(uuid4()),
+        'adapter_id': 'flask-redis-compose-v1', 'adapter_version': '1',
+        'mode': 'quick', 'workload': {'challenge': 'faster'},
+        'source': {'url': 'https://github.com/docker/awesome-compose',
+                   'commit_sha': FLASK_REDIS_COMMIT},
+        'verdict': {'status': verdict, 'reason': 'Recorded for the test.',
+                    'comparison': [], 'winner_id': None, 'baseline_id': None},
+        'evidence': {'dir': directory, 'files': []},
+    }
+
+
 def test_recorded_change_is_served_as_markdown(api):
     client, engine, _ = api
     ident = str(uuid4())
@@ -351,13 +371,105 @@ def test_recorded_change_is_served_as_markdown(api):
     folder.mkdir(parents=True, exist_ok=True)
     (folder / 'change.md').write_text('# Measured change\n\n## Apply\n\n## Rollback\n',
                                       encoding='utf-8')
-    engine.store.save_evaluation({
-        'evaluation_id': ident, 'created_at': '2026-11-16T10:00:00+00:00',
-        'status': 'completed', 'stage': 'completed',
-        'verdict': {'status': 'TRADEOFF_REQUIRES_CHOICE', 'reason': 'Tradeoff.'},
-        'evidence': {'dir': 'ev-change', 'files': []},
-    }, 'done')
+    record = recorded_evaluation(ident, 'ev-change', 'TRADEOFF_REQUIRES_CHOICE')
+    engine._register_evidence(record, folder)
+    engine.store.save_evaluation(record, 'done')
     response = client.get(f'/api/project-evaluations/{ident}/change')
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('text/markdown')
     assert '## Rollback' in response.text
+
+
+def test_stray_files_never_become_evidence(api):
+    client, engine, _ = api
+    ident = str(uuid4())
+    folder = engine.store.root / 'ev-stray'
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / 'verdict.json').write_text('{"status": "BASELINE_RETAINED"}', encoding='utf-8')
+    (folder / 'notes.txt').write_text('host context that must not ship', encoding='utf-8')
+    record = recorded_evaluation(ident, 'ev-stray')
+    engine._register_evidence(record, folder)
+    assert {item['name'] for item in record['evidence']['files']} == {
+        'verdict.json', 'manifest.json'}
+    engine.store.save_evaluation(record, 'done')
+
+    assert client.get(
+        f'/api/project-evaluations/{ident}/artifacts/notes.txt').status_code == 404
+    bundle = client.get(f'/api/project-evaluations/{ident}/bundle')
+    assert bundle.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(bundle.content)) as archive:
+        assert 'notes.txt' not in archive.namelist()
+        assert 'verdict.json' in archive.namelist()
+
+
+def test_tampered_evidence_is_refused_not_served(api):
+    client, engine, _ = api
+    ident = str(uuid4())
+    folder = engine.store.root / 'ev-tampered'
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / 'verdict.json').write_text('{"status": "BASELINE_RETAINED"}', encoding='utf-8')
+    record = recorded_evaluation(ident, 'ev-tampered')
+    engine._register_evidence(record, folder)
+    engine.store.save_evaluation(record, 'done')
+    (folder / 'verdict.json').write_text('{"status": "VERIFIED_IMPROVEMENT"}', encoding='utf-8')
+
+    assert client.get(
+        f'/api/project-evaluations/{ident}/artifacts/verdict.json').status_code == 404
+    assert client.get(f'/api/project-evaluations/{ident}/bundle').status_code == 409
+
+
+@pytest.mark.skipif(not hasattr(Path, 'symlink_to'), reason='No symlink support')
+def test_symlinked_artifact_cannot_escape_the_evidence_folder(api, tmp_path):
+    client, engine, _ = api
+    ident = str(uuid4())
+    folder = engine.store.root / 'ev-symlink'
+    folder.mkdir(parents=True, exist_ok=True)
+    outside = tmp_path / 'outside.json'
+    outside.write_text('{"secret": "not evidence"}', encoding='utf-8')
+    try:
+        (folder / 'verdict.json').symlink_to(outside)
+    except OSError as exc:
+        pytest.skip(f'Symlinks are unavailable here: {exc}')
+    manifest = {'schema_version': 1, 'files': {
+        'verdict.json': hashlib.sha256(outside.read_bytes()).hexdigest()}}
+    (folder / 'manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+    record = recorded_evaluation(ident, 'ev-symlink')
+    record['evidence']['files'] = [
+        {'name': 'verdict.json', 'sha256': manifest['files']['verdict.json'], 'bytes': 0}]
+    engine.store.save_evaluation(record, 'done')
+
+    assert client.get(
+        f'/api/project-evaluations/{ident}/artifacts/verdict.json').status_code == 404
+    assert client.get(f'/api/project-evaluations/{ident}/bundle').status_code == 409
+
+
+def test_bundle_refuses_a_folder_without_an_evidence_manifest(api):
+    """An interrupted run keeps the adapter's own manifest; it is not evidence."""
+    client, engine, _ = api
+    ident = str(uuid4())
+    folder = engine.store.root / 'ev-interrupted'
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / 'manifest.json').write_text(json.dumps({'runtime': 'native'}), encoding='utf-8')
+    record = recorded_evaluation(ident, 'ev-interrupted')
+    record['status'] = 'failed'
+    engine.store.save_evaluation(record, 'failed')
+
+    assert client.get(f'/api/project-evaluations/{ident}/bundle').status_code == 409
+
+
+def test_record_without_registered_evidence_fails_closed(api):
+    client, engine, _ = api
+    ident = str(uuid4())
+    folder = engine.store.root / 'ev-legacy'
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / 'verdict.json').write_text('{"status": "BASELINE_RETAINED"}', encoding='utf-8')
+    (folder / 'change.md').write_text('# Unverified change\n', encoding='utf-8')
+    record = recorded_evaluation(ident, 'ev-legacy', 'TRADEOFF_REQUIRES_CHOICE')
+    record['evidence'] = {'dir': 'ev-legacy', 'files': None}
+    engine.store.save_evaluation(record, 'done')
+
+    assert client.get(
+        f'/api/project-evaluations/{ident}/artifacts/verdict.json').status_code == 404
+    change = client.get(f'/api/project-evaluations/{ident}/change')
+    assert 'Unverified change' not in change.text
+    assert 'No deployable change is exported' in change.text

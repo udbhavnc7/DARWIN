@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "39347c62-4875-484b-b9bd-f00e60e15317",
+  "inspection_id": "5c006716-f637-4c23-ac9d-6b5fcbc293fe",
+  "source_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "adapter_id": "architecture-screening-v1",
+  "adapter_version": "1.0.0",
+  "evidence_kind": "simulated",
+  "created_at": "2026-11-16T13:59:35.644596+00:00",
+  "files": {
+    "architecture.json": "9aab90118601efe65feab9adc7807733b1f0d9e9c00a627a60c616fc5bb1d9db",
+    "project-note.md": "ac0ac001d9b0a248a5e6d8cb317d3b55a69c54a0e5eb39be5f2d99fa8a833429",
+    "replay.md": "5cf2ccb6a4c1940011f77cf428baffec4a140153d01649628809df078c07ade0",
+    "screening.json": "b60acc681e807b491ffc532485dd20065d1ee47857dcbd6efd3291939df13dfd",
+    "source.json": "3480c637519d8041c197f820269a3852e1f13e8959b9c7c4c2e63fa1da005c14",
+    "verdict.json": "2e2a51f6ff1ac061e16fbc3b8cf6f7bbc9c25b2f2c851fab92514eaad74da90c",
+    "workload.json": "01638319d33b8bbaade804d2e5109a36727c271795ec232aa677d1ab0710df47"
+  }
+}

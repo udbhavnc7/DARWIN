@@ -1,0 +1,32 @@
+{
+  "source": {
+    "url": "https://github.com/udbhavnc7/Sanchay",
+    "owner": "udbhavnc7",
+    "repo": "Sanchay",
+    "requested_ref": "main",
+    "commit_sha": "7e1bc4cdd31e53380e7896b4a20a864bbebcee1e",
+    "short_sha": "7e1bc4cdd31e",
+    "trusted": true,
+    "cache_key": "udbhavnc7__Sanchay__7e1bc4cdd31e",
+    "file_count": 2036,
+    "size_bytes": 24797038,
+    "metadata": {
+      "size": 73541,
+      "default_branch": "main",
+      "language": "Kotlin",
+      "license": {
+        "key": "gpl-3.0",
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "node_id": "MDc6TGljZW5zZTk="
+      },
+      "pushed_at": "2026-11-14T18:05:42Z"
+    }
+  },
+  "adapter": {
+    "adapter_id": "sanchay-reporting-v1",
+    "adapter_version": "1.0.0"
+  },
+  "inspection_id": "f1a507ff-a5ee-460e-93e7-959cdb875fd3"
+}
