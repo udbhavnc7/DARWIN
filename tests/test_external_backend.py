@@ -364,6 +364,56 @@ def test_candidates_preview_lists_reviewed_dimensions(api):
     assert all('replicas' in item['dimension'] for item in body['candidates'])
 
 
+def test_candidates_preview_tolerates_a_client_pipeline_adapter(api):
+    from darwin.adapters.sanchay_reporting import SanchayReportingAdapter
+
+    client, engine, root = api
+    adapter = SanchayReportingAdapter()
+    engine.adapters = {adapter.id: adapter}
+    record = inspection(root)
+    record['supported_evaluations'] = [{
+        'adapter_id': adapter.id, 'adapter_version': adapter.version,
+        'evaluation_type': 'client_data_processing', 'execution_allowed': True,
+    }]
+    engine.store.save_inspection(record)
+    preview = client.get(f'/api/repositories/inspections/{record["inspection_id"]}/candidates')
+    assert preview.status_code == 200
+    body = preview.json()
+    assert body['eligible'] is True
+    assert body['capabilities'] == {}
+    assert body['candidates'] == []
+
+
+def test_manifest_validation_accepts_reviewed_and_rejects_tampered(api):
+    import hashlib
+    import json as jsonlib
+
+    client, engine, _ = api
+    manifest = FlaskRedisAdapter().manifest.as_dict()
+    reviewed = client.post('/api/repositories/validate-manifest', json={
+        'adapter_id': 'flask-redis-compose-v1', 'manifest': manifest,
+    })
+    assert reviewed.status_code == 200
+    assert reviewed.json()['valid'] is True
+
+    tampered = {**manifest, 'app_port': 9999}
+    rejected = client.post('/api/repositories/validate-manifest', json={
+        'adapter_id': 'flask-redis-compose-v1', 'manifest': tampered,
+    }).json()
+    assert rejected['valid'] is False
+    assert any('sha256' in item for item in rejected['errors'])
+
+    unsafe = {**manifest, 'source_files': ['../outside.py']}
+    body = {key: value for key, value in unsafe.items() if key != 'sha256'}
+    unsafe['sha256'] = hashlib.sha256(
+        jsonlib.dumps(body, sort_keys=True).encode('utf-8')).hexdigest()
+    refused = client.post('/api/repositories/validate-manifest', json={
+        'adapter_id': 'flask-redis-compose-v1', 'manifest': unsafe,
+    }).json()
+    assert refused['valid'] is False
+    assert any('Unsafe source path' in item for item in refused['errors'])
+
+
 def test_prerequisite_mismatch_is_refused_before_any_execution(api):
     client, engine, root = api
     flask_tree(root)

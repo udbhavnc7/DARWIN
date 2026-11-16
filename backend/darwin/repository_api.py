@@ -7,6 +7,8 @@ catalogued repository at its pinned commit can start a live evaluation.
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import os
 from pathlib import Path
 import secrets
@@ -31,6 +33,11 @@ class InspectRequest(BaseModel):
         default=False,
         description='The caller explicitly allows DARWIN to download this public source.',
     )
+
+
+class ManifestValidationRequest(BaseModel):
+    adapter_id: str = Field(min_length=1, max_length=100)
+    manifest: dict
 
 
 class EvaluationRequest(BaseModel):
@@ -114,6 +121,52 @@ def inspect(body: InspectRequest, request: Request):
         raise _repository_error(exc)
 
 
+@router.post('/api/repositories/validate-manifest')
+def validate_manifest(body: ManifestValidationRequest, request: Request):
+    """Validate a proposed run manifest against the reviewed, hashed manifest.
+
+    This is a read-only review helper: nothing is written, downloaded or run.
+    """
+    from darwin.backend_manifest import validate_relative_files
+
+    engine = repositories(request)
+    adapter = engine.adapters.get(body.adapter_id)
+    if adapter is None or not hasattr(adapter, 'manifest'):
+        raise HTTPException(404, 'No reviewed container adapter is installed with that id.')
+    expected = adapter.manifest.as_dict()
+    submitted = dict(body.manifest)
+    digest = submitted.pop('sha256', None)
+    errors: list[str] = []
+    try:
+        computed = hashlib.sha256(
+            json.dumps(submitted, sort_keys=True).encode('utf-8')).hexdigest()
+    except (TypeError, ValueError):
+        computed = ''
+        errors.append('The manifest body is not JSON-serialisable.')
+    if not digest or digest != computed:
+        errors.append('The supplied sha256 does not match the manifest body.')
+    if digest and digest != expected.get('sha256'):
+        errors.append('The manifest does not match the reviewed adapter manifest.')
+    if submitted.get('adapter_id') != body.adapter_id:
+        errors.append('The manifest adapter_id does not match the request adapter_id.')
+    try:
+        validate_relative_files(submitted.get('source_files') or [])
+    except (TypeError, ValueError) as exc:
+        errors.append(f'Unsafe source path: {exc}')
+    if submitted.get('runtime') not in ('gunicorn-flask', 'uvicorn-fastapi', 'node-express'):
+        errors.append('The runtime is not supported by this isolated runner.')
+    port = submitted.get('app_port')
+    if not isinstance(port, int) or isinstance(port, bool) or not 1 <= port <= 65535:
+        errors.append('app_port must be an integer between 1 and 65535.')
+    return {
+        'valid': not errors,
+        'adapter_id': body.adapter_id,
+        'sha256': computed or None,
+        'reviewed_sha256': expected.get('sha256'),
+        'errors': errors,
+    }
+
+
 @router.get('/api/repositories/inspections')
 def inspections(request: Request):
     return _public(repositories(request).store.all_inspections())
@@ -183,13 +236,17 @@ def inspection_candidates(ident: str, request: Request):
     manifest = adapter.describe(Path(inspection.get('_source_root', '')),
                                 inspection['source']['commit_sha'],
                                 bool(inspection['source']['trusted']))
+    # Client-pipeline adapters declare their abilities on the inspection payload;
+    # container adapters expose a capabilities() method on the adapter itself.
+    capabilities = (adapter.capabilities() if hasattr(adapter, 'capabilities')
+                    else support.get('capabilities') or {})
     return {
         'eligible': bool(inspection.get('execution_allowed')),
         'support_level': inspection.get('support_level'),
         'prerequisites': inspection.get('prerequisites') or [],
         'adapter_id': support['adapter_id'],
         'adapter_version': support['adapter_version'],
-        'capabilities': adapter.capabilities(),
+        'capabilities': capabilities,
         'challenges': support.get('challenges') or [],
         'unsupported': manifest.get('unsupported') or [],
         'candidates': [
