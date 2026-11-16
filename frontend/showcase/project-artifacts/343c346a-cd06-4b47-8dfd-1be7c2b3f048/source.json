@@ -1,0 +1,26 @@
+{
+  "source": {
+    "url": "https://github.com/udbhavnc7/TATTAVA",
+    "owner": "udbhavnc7",
+    "repo": "TATTAVA",
+    "requested_ref": "main",
+    "commit_sha": "cb21876d5c481ccddb6fbb5d09c7569d11b80c94",
+    "short_sha": "cb21876d5c48",
+    "trusted": false,
+    "cache_key": "udbhavnc7__TATTAVA__cb21876d5c48",
+    "file_count": 3332,
+    "size_bytes": 6829435,
+    "metadata": {
+      "size": 3330,
+      "default_branch": "main",
+      "language": "TypeScript",
+      "pushed_at": "2026-08-08T13:50:05Z"
+    }
+  },
+  "adapter": {
+    "adapter_id": "architecture-screening-v1",
+    "adapter_version": "1.0.0"
+  },
+  "inspection_id": "f3ce9e22-509e-45ed-a8e8-2d8b70397475",
+  "evidence_kind": "simulated"
+}

@@ -1,0 +1,4 @@
+{
+  "status": "skipped",
+  "reason": "The pinned checkout has no installed Vitest runtime; DARWIN did not install packages."
+}

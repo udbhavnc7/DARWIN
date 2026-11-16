@@ -102,9 +102,19 @@ def main() -> None:
     write('project-evaluations.json', project_evaluations)
     for inspection in project_inspections:
         write(f"project-inspections/{inspection['inspection_id']}.json", inspection)
+        try:
+            write(f"project-candidates/{inspection['inspection_id']}.json",
+                  client.get(f"/api/repositories/inspections/{inspection['inspection_id']}/candidates"))
+        except (urllib.error.URLError, TimeoutError) as error:
+            print(f"candidates not captured for {inspection['inspection_id']}: {error}")
     for evaluation in project_evaluations:
         ident = evaluation['evaluation_id']
         write(f'project-evaluations/{ident}.json', evaluation)
+        try:
+            change = client.request(client.api + f'/api/project-evaluations/{ident}/change')
+            write_bytes(f'project-changes/{ident}.md', change)
+        except (urllib.error.URLError, TimeoutError) as error:
+            print(f'project change not captured for {ident}: {error}')
         try:
             write(f'events/project-evaluation-{ident}.json',
                   client.get(f'/api/project-evaluations/{ident}/events'))

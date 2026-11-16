@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "baseline-1x1 health and shared-state oracle",
+      "passed": true,
+      "detail": "Shared Redis counter increased through the gateway"
+    },
+    {
+      "name": "replicas-2x1 health and shared-state oracle",
+      "passed": true,
+      "detail": "Shared Redis counter increased through the gateway"
+    },
+    {
+      "name": "workers-1x2 health and shared-state oracle",
+      "passed": true,
+      "detail": "Shared Redis counter increased through the gateway"
+    }
+  ],
+  "source_tests": {
+    "status": "not_run",
+    "reason": "This adapter verifies HTTP oracles in isolation; it does not install repository test runners."
+  }
+}

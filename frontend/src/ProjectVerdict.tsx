@@ -2,7 +2,8 @@ import {useState} from 'react';
 import {Action, Icon} from './Action';
 import {
   api, artifactUrl, bundleUrl, changeLabel, controlLabel, formatDate, formatDuration, formatMs,
-  formatRows, tone, type Evaluation, type EvidenceFile, type Measurement, type ScreeningChange,
+  formatRows, tone, type ArchitectureRun, type Evaluation, type EvidenceFile, type Measurement,
+  type ScreeningChange,
 } from './projectApi';
 
 type Props = {
@@ -100,7 +101,7 @@ function ScreeningVerdict({evaluation, onRerun, onChooseAnother, downloadsAvaila
     return <section className="project-panel project-verdict">
       <div className="section-title">
         <div className="panel-heading">
-          <span className="section-kicker">Step 4 · Simulated screening</span>
+          <span className="section-kicker">Step 5 · Prove · Simulated screening</span>
           <h2>No screening result was produced.</h2>
         </div>
         <span className="status-chip warn">SIMULATED · NOT MEASURED</span>
@@ -131,7 +132,7 @@ function ScreeningVerdict({evaluation, onRerun, onChooseAnother, downloadsAvaila
   return <section className="project-panel project-verdict project-sim-verdict" aria-labelledby="project-verdict-title">
     <div className="section-title">
       <div className="panel-heading">
-        <span className="section-kicker">Step 4 · Simulated recommendation</span>
+        <span className="section-kicker">Step 5 · Prove · Simulated recommendation</span>
         <h2 id="project-verdict-title">{recommendation.label}</h2>
       </div>
       <span className="status-chip warn"
@@ -343,6 +344,266 @@ function ScreeningVerdict({evaluation, onRerun, onChooseAnother, downloadsAvaila
   </section>;
 }
 
+function rateLabel(value?: number | null): string {
+  return value === null || value === undefined || !Number.isFinite(value) ? '—' : `${value.toFixed(2)}/s`;
+}
+
+function mbLabel(value?: number | null): string {
+  return value === null || value === undefined || !Number.isFinite(value) ? '—' : `${value.toFixed(1)} MB`;
+}
+
+function cpuLabel(value?: number | null): string {
+  return value === null || value === undefined || !Number.isFinite(value) ? '—' : `${value.toFixed(3)} s`;
+}
+
+function ArchitectureVerdict({evaluation, onRerun, onChooseAnother, downloadsAvailable, recordedView, artifact}
+  : Props & {artifact: ArtifactState}) {
+  const verdict = evaluation.verdict;
+  const measurement = evaluation.architecture;
+  const [change, setChange] = useState<string | null>(null);
+  const [changeState, setChangeState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [changeError, setChangeError] = useState('');
+
+  if (!verdict) return null;
+
+  const runs: ArchitectureRun[] = measurement?.runs?.length
+    ? measurement.runs.map(run => (run.metrics ? {...run, ...run.metrics} : run))
+    : verdict.comparison ?? [];
+  const baseline = runs.find(item => item.candidate_id === verdict.baseline_id)
+    ?? runs.find(item => item.baseline) ?? runs[0];
+  const winner = runs.find(item => item.candidate_id === verdict.winner_id);
+  const challenge = measurement?.challenge ?? evaluation.workload?.challenge;
+  const env = measurement?.environment;
+  const regressions = verdict.regressions ?? [];
+  const live = !recordedView && evaluation.evidence_kind === 'live';
+  const changes = winner && baseline
+    ? [
+      {label: 'Service replicas', from: baseline.replicas, to: winner.replicas},
+      {label: 'Gunicorn workers', from: baseline.workers, to: winner.workers},
+    ].filter(item => item.from !== item.to)
+    : [];
+
+  async function loadChange() {
+    if (change !== null) return;
+    setChangeState('loading');
+    try {
+      setChange(await api.change(evaluation.evaluation_id));
+      setChangeState('idle');
+    } catch (reason) {
+      setChangeState('error');
+      setChangeError(reason instanceof Error ? reason.message : 'The change document could not be loaded.');
+    }
+  }
+
+  return <section className="project-panel project-verdict" aria-labelledby="project-verdict-title">
+    <div className="section-title">
+      <div className="panel-heading">
+        <span className="section-kicker">Step 5 · Prove</span>
+        <h2 id="project-verdict-title">{verdict.label}</h2>
+      </div>
+      <span className={`status-chip ${live ? 'good' : 'warn'}`}
+        title={live
+          ? 'Measured on this computer in an isolated loopback stack and stored as evidence.'
+          : 'This verdict is a saved run, not a live measurement.'}>
+        {live ? 'LIVE · this computer' : 'RECORDED evidence'}
+      </span>
+    </div>
+
+    <div className={`project-verdict-callout ${tone(verdict.status)}`} role="status">
+      <strong>{verdict.status.replaceAll('_', ' ')}</strong>
+      <p>{verdict.reason}</p>
+    </div>
+
+    <div className="project-decision">
+      <div className="project-decision-main">
+        <span className="section-kicker">Decision card</span>
+        <h3>{winner ? winner.label : 'Original architecture retained'}</h3>
+        <dl className="project-decision-facts">
+          <div><dt>Challenge</dt><dd>{challenge ? challenge.replaceAll('_', ' ') : '—'}</dd></div>
+          <div><dt>Original</dt><dd>{baseline ? `${baseline.replicas} replica(s) × ${baseline.workers} worker(s)` : '—'}</dd></div>
+          <div><dt>Recommended</dt><dd>{winner ? `${winner.replicas} replica(s) × ${winner.workers} worker(s)` : 'No change'}</dd></div>
+          <div><dt>Correctness</dt>
+            <dd>{verdict.correctness.checks_passed}/{verdict.correctness.checks_total} checks</dd></div>
+          <div><dt>Evidence</dt><dd><span className={`status-chip ${live ? 'good' : 'warn'}`}>
+            {live ? 'LIVE' : 'RECORDED'}</span></dd></div>
+          <div><dt>Confidence limits</dt><dd>One host, one workload window</dd></div>
+        </dl>
+        {changes.length > 0 ? <div className="table-scroll project-table">
+          <table>
+            <thead><tr><th scope="col">Deployable change</th><th scope="col">Original</th><th scope="col">Recommended</th></tr></thead>
+            <tbody>{changes.map(item => <tr key={item.label}>
+              <th scope="row">{item.label}</th>
+              <td>{item.from}</td>
+              <td>{item.to}</td>
+            </tr>)}</tbody>
+          </table>
+        </div> : <p className="muted">The measured evidence does not support a deployment change.</p>}
+        <p className="project-footnote">
+          Thresholds: at least {verdict.policy.minimum_improvement_pct ?? 8}% better on the challenge metric,
+          error rate at most {((verdict.policy.maximum_error_rate ?? 0.05) * 100).toFixed(0)}%, and no regression
+          above {verdict.policy.regression_limit_pct ?? 5}% on latency, CPU, memory or throughput.
+        </p>
+      </div>
+      <div className="project-decision-side">
+        <span className="section-kicker">What this is not</span>
+        <ul className="project-decision-limits">
+          <li>Not a production benchmark: the load generator and the service share one host.</li>
+          <li>Not the repository's own Compose file or Dockerfile; DARWIN deploys a reviewed stack.</li>
+          <li>Not a business-correctness proof: the oracle checks HTTP health and counter monotonicity.</li>
+          <li>No number here is simulated or estimated.</li>
+        </ul>
+        {measurement && !measurement.complete && <p className="notice" role="alert">
+          This run was incomplete. {measurement.skipped?.length ?? 0} candidate(s) did not run inside the
+          bounded budget. No missing number was filled in.
+        </p>}
+      </div>
+    </div>
+
+    {regressions.length > 0 && <div className="project-regressions" role="alert">
+      <h3>Cost of this change</h3>
+      <ul>{regressions.map(item => <li key={item.metric}>
+        <span className="status-chip warn">Regressed</span>
+        <span>{item.label}: {typeof item.baseline === 'number' ? item.baseline.toFixed(3) : item.baseline}
+          {' → '}{typeof item.candidate === 'number' ? item.candidate.toFixed(3) : item.candidate}
+          <small>{item.change_pct > 0 ? '+' : ''}{item.change_pct.toFixed(1)}%</small></span>
+      </li>)}</ul>
+      <p className="project-footnote">
+        A win on the challenge metric never erases a regression elsewhere. DARWIN reports the tradeoff
+        instead of a single winner score.
+      </p>
+    </div>}
+
+    {challenge === 'recover' && <div className="project-recovery">
+      <h3>Recovery measured during a web-replica restart</h3>
+      <dl className="project-recovery-grid">
+        <div><dt>Original</dt><dd>{formatMs((verdict.baseline_recovery_s ?? 0) * 1000)}</dd></div>
+        <div><dt>Recommended</dt><dd>{formatMs((verdict.candidate_recovery_s ?? 0) * 1000)}</dd></div>
+      </dl>
+      <p className="muted">{(verdict.recovery_notes ?? []).join(' ')}</p>
+    </div>}
+
+    <div className="project-verdict-grid project-comparison">
+      <div>
+        <h3>Measured comparison</h3>
+        {runs.length > 0 ? <div className="table-scroll project-table">
+          <table>
+            <thead><tr>
+              <th scope="col">Configuration</th>
+              <th scope="col">p95</th><th scope="col">Throughput</th><th scope="col">Errors</th>
+              <th scope="col">CPU</th><th scope="col">Peak memory</th>
+              {challenge === 'recover' && <th scope="col">Recovery</th>}
+            </tr></thead>
+            <tbody>{runs.map(item => <tr key={item.candidate_id}
+              className={item.candidate_id === verdict.winner_id ? 'project-primary-row' : undefined}>
+              <th scope="row">{item.label}
+                <span className="project-run-shape">{item.replicas} × {item.workers}</span>
+                {item.candidate_id === verdict.winner_id && <span className="project-primary-mark">recommended</span>}
+                {item.candidate_id === verdict.baseline_id && <span className="project-primary-mark">original</span>}
+              </th>
+              <td>{formatMs(item.p95_ms)}</td>
+              <td>{rateLabel(item.requests_per_s)}</td>
+              <td>{item.error_rate === null || item.error_rate === undefined
+                ? '—' : `${(item.error_rate * 100).toFixed(2)}%`}</td>
+              <td>{cpuLabel(item.cpu_seconds)}</td>
+              <td>{mbLabel(item.memory_peak_mb)}</td>
+              {challenge === 'recover' && <td>{item.recovery_s == null ? '—' : formatMs(item.recovery_s * 1000)}</td>}
+            </tr>)}</tbody>
+          </table>
+        </div> : <p className="muted">No measured run was retained. There is no performance claim to make.</p>}
+        <p className="project-footnote">
+          Median across repeated runs for latency, throughput, CPU and memory; the worst error rate is kept.
+          Recovery is the user-visible outage at the gateway after a restart.
+        </p>
+      </div>
+      <div className="project-verdict-side">
+        <h3>Provenance</h3>
+        <dl>
+          <div><dt>Repository</dt><dd><a href={evaluation.source.url} target="_blank" rel="noreferrer">{evaluation.source.owner}/{evaluation.source.repo}</a></dd></div>
+          <div><dt>Pinned commit</dt><dd><code>{evaluation.source.short_sha}</code></dd></div>
+          <div><dt>Adapter</dt><dd>{evaluation.adapter_id} · v{evaluation.adapter_version}</dd></div>
+          <div><dt>Challenge</dt><dd>{challenge ?? '—'}</dd></div>
+          <div><dt>Mode</dt><dd>{evaluation.mode} · {measurement?.repetitions_requested ?? 1} repetition(s)</dd></div>
+          <div><dt>Isolation</dt><dd>{env?.isolation ?? '—'} · loopback only</dd></div>
+          <div><dt>Load window</dt><dd>{env?.load_window_s ?? '—'} s · {env?.load_rate_per_s ?? '—'} req/s</dd></div>
+          <div><dt>Repository Compose</dt><dd>{env?.repository_compose_used ? 'used' : 'not used'}</dd></div>
+          <div><dt>Recorded</dt><dd>{formatDate(evaluation.finished_at)}</dd></div>
+          <div><dt>Run time</dt><dd>{formatDuration(evaluation.duration_s)}</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <details className="project-proof">
+      <summary>Advanced evidence <span className="status-chip">{evaluation.evidence.files.length} files</span></summary>
+      <div className="project-proof-body">
+        <h3>Correctness gates</h3>
+        <ul className="project-check-list">
+          {(evaluation.correctness?.checks ?? []).map(check => <li key={check.name}
+            className={check.passed ? 'passed' : 'failed'}>
+            <span className={`status-chip ${check.passed ? 'good' : 'bad'}`}>{check.passed ? 'Pass' : 'Fail'}</span>
+            <span>{check.name}{check.detail && <small>{check.detail}</small>}</span>
+          </li>)}
+        </ul>
+        <p className="muted">{verdict.correctness.note}</p>
+
+        {runs.length > 0 && <details>
+          <summary>Repeated live runs</summary>
+          <div className="table-scroll project-table">
+            <table>
+              <thead><tr><th scope="col">Configuration</th><th scope="col">Rep</th><th scope="col">p95</th>
+                <th scope="col">Throughput</th><th scope="col">Errors</th></tr></thead>
+              <tbody>{runs.flatMap(run => (run.repetitions ?? []).map(rep => <tr key={`${run.candidate_id}-${rep.repetition}`}>
+                <th scope="row">{run.label}</th><td>{rep.repetition}</td>
+                <td>{formatMs(rep.metrics.p95_ms)}</td><td>{rateLabel(rep.metrics.requests_per_s)}</td>
+                <td>{(rep.metrics.error_rate * 100).toFixed(2)}%</td>
+              </tr>))}</tbody>
+            </table>
+          </div>
+        </details>}
+
+        {measurement?.pareto && measurement.pareto.length > 0 && <p className="project-footnote">
+          Non-dominated configurations on p95, error rate and replica count:{' '}
+          {measurement.pareto.map(item => item.candidate_id).join(', ')}.
+        </p>}
+
+        <h3>Evidence files</h3>
+        <EvidenceFiles files={evaluation.evidence.files} files_open={artifact.open}
+          downloadsAvailable={downloadsAvailable} evaluation={evaluation} artifact={artifact}/>
+        <p className="project-footnote">
+          Verify every file against <code>manifest.json</code>. Raw samples live in <code>benchmark.json</code>;
+          <code>change.md</code> records the decision, the measured comparison and any deployment change.
+        </p>
+      </div>
+    </details>
+
+    {changes.length === 0 && <p className="project-footnote project-no-change">
+      No deployment change is exported for this verdict. <code>change.md</code> in the evidence bundle
+      still records the measured comparison, the apply and rollback notes, and the limits of the run.
+    </p>}
+
+    <div className="project-actions">
+      {changes.length > 0 && <Action variant="secondary" icon="code" pending={changeState === 'loading'} onClick={() => void loadChange()}>
+        Open deployment change
+      </Action>}
+      <Action variant="secondary" icon="download" disabled={!downloadsAvailable}
+        title={downloadsAvailable ? undefined : 'The evidence archive is available when this page is connected to a live DARWIN bench.'}
+        onClick={() => { if (downloadsAvailable) window.location.assign(bundleUrl(evaluation.evaluation_id)); }}>
+        Download evidence bundle
+      </Action>
+      <Action variant="primary" icon="refresh" onClick={onRerun}>Run a fresh comparison</Action>
+      <Action variant="quiet" onClick={onChooseAnother}>Choose another project</Action>
+    </div>
+    {changeState === 'error' && <p className="notice" role="alert">{changeError}</p>}
+    {change !== null && <details open className="project-diff">
+      <summary>Deployment change · review before applying</summary>
+      <pre className="project-pre">{change}</pre>
+      <p className="project-footnote">
+        This is a reviewable change, not an automatic edit. DARWIN never edits, commits or pushes the
+        project repository; rollback is described in the document.
+      </p>
+    </details>}
+  </section>;
+}
+
 export function ProjectVerdict(props: Props) {
   const {evaluation, onRerun, onChooseAnother, downloadsAvailable, recordedView} = props;
   const verdict = evaluation.verdict;
@@ -396,9 +657,13 @@ export function ProjectVerdict(props: Props) {
     return <ScreeningVerdict {...props} artifact={artifactState}/>;
   }
 
+  if (evaluation.evaluation_type === 'backend_architecture') {
+    return <ArchitectureVerdict {...props} artifact={artifactState}/>;
+  }
+
   if (!verdict) {
     return <section className="project-panel project-verdict">
-      <span className="section-kicker">Step 4 · Verdict</span>
+      <span className="section-kicker">Step 5 · Prove · Verdict</span>
       <h2>No verdict was recorded</h2>
       <p className="project-lede">This evaluation ended without a defensible result. DARWIN will not invent one.</p>
       {evaluation.error && <p className="notice" role="alert">{evaluation.error}</p>}
@@ -413,7 +678,7 @@ export function ProjectVerdict(props: Props) {
   return <section className="project-panel project-verdict" aria-labelledby="project-verdict-title">
     <div className="section-title">
       <div className="panel-heading">
-        <span className="section-kicker">Step 4 · Verdict</span>
+        <span className="section-kicker">Step 5 · Prove · Verdict</span>
         <h2 id="project-verdict-title">{verdict.label}</h2>
       </div>
       <span className={`status-chip ${liveEvidence ? 'good' : ''}`}

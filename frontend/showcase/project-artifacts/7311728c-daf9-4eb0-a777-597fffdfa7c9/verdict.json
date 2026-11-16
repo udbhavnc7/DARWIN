@@ -1,0 +1,136 @@
+{
+  "status": "TRADEOFF_REQUIRES_CHOICE",
+  "label": "Tradeoff — choose",
+  "reason": "Two stateless replicas was 4.1% better on p95_ms but regressed on CPU seconds per window +32.9%, peak memory +64.5%. DARWIN will not hide that cost behind a single winner score.",
+  "policy": {
+    "minimum_improvement_pct": 8.0,
+    "maximum_error_rate": 0.05,
+    "regression_limit_pct": 5.0,
+    "challenge": "faster",
+    "evidence_kind": "live",
+    "primary_metric": "p95_ms",
+    "simulation_cannot_win": true
+  },
+  "correctness": {
+    "passed": true,
+    "checks_passed": 2,
+    "checks_total": 2,
+    "failures": [],
+    "note": "HTTP availability is not business correctness. Counter monotonicity is the oracle for this adapter."
+  },
+  "per_size": [],
+  "winner_id": "replicas-2x1",
+  "baseline_id": "baseline-1x1",
+  "baseline_metrics": {
+    "schema_version": 1,
+    "p50_ms": 3.171199999997043,
+    "p95_ms": 3.530599999066908,
+    "p99_ms": 15.091200000824756,
+    "requests_per_s": 6.0,
+    "error_rate": 0.0,
+    "cpu_seconds": 0.2079,
+    "memory_peak_mb": 39.41,
+    "recovery_s": null,
+    "sample_count": 36
+  },
+  "candidate_metrics": {
+    "change_pct": 4.12,
+    "baseline_p95_ms": 3.530599999066908,
+    "candidate_p95_ms": 3.3851000007416587,
+    "baseline_rps": 6.0,
+    "candidate_rps": 6.0,
+    "baseline_recovery_s": null,
+    "candidate_recovery_s": null,
+    "comparison": [
+      {
+        "candidate_id": "baseline-1x1",
+        "label": "Original: 1 replica",
+        "p95_ms": 3.530599999066908,
+        "requests_per_s": 6.0,
+        "error_rate": 0.0,
+        "cpu_seconds": 0.2079,
+        "memory_peak_mb": 39.41,
+        "recovery_s": null,
+        "replicas": 1,
+        "workers": 1
+      },
+      {
+        "candidate_id": "replicas-2x1",
+        "label": "Two stateless replicas",
+        "p95_ms": 3.3851000007416587,
+        "requests_per_s": 6.0,
+        "error_rate": 0.0,
+        "cpu_seconds": 0.2762,
+        "memory_peak_mb": 64.82,
+        "recovery_s": null,
+        "replicas": 2,
+        "workers": 1
+      }
+    ],
+    "regressions": [
+      {
+        "metric": "cpu_seconds",
+        "label": "CPU seconds per window",
+        "baseline": 0.2079,
+        "candidate": 0.2762,
+        "change_pct": 32.85
+      },
+      {
+        "metric": "memory_peak_mb",
+        "label": "peak memory",
+        "baseline": 39.41,
+        "candidate": 64.82,
+        "change_pct": 64.48
+      }
+    ]
+  },
+  "change_pct": 4.12,
+  "baseline_p95_ms": 3.530599999066908,
+  "candidate_p95_ms": 3.3851000007416587,
+  "baseline_rps": 6.0,
+  "candidate_rps": 6.0,
+  "baseline_recovery_s": null,
+  "candidate_recovery_s": null,
+  "comparison": [
+    {
+      "candidate_id": "baseline-1x1",
+      "label": "Original: 1 replica",
+      "p95_ms": 3.530599999066908,
+      "requests_per_s": 6.0,
+      "error_rate": 0.0,
+      "cpu_seconds": 0.2079,
+      "memory_peak_mb": 39.41,
+      "recovery_s": null,
+      "replicas": 1,
+      "workers": 1
+    },
+    {
+      "candidate_id": "replicas-2x1",
+      "label": "Two stateless replicas",
+      "p95_ms": 3.3851000007416587,
+      "requests_per_s": 6.0,
+      "error_rate": 0.0,
+      "cpu_seconds": 0.2762,
+      "memory_peak_mb": 64.82,
+      "recovery_s": null,
+      "replicas": 2,
+      "workers": 1
+    }
+  ],
+  "regressions": [
+    {
+      "metric": "cpu_seconds",
+      "label": "CPU seconds per window",
+      "baseline": 0.2079,
+      "candidate": 0.2762,
+      "change_pct": 32.85
+    },
+    {
+      "metric": "memory_peak_mb",
+      "label": "peak memory",
+      "baseline": 39.41,
+      "candidate": 64.82,
+      "change_pct": 64.48
+    }
+  ]
+}

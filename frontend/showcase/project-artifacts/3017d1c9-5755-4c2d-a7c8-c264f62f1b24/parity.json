@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "baseline-1x1 health and shared-state oracle",
+      "passed": true,
+      "detail": "Shared Redis counter increased before and after the web replica restart"
+    },
+    {
+      "name": "replicas-2x1 health and shared-state oracle",
+      "passed": true,
+      "detail": "Shared Redis counter increased before and after the web replica restart"
+    },
+    {
+      "name": "workers-1x2 health and shared-state oracle",
+      "passed": true,
+      "detail": "Shared Redis counter increased before and after the web replica restart"
+    }
+  ],
+  "source_tests": {
+    "status": "not_run",
+    "reason": "This adapter verifies HTTP oracles in isolation; it does not install repository test runners."
+  }
+}

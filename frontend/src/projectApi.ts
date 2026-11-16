@@ -227,6 +227,117 @@ export type SupportedEvaluation = {
   execution_allowed: boolean;
   execution_note: string;
   evidence: string[];
+  ready?: boolean;
+  prerequisite?: string;
+  capabilities?: {
+    inspect?: boolean;
+    deploy?: boolean;
+    dimensions?: string[];
+    faults?: string[];
+    metrics?: string[];
+    invariants?: string[];
+    search?: string;
+    limits?: string[];
+  };
+  challenges?: string[];
+};
+
+export type ArchitectureMetrics = {
+  p50_ms?: number;
+  p95_ms?: number;
+  p99_ms?: number;
+  requests_per_s?: number;
+  error_rate?: number;
+  cpu_seconds?: number;
+  memory_peak_mb?: number;
+  sample_count?: number;
+};
+
+export type ArchitectureMetricRow = {
+  candidate_id: string;
+  label: string;
+  p95_ms?: number | null;
+  requests_per_s?: number | null;
+  error_rate?: number | null;
+  cpu_seconds?: number | null;
+  memory_peak_mb?: number | null;
+  recovery_s?: number | null;
+  replicas?: number;
+  workers?: number;
+};
+
+export type ArchitectureRepetition = {
+  repetition: number;
+  metrics: {
+    p50_ms: number; p95_ms: number; p99_ms: number; requests_per_s: number;
+    error_rate: number; cpu_seconds?: number; memory_peak_mb?: number;
+    sample_count?: number;
+  };
+  recovery_s?: number | null;
+  ready_s?: number | null;
+};
+
+export type ArchitectureRun = ArchitectureMetricRow & {
+  description?: string;
+  baseline?: boolean;
+  metrics?: ArchitectureMetrics;
+  compose_sha256?: string;
+  repetitions?: ArchitectureRepetition[];
+  recovery_detail?: {
+    recovery_s?: number; restart_command_s?: number; probes?: number;
+    failed_probes?: number; observed_outage?: boolean; note?: string;
+  } | null;
+  resources?: {
+    measured?: boolean;
+    source?: string;
+    memory_basis?: string;
+    containers?: {name: string; cpu_us?: number; memory_bytes?: number}[];
+  } | null;
+  cleanup_status?: string;
+};
+
+export type ArchitectureMeasurement = {
+  challenge?: string;
+  runs: ArchitectureRun[];
+  pareto?: {candidate_id: string; objectives: number[]}[];
+  comparison?: {
+    baseline?: ArchitectureRun | null;
+    candidates?: ArchitectureRun[];
+    challenge?: string;
+    complete?: boolean;
+    skipped?: {candidate_id: string; reason: string}[];
+    repetitions?: number;
+    wall_clock_s?: number;
+  };
+  environment?: {
+    isolation?: string;
+    platform?: string;
+    repository_compose_used?: boolean;
+    load_window_s?: number;
+    load_rate_per_s?: number;
+  };
+  complete?: boolean;
+  skipped?: {candidate_id: string; reason: string}[];
+  repetitions_requested?: number;
+};
+
+export type CandidatePreview = {
+  eligible: boolean;
+  reason?: string;
+  support_level?: string;
+  prerequisites?: string[];
+  adapter_id?: string;
+  adapter_version?: string;
+  capabilities?: SupportedEvaluation['capabilities'];
+  challenges?: string[];
+  unsupported?: string[];
+  candidates: {
+    candidate_id: string;
+    label: string;
+    description: string;
+    dimension: {replicas: number; workers: number};
+    challenges: string[];
+  }[];
 };
 
 export type Source = {
@@ -276,6 +387,8 @@ export type Inspection = {
   };
   warnings: string[];
   execution_allowed: boolean;
+  support_level?: 'READY_FOR_MEASURED_EVOLUTION' | 'EVALUABLE_WITH_SETUP' | 'INSPECTABLE';
+  prerequisites?: string[];
   evaluation_status: string;
   policy: Record<string, string>;
 };
@@ -318,15 +431,32 @@ export type Verdict = {
     regression_limit_pct?: number;
     minimum_paired_win_rate?: number;
     maximum_error_rate_pct?: number;
+    maximum_error_rate?: number;
     maximum_error_delta_pct?: number;
     maximum_cost_multiplier?: number;
     primary_rule?: string;
+    primary_metric?: string;
+    simulation_cannot_win?: boolean;
+    challenge?: string;
   };
   per_size: Measurement[];
   primary_size?: number;
   baseline_median_ms?: number;
   candidate_median_ms?: number;
   change_pct?: number;
+  winner_id?: string | null;
+  baseline_id?: string | null;
+  baseline_metrics?: ArchitectureMetrics | null;
+  comparison?: ArchitectureMetricRow[];
+  baseline_p95_ms?: number;
+  candidate_p95_ms?: number;
+  baseline_rps?: number;
+  candidate_rps?: number;
+  baseline_recovery_s?: number;
+  candidate_recovery_s?: number;
+  regressions?: {metric: string; label: string; baseline: number; candidate: number; change_pct: number}[];
+  recovery_notes?: string[];
+  explanation?: string;
   correctness: {
     passed: boolean;
     checks_passed: number;
@@ -394,6 +524,7 @@ export type Evaluation = {
   };
   workload: {
     preset: string;
+    challenge?: string;
     seeds: number[];
     sizes: number[];
     repetitions: number;
@@ -422,6 +553,7 @@ export type Evaluation = {
   source_tests: SourceTest | null;
   screening?: ScreeningResult | null;
   recommendation?: ScreeningRecommendation | null;
+  architecture?: ArchitectureMeasurement | null;
   verdict: Verdict | null;
   error: string | null;
   cleanup_status: string;
@@ -505,13 +637,16 @@ export const api = {
   }),
   evaluations: () => request<Evaluation[]>('/api/project-evaluations'),
   evaluation: (id: string) => request<Evaluation>(`/api/project-evaluations/${encodeURIComponent(id)}`),
-  start: (inspectionId: string, mode: 'quick' | 'full', includeSourceTests?: boolean, adapterId?: string) =>
+  candidates: (inspectionId: string) =>
+    request<CandidatePreview>(`/api/repositories/inspections/${encodeURIComponent(inspectionId)}/candidates`),
+  start: (inspectionId: string, mode: 'quick' | 'full', includeSourceTests?: boolean,
+          adapterId?: string, challenge: string = 'faster') =>
     request<Evaluation>('/api/project-evaluations', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         inspection_id: inspectionId, adapter_id: adapterId, mode,
-        include_source_tests: includeSourceTests,
+        include_source_tests: includeSourceTests, challenge,
       }),
     }),
   cancel: (id: string) => request<Evaluation>(`/api/project-evaluations/${encodeURIComponent(id)}/cancel`, {
@@ -524,9 +659,15 @@ export const api = {
     if (!response.ok) throw Error(await readError(response));
     return response.text();
   },
+  change: async (id: string) => {
+    const response = await fetch(`/api/project-evaluations/${encodeURIComponent(id)}/change`);
+    if (!response.ok) throw Error(await readError(response));
+    return response.text();
+  },
 };
 
 export const diffUrl = (id: string) => `/api/project-evaluations/${encodeURIComponent(id)}/diff`;
+export const changeUrl = (id: string) => `/api/project-evaluations/${encodeURIComponent(id)}/change`;
 export const bundleUrl = (id: string) => `/api/project-evaluations/${encodeURIComponent(id)}/bundle`;
 export const artifactUrl = (id: string, name: string) =>
   `/api/project-evaluations/${encodeURIComponent(id)}/artifacts/${encodeURIComponent(name)}`;

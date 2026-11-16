@@ -1,0 +1,1165 @@
+{
+  "adapter_id": "architecture-screening-v1",
+  "adapter_version": "1.0.0",
+  "model_version": "architecture-screening-v1",
+  "evaluation_type": "architecture_screening",
+  "evidence_kind": "simulated",
+  "label": "SIMULATED",
+  "not_measured": true,
+  "mode": "full",
+  "seeds": [
+    7,
+    21,
+    2026
+  ],
+  "workload": {
+    "name": "synthetic architecture screening workload",
+    "arrival_rate_rps": 40.0,
+    "burst_factor": 1.6,
+    "routes": 36,
+    "read_routes": 17,
+    "read_ratio": 0.472,
+    "write_ratio": 0.528,
+    "external_integrations": 1,
+    "datastores": 0,
+    "queues": 0,
+    "auth": true,
+    "services": 1,
+    "note": "Synthetic request mix derived from detected route methods. It is not observed production traffic and no repository endpoint was called."
+  },
+  "controls": [
+    "cache_ttl_s",
+    "offload_jobs",
+    "rate_limit",
+    "replicas",
+    "retry_policy"
+  ],
+  "baseline": {
+    "label": "Detected baseline",
+    "controls": {
+      "replicas": 1,
+      "cache_ttl_s": 0,
+      "offload_jobs": false,
+      "retry_policy": "none",
+      "rate_limit": 0
+    },
+    "metrics": {
+      "p50_ms": 9.64,
+      "p95_ms": 11.09,
+      "throughput_rps": 40.0,
+      "error_rate_pct": 1.3,
+      "cost_index": 1.0,
+      "utilization": 0.048,
+      "db_wait_ms": 0.0
+    },
+    "runs": [
+      {
+        "seed": 7,
+        "p50_ms": 9.99,
+        "p95_ms": 11.49,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.0,
+        "utilization": 0.05,
+        "db_wait_ms": 0.0,
+        "rejected_pct": 0.0
+      },
+      {
+        "seed": 21,
+        "p50_ms": 9.57,
+        "p95_ms": 11.0,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.0,
+        "utilization": 0.048,
+        "db_wait_ms": 0.0,
+        "rejected_pct": 0.0
+      },
+      {
+        "seed": 2026,
+        "p50_ms": 9.64,
+        "p95_ms": 11.09,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.0,
+        "utilization": 0.048,
+        "db_wait_ms": 0.0,
+        "rejected_pct": 0.0
+      }
+    ]
+  },
+  "variants": [
+    {
+      "id": "cache_ttl_s=90|offload_jobs=True|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Cache TTL 0→90 + Background offload False→True",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 90,
+        "offload_jobs": true,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "cache_ttl_s",
+          "label": "Cache TTL",
+          "from": 0,
+          "to": 90,
+          "unit": "s"
+        },
+        {
+          "control": "offload_jobs",
+          "label": "Background offload",
+          "from": false,
+          "to": true,
+          "unit": "enabled"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 7.89,
+        "p95_ms": 9.07,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 0.75,
+        "cost_index": 1.6,
+        "utilization": 0.039,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 7.64,
+          "p95_ms": 8.78,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.038,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 7.93,
+          "p95_ms": 9.12,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.04,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 7.89,
+          "p95_ms": 9.07,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.039,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 18.21,
+      "error_delta_pct": -0.55,
+      "cost_multiplier": 1.6,
+      "qualifies": true,
+      "score": 17.01
+    },
+    {
+      "id": "cache_ttl_s=30|offload_jobs=True|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Cache TTL 0→30 + Background offload False→True",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 30,
+        "offload_jobs": true,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "cache_ttl_s",
+          "label": "Cache TTL",
+          "from": 0,
+          "to": 30,
+          "unit": "s"
+        },
+        {
+          "control": "offload_jobs",
+          "label": "Background offload",
+          "from": false,
+          "to": true,
+          "unit": "enabled"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 8.28,
+        "p95_ms": 9.52,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 0.75,
+        "cost_index": 1.6,
+        "utilization": 0.041,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 8.28,
+          "p95_ms": 9.52,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.041,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 8.13,
+          "p95_ms": 9.35,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.041,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 8.28,
+          "p95_ms": 9.52,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.041,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 14.16,
+      "error_delta_pct": -0.55,
+      "cost_multiplier": 1.6,
+      "qualifies": true,
+      "score": 12.96
+    },
+    {
+      "id": "cache_ttl_s=90|offload_jobs=False|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Cache TTL 0→90",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 90,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "cache_ttl_s",
+          "label": "Cache TTL",
+          "from": 0,
+          "to": 90,
+          "unit": "s"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 8.31,
+        "p95_ms": 9.55,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.25,
+        "utilization": 0.042,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 8.31,
+          "p95_ms": 9.55,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.042,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 8.61,
+          "p95_ms": 9.91,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.043,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 8.28,
+          "p95_ms": 9.52,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.041,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 13.89,
+      "error_delta_pct": 0.0,
+      "cost_multiplier": 1.25,
+      "qualifies": true,
+      "score": 13.39
+    },
+    {
+      "id": "cache_ttl_s=10|offload_jobs=True|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Cache TTL 0→10 + Background offload False→True",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 10,
+        "offload_jobs": true,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "cache_ttl_s",
+          "label": "Cache TTL",
+          "from": 0,
+          "to": 10,
+          "unit": "s"
+        },
+        {
+          "control": "offload_jobs",
+          "label": "Background offload",
+          "from": false,
+          "to": true,
+          "unit": "enabled"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 8.39,
+        "p95_ms": 9.65,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 0.75,
+        "cost_index": 1.6,
+        "utilization": 0.042,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 8.39,
+          "p95_ms": 9.65,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.042,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 8.15,
+          "p95_ms": 9.37,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.041,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 8.61,
+          "p95_ms": 9.9,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.6,
+          "utilization": 0.043,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 12.98,
+      "error_delta_pct": -0.55,
+      "cost_multiplier": 1.6,
+      "qualifies": true,
+      "score": 11.78
+    },
+    {
+      "id": "cache_ttl_s=30|offload_jobs=False|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Cache TTL 0→30",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 30,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "cache_ttl_s",
+          "label": "Cache TTL",
+          "from": 0,
+          "to": 30,
+          "unit": "s"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 8.58,
+        "p95_ms": 9.86,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.25,
+        "utilization": 0.043,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 8.58,
+          "p95_ms": 9.86,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.043,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 8.71,
+          "p95_ms": 10.02,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.044,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 8.58,
+          "p95_ms": 9.86,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.043,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 11.09,
+      "error_delta_pct": 0.0,
+      "cost_multiplier": 1.25,
+      "qualifies": true,
+      "score": 10.59
+    },
+    {
+      "id": "cache_ttl_s=0|offload_jobs=True|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Background offload False→True",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 0,
+        "offload_jobs": true,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "offload_jobs",
+          "label": "Background offload",
+          "from": false,
+          "to": true,
+          "unit": "enabled"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 9.0,
+        "p95_ms": 10.34,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 0.75,
+        "cost_index": 1.35,
+        "utilization": 0.045,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 9.0,
+          "p95_ms": 10.34,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.35,
+          "utilization": 0.045,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 9.11,
+          "p95_ms": 10.48,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.35,
+          "utilization": 0.046,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 8.98,
+          "p95_ms": 10.32,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.75,
+          "cost_index": 1.35,
+          "utilization": 0.045,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 6.76,
+      "error_delta_pct": -0.55,
+      "cost_multiplier": 1.35,
+      "qualifies": false,
+      "score": 6.06
+    },
+    {
+      "id": "cache_ttl_s=10|offload_jobs=False|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Cache TTL 0→10",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 10,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "cache_ttl_s",
+          "label": "Cache TTL",
+          "from": 0,
+          "to": 10,
+          "unit": "s"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 9.12,
+        "p95_ms": 10.49,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.25,
+        "utilization": 0.046,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 9.19,
+          "p95_ms": 10.57,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.046,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 9.12,
+          "p95_ms": 10.49,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.046,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 9.04,
+          "p95_ms": 10.39,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.25,
+          "utilization": 0.045,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 5.41,
+      "error_delta_pct": 0.0,
+      "cost_multiplier": 1.25,
+      "qualifies": false,
+      "score": 4.91
+    },
+    {
+      "id": "cache_ttl_s=0|offload_jobs=False|rate_limit=60|replicas=1|retry_policy=none",
+      "label": "Rate limit 0→60",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 0,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 60
+      },
+      "changes": [
+        {
+          "control": "rate_limit",
+          "label": "Rate limit",
+          "from": 0,
+          "to": 60,
+          "unit": "req/s"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 9.6,
+        "p95_ms": 10.87,
+        "throughput_rps": 37.5,
+        "error_rate_pct": 7.55,
+        "cost_index": 1.1,
+        "utilization": 0.048,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 9.7,
+          "p95_ms": 10.99,
+          "throughput_rps": 37.5,
+          "error_rate_pct": 7.55,
+          "cost_index": 1.1,
+          "utilization": 0.048,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 6.25
+        },
+        {
+          "seed": 21,
+          "p50_ms": 9.6,
+          "p95_ms": 10.87,
+          "throughput_rps": 37.5,
+          "error_rate_pct": 7.55,
+          "cost_index": 1.1,
+          "utilization": 0.048,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 6.25
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 9.51,
+          "p95_ms": 10.77,
+          "throughput_rps": 37.5,
+          "error_rate_pct": 7.55,
+          "cost_index": 1.1,
+          "utilization": 0.048,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 6.25
+        }
+      ],
+      "change_pct": 1.98,
+      "error_delta_pct": 6.25,
+      "cost_multiplier": 1.1,
+      "qualifies": false,
+      "score": -48.22
+    },
+    {
+      "id": "cache_ttl_s=0|offload_jobs=False|rate_limit=0|replicas=1|retry_policy=none",
+      "label": "Detected baseline",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 0,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [],
+      "metrics": {
+        "p50_ms": 9.64,
+        "p95_ms": 11.09,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.0,
+        "utilization": 0.048,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 9.99,
+          "p95_ms": 11.49,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.0,
+          "utilization": 0.05,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 9.57,
+          "p95_ms": 11.0,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.0,
+          "utilization": 0.048,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 9.64,
+          "p95_ms": 11.09,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.0,
+          "utilization": 0.048,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": 0.0,
+      "error_delta_pct": 0.0,
+      "cost_multiplier": 1.0,
+      "qualifies": true,
+      "score": 0.0
+    },
+    {
+      "id": "cache_ttl_s=0|offload_jobs=False|rate_limit=0|replicas=2|retry_policy=none",
+      "label": "Service replicas 1→2",
+      "controls": {
+        "replicas": 2,
+        "cache_ttl_s": 0,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "replicas",
+          "label": "Service replicas",
+          "from": 1,
+          "to": 2,
+          "unit": "replica(s)"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 9.71,
+        "p95_ms": 11.16,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 2.0,
+        "utilization": 0.024,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 9.9,
+          "p95_ms": 11.39,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 2.0,
+          "utilization": 0.025,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 9.71,
+          "p95_ms": 11.16,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 2.0,
+          "utilization": 0.024,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 9.62,
+          "p95_ms": 11.06,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 2.0,
+          "utilization": 0.024,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": -0.63,
+      "error_delta_pct": 0.0,
+      "cost_multiplier": 2.0,
+      "qualifies": false,
+      "score": -2.63
+    },
+    {
+      "id": "cache_ttl_s=0|offload_jobs=False|rate_limit=0|replicas=3|retry_policy=none",
+      "label": "Service replicas 1→3",
+      "controls": {
+        "replicas": 3,
+        "cache_ttl_s": 0,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "replicas",
+          "label": "Service replicas",
+          "from": 1,
+          "to": 3,
+          "unit": "replica(s)"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 9.81,
+        "p95_ms": 11.28,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 3.0,
+        "utilization": 0.016,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 9.96,
+          "p95_ms": 11.46,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 3.0,
+          "utilization": 0.017,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 9.81,
+          "p95_ms": 11.28,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 3.0,
+          "utilization": 0.016,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 9.42,
+          "p95_ms": 10.83,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 3.0,
+          "utilization": 0.016,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": -1.71,
+      "error_delta_pct": 0.0,
+      "cost_multiplier": 3.0,
+      "qualifies": false,
+      "score": -5.71
+    },
+    {
+      "id": "cache_ttl_s=0|offload_jobs=False|rate_limit=90|replicas=1|retry_policy=none",
+      "label": "Rate limit 0→90",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 0,
+        "offload_jobs": false,
+        "retry_policy": "none",
+        "rate_limit": 90
+      },
+      "changes": [
+        {
+          "control": "rate_limit",
+          "label": "Rate limit",
+          "from": 0,
+          "to": 90,
+          "unit": "req/s"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 9.9,
+        "p95_ms": 11.38,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 1.3,
+        "cost_index": 1.1,
+        "utilization": 0.049,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 9.48,
+          "p95_ms": 10.9,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.1,
+          "utilization": 0.047,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 9.9,
+          "p95_ms": 11.38,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.1,
+          "utilization": 0.049,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 9.98,
+          "p95_ms": 11.47,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 1.3,
+          "cost_index": 1.1,
+          "utilization": 0.05,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": -2.61,
+      "error_delta_pct": 0.0,
+      "cost_multiplier": 1.1,
+      "qualifies": false,
+      "score": -2.81
+    },
+    {
+      "id": "cache_ttl_s=0|offload_jobs=False|rate_limit=0|replicas=1|retry_policy=idempotent_only",
+      "label": "Retry policy none→idempotent_only",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 0,
+        "offload_jobs": false,
+        "retry_policy": "idempotent_only",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "retry_policy",
+          "label": "Retry policy",
+          "from": "none",
+          "to": "idempotent_only",
+          "unit": "policy"
+        }
+      ],
+      "metrics": {
+        "p50_ms": 11.18,
+        "p95_ms": 12.86,
+        "throughput_rps": 40.0,
+        "error_rate_pct": 0.585,
+        "cost_index": 1.05,
+        "utilization": 0.056,
+        "db_wait_ms": 0.0
+      },
+      "runs": [
+        {
+          "seed": 7,
+          "p50_ms": 11.4,
+          "p95_ms": 13.11,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.585,
+          "cost_index": 1.05,
+          "utilization": 0.057,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 21,
+          "p50_ms": 11.0,
+          "p95_ms": 12.65,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.585,
+          "cost_index": 1.05,
+          "utilization": 0.055,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        },
+        {
+          "seed": 2026,
+          "p50_ms": 11.18,
+          "p95_ms": 12.86,
+          "throughput_rps": 40.0,
+          "error_rate_pct": 0.585,
+          "cost_index": 1.05,
+          "utilization": 0.056,
+          "db_wait_ms": 0.0,
+          "rejected_pct": 0.0
+        }
+      ],
+      "change_pct": -15.96,
+      "error_delta_pct": -0.715,
+      "cost_multiplier": 1.05,
+      "qualifies": false,
+      "score": -16.06
+    }
+  ],
+  "recommendation": {
+    "status": "IMPROVEMENT_CANDIDATE",
+    "label": "Architecture improvement candidate",
+    "summary": "Cache TTL 0→90 + Background offload False→True models p95 latency 18.2% lower with a 1.60× cost index. This is a SIMULATED candidate; validate it on a real deployment before changing production.",
+    "candidate_id": "cache_ttl_s=90|offload_jobs=True|rate_limit=0|replicas=1|retry_policy=none",
+    "controls": {
+      "replicas": 1,
+      "cache_ttl_s": 90,
+      "offload_jobs": true,
+      "retry_policy": "none",
+      "rate_limit": 0
+    },
+    "changes": [
+      {
+        "control": "cache_ttl_s",
+        "label": "Cache TTL",
+        "from": 0,
+        "to": 90,
+        "unit": "s"
+      },
+      {
+        "control": "offload_jobs",
+        "label": "Background offload",
+        "from": false,
+        "to": true,
+        "unit": "enabled"
+      }
+    ],
+    "modelled_change_pct": 18.21,
+    "baseline_p95_ms": 11.09,
+    "candidate_p95_ms": 9.07,
+    "error_rate_pct": 0.75,
+    "cost_multiplier": 1.6,
+    "measured": false,
+    "evidence_kind": "simulated",
+    "seed_sensitivity": {
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "min_change_pct": 17.76,
+      "max_change_pct": 20.83
+    },
+    "mode": "full"
+  },
+  "verdict": {
+    "status": "NOT_MEASURED",
+    "label": "Simulated architecture recommendation",
+    "reason": "Cache TTL 0→90 + Background offload False→True models p95 latency 18.2% lower with a 1.60× cost index. This is a SIMULATED candidate; validate it on a real deployment before changing production.",
+    "policy": {
+      "evidence_kind": "simulated",
+      "label": "SIMULATED",
+      "not_measured": true,
+      "minimum_improvement_pct": 8.0,
+      "regression_limit_pct": 2.0,
+      "maximum_error_rate_pct": 2.0,
+      "maximum_cost_multiplier": 2.5,
+      "primary_rule": "modelled p95 latency, gated by error rate and cost index"
+    },
+    "per_size": [],
+    "correctness": {
+      "passed": true,
+      "checks_passed": 0,
+      "checks_total": 0,
+      "failures": [],
+      "note": "No repository code was executed. Model assumptions are listed in screening.assumptions."
+    },
+    "recommendation": {
+      "status": "IMPROVEMENT_CANDIDATE",
+      "label": "Architecture improvement candidate",
+      "summary": "Cache TTL 0→90 + Background offload False→True models p95 latency 18.2% lower with a 1.60× cost index. This is a SIMULATED candidate; validate it on a real deployment before changing production.",
+      "candidate_id": "cache_ttl_s=90|offload_jobs=True|rate_limit=0|replicas=1|retry_policy=none",
+      "controls": {
+        "replicas": 1,
+        "cache_ttl_s": 90,
+        "offload_jobs": true,
+        "retry_policy": "none",
+        "rate_limit": 0
+      },
+      "changes": [
+        {
+          "control": "cache_ttl_s",
+          "label": "Cache TTL",
+          "from": 0,
+          "to": 90,
+          "unit": "s"
+        },
+        {
+          "control": "offload_jobs",
+          "label": "Background offload",
+          "from": false,
+          "to": true,
+          "unit": "enabled"
+        }
+      ],
+      "modelled_change_pct": 18.21,
+      "baseline_p95_ms": 11.09,
+      "candidate_p95_ms": 9.07,
+      "error_rate_pct": 0.75,
+      "cost_multiplier": 1.6,
+      "measured": false,
+      "evidence_kind": "simulated",
+      "seed_sensitivity": {
+        "seeds": [
+          7,
+          21,
+          2026
+        ],
+        "min_change_pct": 17.76,
+        "max_change_pct": 20.83
+      },
+      "mode": "full"
+    }
+  },
+  "policy": {
+    "minimum_improvement_pct": 8.0,
+    "regression_limit_pct": 2.0,
+    "maximum_error_rate_pct": 2.0,
+    "maximum_error_delta_pct": 0.5,
+    "maximum_cost_multiplier": 2.5,
+    "primary_metric": "modelled p95 latency",
+    "evidence_kind": "simulated"
+  },
+  "assumptions": [
+    "Traffic is a synthetic 40 request/s workload derived from the inspected route mix; it is not observed production traffic.",
+    "Service and database times are transparent model parameters. They are not benchmarked from the repository.",
+    "The baseline is the detected architecture with one service replica and no cache, retry, queue offload or read replica unless source evidence proves otherwise.",
+    "Cache hit rates are fixed assumptions by TTL (10 s: 45%, 30 s: 65%, 90 s: 78%). They are not measured cache statistics.",
+    "The model assumes the service and database are the bottlenecks. Network jitter, garbage collection, provider outages and cold starts are not simulated.",
+    "Only deployment-level controls are varied. Application code, schemas and business logic are unchanged.",
+    "No repository code, dependency, package manager, container or service was executed.",
+    "A recommendation is an uncalibrated candidate for real deployment validation. It is not a measured winner.",
+    "Applicable controls for this source: cache_ttl_s, offload_jobs, rate_limit, replicas, retry_policy.",
+    "The workload assumes 36 route(s), 0 data store(s), 1 external call target(s) and 1 service(s)."
+  ],
+  "limitations": [
+    "No runtime measurement, load test or production trace was collected.",
+    "The model is not calibrated against this repository or its deployment.",
+    "Relative modelled differences must not be quoted as measured speedups.",
+    "Validate the candidate with a real staging deployment and observed traffic before changing production."
+  ],
+  "hotspots_addressed": [
+    {
+      "hotspot": "missing_queue",
+      "title": "Multiple outbound calls with no queue detected",
+      "control": "offload_jobs",
+      "addressed": true
+    },
+    {
+      "hotspot": "sync_external",
+      "title": "External call on the request path",
+      "control": "retry_policy",
+      "addressed": false
+    },
+    {
+      "hotspot": "no_tests",
+      "title": "No test suite detected",
+      "control": "replicas",
+      "addressed": false
+    }
+  ]
+}

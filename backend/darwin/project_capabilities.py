@@ -198,6 +198,62 @@ def _sanchay_adapter(root: Path, pinned: bool) -> dict | None:
     }
 
 
+def _compose_adapter(root: Path, repository_url: str, commit_sha: str, pinned: bool) -> dict | None:
+    """Offer a catalogued containerized adapter only when its reviewed files match.
+
+    The trusted catalog names the reviewed adapter for this repository; the
+    adapter itself must still recognise the pinned source markers. A mismatch
+    returns None, so a lookalike application is never silently treated as the
+    catalogued sample.
+    """
+    from darwin.adapters.registry import compose_adapter_by_id
+
+    entry = catalog_entry(url=repository_url)
+    if not entry or entry.get('evaluation_type') != 'backend_architecture':
+        return None
+    adapter = compose_adapter_by_id(entry['adapter']['adapter_id'])
+    if adapter is None:
+        return None
+    assessment = adapter.detect(root, commit_sha, pinned)
+    if not assessment.supported:
+        return None
+    catalog = entry['adapter']
+    manifest = adapter.manifest
+    return {
+        'adapter_id': adapter.id,
+        'adapter_version': adapter.version,
+        'display_name': catalog['display_name'],
+        'evaluation_type': adapter.evaluation_type,
+        'summary': (
+            f'Measure the original {entry["name"]} topology against reviewed '
+            'replica and process changes in an isolated Linux Docker stack.'
+        ),
+        'runtime': manifest.runtime,
+        'repository_name': entry['name'],
+        'source_root': manifest.source_subdir,
+        'source_files': list(manifest.source_files),
+        'needs_redis': manifest.needs_redis,
+        'change_summary': catalog['change_summary'],
+        'mechanism': catalog['mechanism'],
+        'correctness_rules': list(catalog['correctness_rules']),
+        'scope_note': catalog['scope_note'],
+        'modes': list(catalog['modes']),
+        'execution_allowed': bool(pinned and assessment.ready),
+        'ready': bool(assessment.ready),
+        'prerequisite': assessment.prerequisite,
+        'execution_note': (
+            assessment.reason if assessment.ready else
+            'The reviewed adapter matches, but this host cannot start an isolated Linux '
+            'container stack yet. ' + assessment.prerequisite
+        ),
+        'evidence': assessment.evidence,
+        'capabilities': adapter.capabilities(),
+        'dimensions': adapter.capabilities().get('dimensions', []),
+        'challenges': (['faster', 'recover', 'resources']
+                       if manifest.allow_fault_restart else ['faster', 'resources']),
+    }
+
+
 def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
                    commit_sha: str, pinned: bool) -> dict:
     root = Path(root).resolve()
@@ -225,11 +281,11 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     guesses: list[dict] = []
     languages: list[str] = []
 
-    if root_package:
+    if root_package or web_package:
         languages.append('JavaScript/TypeScript')
     if _exists(root, 'settings.gradle.kts') or _exists(root, 'build.gradle.kts'):
         languages.append('Kotlin/Java')
-    if web_package:
+    if web_package and 'react' in dependencies:
         languages.append('TypeScript/React')
 
     is_sanchay_shape = bool(
@@ -238,6 +294,9 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     )
     is_client_app = bool(web_package and 'react' in dependencies)
     is_node_server = bool(server_frameworks and server_entry)
+    # Any catalogued backend target is resolved the same way: the trusted catalog
+    # names the reviewed adapter, and that adapter must recognise the source.
+    compose_adapter = _compose_adapter(root, repository_url, commit_sha, pinned)
 
     if is_sanchay_shape:
         project_type = 'react_webview_local_app'
@@ -248,6 +307,17 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
         summary = (
             'A client-side personal-finance dashboard. The visible React application reads and '
             'writes browser-local data; there is no deployed server API or server database.'
+        )
+    elif compose_adapter:
+        project_type = 'containerized_backend'
+        display_type = f'{compose_adapter["repository_name"]} · containerized backend'
+        application_host = 'Linux containers (Docker)'
+        persistence = 'Redis (shared state)' if compose_adapter.get('needs_redis') else 'None'
+        is_server_backend = True
+        summary = (
+            f'A public {compose_adapter["repository_name"]} sample. DARWIN deploys a reviewed '
+            'isolated stack from the allowlisted source files; the repository Compose file, '
+            'Dockerfile and gateway config are never executed.'
         )
     elif is_client_app and not is_node_server:
         project_type = 'client_web_app'
@@ -309,6 +379,28 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
                 'confidence': 'low',
             })
 
+    if compose_adapter:
+        source_files = list(compose_adapter.get('source_files') or [])
+        runtime = compose_adapter.get('runtime') or 'reviewed'
+        facts.append(_fact('Web application', f'{compose_adapter["repository_name"]} service', source_files))
+        facts.append(_fact('Server runtime', f'{runtime} (DARWIN-owned image)', source_files))
+        facts.append(_fact('Gateway', 'nginx (DARWIN-generated config)', source_files))
+        facts.append(_fact(
+            'Shared state',
+            'Redis shared state' if compose_adapter.get('needs_redis') else 'No shared datastore',
+            source_files,
+        ))
+        not_supported.extend([
+            {'capability': 'Repository Compose / Dockerfile',
+             'reason': 'The sample’s own Compose file and Dockerfile are not executed; DARWIN writes its own stack.'},
+            {'capability': 'SQL database or queue faults',
+             'reason': 'This sample has no SQL database or queue; only the reviewed fault probe is measured.'},
+            {'capability': 'Framework conversion',
+             'reason': 'The reviewed boundary is deployable topology, not rewriting the service in another stack.'},
+            {'capability': 'Production traffic forecasting',
+             'reason': 'The load generator and service share one host; absolute throughput is lab-only.'},
+        ])
+
     kotlin_count = _count_files(root, 'app/src/**/*.kt', cap=3000) if _exists(root, 'settings.gradle.kts') else 0
     if kotlin_count:
         facts.append(_fact(
@@ -323,6 +415,8 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
 
     adapter = _sanchay_adapter(root, pinned) if is_sanchay_shape else None
     supported = [adapter] if adapter else []
+    if compose_adapter:
+        supported.append(compose_adapter)
 
     if not supported:
         not_supported.append({
@@ -358,7 +452,7 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     screening = generic.get('screening') or {'available': False, 'controls': [],
                                               'reason': 'Architecture screening was not analysed.'}
 
-    if is_sanchay_shape:
+    if is_sanchay_shape or compose_adapter:
         project = {
             'type': project_type,
             'display_type': display_type,
@@ -403,12 +497,24 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
         **(generic.get('readiness') or {}),
         'node_available': shutil.which('node') is not None,
         'node_version': _node_version(),
-        'source_paths_present': bool(reporting_exists and persistence_exists) if is_sanchay_shape
-        else bool(generic_backend.get('services')),
-        'adapter_approved': bool(adapter and adapter['execution_allowed']),
+        'source_paths_present': (
+            bool(reporting_exists and persistence_exists) if is_sanchay_shape
+            else True if compose_adapter
+            else bool(generic_backend.get('services'))
+        ),
+        'adapter_approved': any(item.get('execution_allowed') for item in supported),
+        'container_runner_available': _container_runner_available() if compose_adapter else None,
         'source_tests_available': _exists(root, 'web/node_modules/vitest/package.json')
         if is_sanchay_shape else bool((generic_backend.get('tests') or {}).get('file_count')),
     }
+
+    support_level = (
+        'READY_FOR_MEASURED_EVOLUTION' if any(item.get('execution_allowed') for item in supported)
+        else 'EVALUABLE_WITH_SETUP' if supported
+        else 'INSPECTABLE'
+    )
+    prerequisites = [item.get('prerequisite') for item in supported
+                     if not item.get('execution_allowed') and item.get('prerequisite')]
 
     return {
         'project': project,
@@ -416,9 +522,19 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
         'facts': facts,
         'not_supported': not_supported,
         'supported_evaluations': supported,
+        'support_level': support_level,
+        'prerequisites': prerequisites,
         'hotspots': hotspots,
         'screening': screening,
         'guesses': guesses,
         'readiness': readiness,
         'evaluation_status': 'NOT_MEASURED' if supported else 'UNSUPPORTED_PROJECT',
     }
+
+
+def _container_runner_available() -> bool:
+    try:
+        from darwin.isolated_backend import runner_available
+        return runner_available()[0]
+    except Exception:
+        return False

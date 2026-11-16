@@ -1,0 +1,21 @@
+{
+  "source": {
+    "url": "https://github.com/example/AGENTBLAZER",
+    "owner": "example",
+    "repo": "AGENTBLAZER",
+    "requested_ref": "main",
+    "commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "short_sha": "bbbbbbbbbbbb",
+    "trusted": false,
+    "cache_key": "example__AGENTBLAZER__bbbbbbbbbbbb",
+    "file_count": 20,
+    "size_bytes": 10000,
+    "metadata": {}
+  },
+  "adapter": {
+    "adapter_id": "architecture-screening-v1",
+    "adapter_version": "1.0.0"
+  },
+  "inspection_id": "5c006716-f637-4c23-ac9d-6b5fcbc293fe",
+  "evidence_kind": "simulated"
+}

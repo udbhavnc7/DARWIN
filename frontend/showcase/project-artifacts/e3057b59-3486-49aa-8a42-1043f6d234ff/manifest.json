@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "e3057b59-3486-49aa-8a42-1043f6d234ff",
+  "inspection_id": "f1a507ff-a5ee-460e-93e7-959cdb875fd3",
+  "source_commit": "7e1bc4cdd31e53380e7896b4a20a864bbebcee1e",
+  "adapter_id": "sanchay-reporting-v1",
+  "adapter_version": "1.0.0",
+  "evidence_kind": "live",
+  "created_at": "2026-11-16T01:30:26.501232+00:00",
+  "files": {
+    "benchmark.json": "54f1098f5cd8453d19ed20c45a31890c07681603606ef30b9e6b734bc66b410d",
+    "candidate.diff": "1154eb338246f268837f966d4ba0dc92d837111f2e5f2ce54a912f66bde332fe",
+    "environment.json": "59beb1bfe4948bfdf7fbb2425433af7498c300c4b295bbe8098fc418b13f7378",
+    "parity.json": "9c67bfeb20c48c6aa125220b30ba32ac5bb7bd032d3b250cf2d459a1ae0d9dde",
+    "replay.md": "dfa547ae56b1b5834bb6caf20b00b6553f69fae4c055d17f28926a84deb269b5",
+    "source-tests.json": "a95520d005e372a87b2fe0b03319f12cd942696cb0c6bd7edb6422d398bbac9b",
+    "source.json": "2e24d2915dd547f9cfe3def5fb54b200469129dee0d95d0786f9f59c0d395716",
+    "verdict.json": "51656632a36aae2dbbb38082b17c4d35bfa3b16c18ff5e552b0e0707b6388279",
+    "workload.json": "22dc7e610347c8966a235279425df946c153d7c663113db5c6786fb8a3f218be"
+  }
+}

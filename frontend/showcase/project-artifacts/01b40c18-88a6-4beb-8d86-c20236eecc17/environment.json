@@ -1,0 +1,15 @@
+{
+  "benchmark_environment": {
+    "isolation": "linux-docker",
+    "platform": "nt",
+    "repository_compose_used": false,
+    "load_window_s": 6,
+    "load_rate_per_s": 6
+  },
+  "harness": null,
+  "source_tests": {
+    "status": "not_run",
+    "reason": "This adapter verifies HTTP oracles in isolation; it does not install repository test runners."
+  },
+  "measurement_scope": null
+}

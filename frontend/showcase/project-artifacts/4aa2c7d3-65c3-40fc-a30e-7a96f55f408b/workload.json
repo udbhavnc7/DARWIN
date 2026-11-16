@@ -1,0 +1,37 @@
+{
+  "preset": "full",
+  "seeds": [
+    7,
+    21,
+    2026
+  ],
+  "fixtures": "synthetic workload derived from the inspected architecture",
+  "note": "No repository code is executed. All values are model outputs.",
+  "model_workload": {
+    "name": "synthetic architecture screening workload",
+    "arrival_rate_rps": 40.0,
+    "burst_factor": 1.6,
+    "routes": 14,
+    "read_routes": 3,
+    "read_ratio": 0.214,
+    "write_ratio": 0.786,
+    "external_integrations": 1,
+    "datastores": 0,
+    "queues": 0,
+    "auth": false,
+    "services": 1,
+    "note": "Synthetic request mix derived from detected route methods. It is not observed production traffic and no repository endpoint was called."
+  },
+  "assumptions": [
+    "Traffic is a synthetic 40 request/s workload derived from the inspected route mix; it is not observed production traffic.",
+    "Service and database times are transparent model parameters. They are not benchmarked from the repository.",
+    "The baseline is the detected architecture with one service replica and no cache, retry, queue offload or read replica unless source evidence proves otherwise.",
+    "Cache hit rates are fixed assumptions by TTL (10 s: 45%, 30 s: 65%, 90 s: 78%). They are not measured cache statistics.",
+    "The model assumes the service and database are the bottlenecks. Network jitter, garbage collection, provider outages and cold starts are not simulated.",
+    "Only deployment-level controls are varied. Application code, schemas and business logic are unchanged.",
+    "No repository code, dependency, package manager, container or service was executed.",
+    "A recommendation is an uncalibrated candidate for real deployment validation. It is not a measured winner.",
+    "Applicable controls for this source: cache_ttl_s, offload_jobs, rate_limit, replicas, retry_policy.",
+    "The workload assumes 14 route(s), 0 data store(s), 1 external call target(s) and 1 service(s)."
+  ]
+}

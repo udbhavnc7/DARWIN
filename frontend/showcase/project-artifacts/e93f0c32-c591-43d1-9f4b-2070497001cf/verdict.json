@@ -1,0 +1,15 @@
+{
+  "status": "INTERRUPTED",
+  "label": "Interrupted",
+  "reason": "The operation was cancelled. No winner is reported.",
+  "policy": {
+    "evidence_kind": "live"
+  },
+  "per_size": [],
+  "correctness": {
+    "passed": false,
+    "checks_passed": 0,
+    "checks_total": 0,
+    "failures": []
+  }
+}

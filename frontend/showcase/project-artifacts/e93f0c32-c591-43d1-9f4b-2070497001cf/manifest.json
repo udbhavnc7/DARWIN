@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "e93f0c32-c591-43d1-9f4b-2070497001cf",
+  "inspection_id": "408b3f8d-ee05-4eca-b442-3f3c7695feca",
+  "source_commit": "7e1bc4cdd31e53380e7896b4a20a864bbebcee1e",
+  "adapter_id": "sanchay-reporting-v1",
+  "adapter_version": "1.0.0",
+  "evidence_kind": "live",
+  "created_at": "2026-11-16T01:26:41.601059+00:00",
+  "files": {
+    "source.json": "26418e44403098abcda1af3a8249e19d067256fa9be2286485e8eb513ace86b9",
+    "verdict.json": "da9a13157046d1cc77cfa3686006f6f87a6e4c09ba0d725f9bbb54fc03d465cd",
+    "workload.json": "ddae300fb3ee62e3b3818b823e9d98a78617d2be655b5f58398a248629154681"
+  }
+}

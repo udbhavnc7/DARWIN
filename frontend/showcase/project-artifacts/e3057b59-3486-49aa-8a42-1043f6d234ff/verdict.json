@@ -1,0 +1,100 @@
+{
+  "status": "VERIFIED_IMPROVEMENT",
+  "label": "Verified improvement",
+  "reason": "All 68 correctness checks passed. The candidate was 22.4% faster at 50,000 rows with a 97% paired win rate, and no measured size regressed by 5% or more.",
+  "policy": {
+    "minimum_improvement_pct": 5.0,
+    "regression_limit_pct": 5.0,
+    "minimum_paired_win_rate": 0.8,
+    "primary_rule": "largest measured ledger size",
+    "evidence_kind": "live"
+  },
+  "per_size": [
+    {
+      "size": 1000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 0.13335,
+      "candidate_median_ms": 0.1194,
+      "baseline_p95_ms": 0.1763,
+      "candidate_p95_ms": 0.2174,
+      "baseline_range_ms": [
+        0.1246,
+        0.247
+      ],
+      "candidate_range_ms": [
+        0.1152,
+        0.3009
+      ],
+      "change_pct": 10.46,
+      "paired_win_rate": 0.867,
+      "paired_lower_decile_pct": -21.61,
+      "samples": 30
+    },
+    {
+      "size": 10000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 1.35095,
+      "candidate_median_ms": 1.20385,
+      "baseline_p95_ms": 2.363,
+      "candidate_p95_ms": 2.3528,
+      "baseline_range_ms": [
+        1.2232,
+        2.5898
+      ],
+      "candidate_range_ms": [
+        1.0933,
+        3.6948
+      ],
+      "change_pct": 10.89,
+      "paired_win_rate": 0.8,
+      "paired_lower_decile_pct": -34.72,
+      "samples": 30
+    },
+    {
+      "size": 50000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 8.25505,
+      "candidate_median_ms": 6.4047,
+      "baseline_p95_ms": 11.7205,
+      "candidate_p95_ms": 8.8452,
+      "baseline_range_ms": [
+        7.5995,
+        12.3049
+      ],
+      "candidate_range_ms": [
+        5.8851,
+        11.3413
+      ],
+      "change_pct": 22.41,
+      "paired_win_rate": 0.967,
+      "paired_lower_decile_pct": 15.4,
+      "samples": 30
+    }
+  ],
+  "primary_size": 50000,
+  "baseline_median_ms": 8.255,
+  "candidate_median_ms": 6.405,
+  "change_pct": 22.41,
+  "correctness": {
+    "passed": true,
+    "checks_passed": 68,
+    "checks_total": 68,
+    "failures": []
+  },
+  "source_tests": {
+    "status": "skipped",
+    "reason": "The pinned checkout has no installed Vitest runtime; DARWIN did not install packages."
+  }
+}

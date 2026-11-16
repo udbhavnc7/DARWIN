@@ -1,0 +1,24 @@
+{
+  "preset": "quick",
+  "challenge": "faster",
+  "seeds": [
+    7
+  ],
+  "sizes": [
+    10000,
+    50000
+  ],
+  "repetitions": 10,
+  "warmups": 2,
+  "fixtures": [
+    {
+      "id": "http-seed",
+      "seed": 7,
+      "size": 6,
+      "currency": "http",
+      "timed": true,
+      "file": "http"
+    }
+  ],
+  "measurement_scope": null
+}

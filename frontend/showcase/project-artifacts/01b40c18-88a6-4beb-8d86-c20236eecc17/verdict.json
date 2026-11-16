@@ -1,0 +1,130 @@
+{
+  "status": "BASELINE_RETAINED",
+  "label": "Baseline retained",
+  "reason": "No measured candidate beat the original architecture on the selected challenge.",
+  "policy": {
+    "minimum_improvement_pct": 8.0,
+    "maximum_error_rate": 0.05,
+    "regression_limit_pct": 5.0,
+    "challenge": "faster",
+    "evidence_kind": "live",
+    "primary_metric": "p95_ms",
+    "simulation_cannot_win": true
+  },
+  "correctness": {
+    "passed": true,
+    "checks_passed": 3,
+    "checks_total": 3,
+    "failures": [],
+    "note": "HTTP availability is not business correctness. Counter monotonicity is the oracle for this adapter."
+  },
+  "per_size": [],
+  "winner_id": "baseline-1x1",
+  "baseline_id": "baseline-1x1",
+  "baseline_metrics": {
+    "schema_version": 1,
+    "p50_ms": 3.2270000001517474,
+    "p95_ms": 3.659900000457128,
+    "p99_ms": 3.7352999997892766,
+    "requests_per_s": 6.0,
+    "error_rate": 0.0,
+    "cpu_seconds": 0.1858,
+    "memory_peak_mb": 55.387,
+    "recovery_s": null,
+    "sample_count": 36
+  },
+  "candidate_metrics": {
+    "change_pct": 0.0,
+    "baseline_p95_ms": 3.659900000457128,
+    "candidate_p95_ms": 3.659900000457128,
+    "baseline_rps": 6.0,
+    "candidate_rps": 6.0,
+    "baseline_recovery_s": null,
+    "candidate_recovery_s": null,
+    "comparison": [
+      {
+        "candidate_id": "baseline-1x1",
+        "label": "Original: 1 replica × 1 worker",
+        "p95_ms": 3.659900000457128,
+        "requests_per_s": 6.0,
+        "error_rate": 0.0,
+        "cpu_seconds": 0.1858,
+        "memory_peak_mb": 55.387,
+        "recovery_s": null,
+        "replicas": 1,
+        "workers": 1
+      },
+      {
+        "candidate_id": "replicas-2x1",
+        "label": "Two stateless replicas × 1 worker",
+        "p95_ms": 5.976299999929324,
+        "requests_per_s": 6.0,
+        "error_rate": 0.0,
+        "cpu_seconds": 0.2448,
+        "memory_peak_mb": 97.273,
+        "recovery_s": null,
+        "replicas": 2,
+        "workers": 1
+      },
+      {
+        "candidate_id": "workers-1x2",
+        "label": "One replica × 2 gunicorn workers",
+        "p95_ms": 4.4797999998991145,
+        "requests_per_s": 6.0,
+        "error_rate": 0.0,
+        "cpu_seconds": 0.1921,
+        "memory_peak_mb": 75.715,
+        "recovery_s": null,
+        "replicas": 1,
+        "workers": 2
+      }
+    ],
+    "regressions": []
+  },
+  "change_pct": 0.0,
+  "baseline_p95_ms": 3.659900000457128,
+  "candidate_p95_ms": 3.659900000457128,
+  "baseline_rps": 6.0,
+  "candidate_rps": 6.0,
+  "baseline_recovery_s": null,
+  "candidate_recovery_s": null,
+  "comparison": [
+    {
+      "candidate_id": "baseline-1x1",
+      "label": "Original: 1 replica × 1 worker",
+      "p95_ms": 3.659900000457128,
+      "requests_per_s": 6.0,
+      "error_rate": 0.0,
+      "cpu_seconds": 0.1858,
+      "memory_peak_mb": 55.387,
+      "recovery_s": null,
+      "replicas": 1,
+      "workers": 1
+    },
+    {
+      "candidate_id": "replicas-2x1",
+      "label": "Two stateless replicas × 1 worker",
+      "p95_ms": 5.976299999929324,
+      "requests_per_s": 6.0,
+      "error_rate": 0.0,
+      "cpu_seconds": 0.2448,
+      "memory_peak_mb": 97.273,
+      "recovery_s": null,
+      "replicas": 2,
+      "workers": 1
+    },
+    {
+      "candidate_id": "workers-1x2",
+      "label": "One replica × 2 gunicorn workers",
+      "p95_ms": 4.4797999998991145,
+      "requests_per_s": 6.0,
+      "error_rate": 0.0,
+      "cpu_seconds": 0.1921,
+      "memory_peak_mb": 75.715,
+      "recovery_s": null,
+      "replicas": 1,
+      "workers": 2
+    }
+  ],
+  "regressions": []
+}

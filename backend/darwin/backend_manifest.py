@@ -91,6 +91,8 @@ class BackendManifest:
     correctness_rules: tuple[str, ...] = ()
     network_policy: str = 'loopback-gateway-only'
     allow_fault_restart: bool = True
+    app_port: int = 8000
+    counter_pattern: str = r'(\d+)'
 
     def as_dict(self) -> dict:
         payload = {
@@ -109,6 +111,8 @@ class BackendManifest:
             'correctness_rules': list(self.correctness_rules),
             'network_policy': self.network_policy,
             'allow_fault_restart': self.allow_fault_restart,
+            'app_port': self.app_port,
+            'counter_pattern': self.counter_pattern,
         }
         payload['sha256'] = hashlib.sha256(
             json.dumps(payload, sort_keys=True).encode('utf-8')

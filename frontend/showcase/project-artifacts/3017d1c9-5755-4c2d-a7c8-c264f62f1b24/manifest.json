@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "3017d1c9-5755-4c2d-a7c8-c264f62f1b24",
+  "inspection_id": "861ca354-9d00-4a26-afc0-0c6b2d951de9",
+  "source_commit": "30f4b7f6a6c3b0c0ecf4d4efb0de203c48d11562",
+  "adapter_id": "flask-redis-compose-v1",
+  "adapter_version": "1.0.0",
+  "evidence_kind": "live",
+  "created_at": "2026-11-16T15:41:58.048772+00:00",
+  "files": {
+    "benchmark.json": "d9d8691327859d11c9e0603ac0d17601ca922271207f60fb90d486248a807f3c",
+    "candidate.diff": "fc1f44ef13c956bee78213daed2846398314b6bae276b2912688aa77661f2050",
+    "change.md": "852b346c85213cdf3c60c0bba352d28a408d4f78f66d0e5eeff9a649ed5b2ce4",
+    "environment.json": "cbb41a0f3a2aaf94c3e254a630346417948b7257977632101b64fd6f1a541889",
+    "parity.json": "a9eb514812af165fbffb779a1592fcfd70befd1e5503c274a4bfe1c9d79f82ea",
+    "replay.md": "a9d916ec08931ab3184fe2afd25445b29981f82c4f9329687291907291714a2e",
+    "source-tests.json": "57bcebffc9c76f0d74773b76368377d684eb9065eaa910009c459709661fac64",
+    "source.json": "5b4270f5775c8470a687f56928786884f0d7b66e89b0504f8dce3a10a9c2fd7d",
+    "verdict.json": "509d97a6e4eae4a88aae4c5fdb9cf4ab7d2f62ab89dd0f6d247293f920de1ac9",
+    "workload.json": "8037ef05728238212dcf2a6005b626c4515fb444ac07af8a2d15abc92ed378e5"
+  }
+}

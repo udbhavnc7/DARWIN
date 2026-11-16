@@ -35,6 +35,7 @@ PRESETS = {
         'repetitions': 10,
         'warmups': 2,
         'wall_clock_s': 120,
+        'external_wall_clock_s': 300,
         'include_source_tests': False,
     },
     'full': {
@@ -43,6 +44,7 @@ PRESETS = {
         'repetitions': 10,
         'warmups': 2,
         'wall_clock_s': 300,
+        'external_wall_clock_s': 900,
         'include_source_tests': True,
     },
 }
@@ -51,7 +53,7 @@ ARTIFACT_NAMES = {
     'source.json', 'workload.json', 'candidate.diff', 'benchmark.json',
     'parity.json', 'verdict.json', 'environment.json', 'source-tests.json',
     'architecture.json', 'screening.json', 'project-note.md',
-    'replay.md', 'manifest.json',
+    'replay.md', 'manifest.json', 'change.md',
 }
 
 
@@ -78,6 +80,102 @@ def _public(value):
 def _progress(stage: str, completed: int, total: int, label: str) -> dict:
     return {'stage': stage, 'completed': completed, 'total': total, 'label': label,
             'percent': round(completed / total * 100) if total else 0}
+
+
+def _change_text(record: dict, verdict: dict) -> str:
+    """Reviewable deployment change derived only from recorded measurements."""
+    rows = verdict.get('comparison') or []
+    winner_id = verdict.get('winner_id')
+    winner = next((row for row in rows if row.get('candidate_id') == winner_id), None)
+    baseline = next((row for row in rows
+                     if row.get('candidate_id') == verdict.get('baseline_id')),
+                    rows[0] if rows else None)
+    lines = [
+        '# DARWIN architecture change',
+        '',
+        f'- Source: {record["source"]["url"]} at `{record["source"]["commit_sha"]}`',
+        f'- Adapter: `{record["adapter_id"]}` `{record["adapter_version"]}`',
+        f'- Verdict: **{verdict.get("status")}** — {verdict.get("label")}',
+        f'- Evidence: {record.get("evidence_kind", "live")} isolated Linux Docker runs, '
+        f'mode `{record["mode"]}`, challenge `{record["workload"].get("challenge")}`',
+        f'- Evaluation: `{record["evaluation_id"]}`',
+        '',
+    ]
+    if not winner or not baseline:
+        return '\n'.join(lines + [
+            'No deployable change is exported for this verdict.',
+            '',
+        ])
+    lines += [
+        '## Measured comparison',
+        '',
+        '| Candidate | Replicas | Workers | p95 ms | req/s | CPU s | Peak MB | Recovery s |',
+        '| --- | --- | --- | --- | --- | --- | --- | --- |',
+    ]
+    for row in rows:
+        lines.append(
+            f'| {row.get("label") or row.get("candidate_id")} | {row.get("replicas")} | '
+            f'{row.get("workers")} | {row.get("p95_ms")} | {row.get("requests_per_s")} | '
+            f'{row.get("cpu_seconds")} | {row.get("memory_peak_mb")} | {row.get("recovery_s")} |'
+        )
+    lines += [
+        '',
+        '## Decision',
+        '',
+        f'{verdict.get("reason") or ""}',
+        '',
+        '## Apply',
+        '',
+    ]
+    status = verdict.get('status')
+    if status == 'VERIFIED_IMPROVEMENT':
+        lines += [
+            f'- Baseline topology: {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s).',
+            f'- Recommended topology: {winner.get("replicas")} replica(s) × {winner.get("workers")} worker(s).',
+            '- Deploy that many replicas of the same reviewed image behind the gateway and keep the '
+            'shared Redis service. Do not copy the repository Compose file or Dockerfile; DARWIN '
+            'generated and tested its own stack.',
+        ]
+    elif status == 'TRADEOFF_REQUIRES_CHOICE':
+        lines += [
+            f'- Baseline topology: {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s).',
+            f'- Candidate topology: {winner.get("replicas")} replica(s) × {winner.get("workers")} worker(s) '
+            f'({winner.get("label") or winner.get("candidate_id")}).',
+            '- This is an operator choice, not an automatic recommendation. Adopt the candidate only '
+            'if its measured regressions are acceptable for this deployment.',
+        ]
+    elif status == 'BASELINE_RETAINED':
+        lines += [
+            f'- Keep the baseline topology: {baseline.get("replicas")} replica(s) × '
+            f'{baseline.get("workers")} worker(s).',
+            '- No candidate cleared the gates, so no deployment change is proposed.',
+        ]
+    else:
+        lines += ['- No deployment change is authorised for this verdict.']
+    lines += [
+        '',
+        '## Rollback',
+        '',
+    ]
+    if status in ('VERIFIED_IMPROVEMENT', 'TRADEOFF_REQUIRES_CHOICE', 'BASELINE_RETAINED'):
+        lines += [
+            f'- Restore {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s). '
+            'No data migration is required because both topologies share the same Redis state.',
+        ]
+    else:
+        lines += ['- Nothing was applied, so no rollback is required.']
+    lines += [
+        '',
+        '## Limits',
+        '',
+        '- Measured on one host with the load generator and the service sharing CPU. Absolute '
+        'numbers are lab-only and do not establish production performance.',
+        '- Only the reviewed workload path and oracles were exercised. HTTP availability alone '
+        'is not business correctness; counter monotonicity was the oracle here.',
+        '- Simulation results never authorise a change in this document.',
+        '',
+    ]
+    return '\n'.join(lines)
 
 
 def _empty_verdict(status: str, label: str, reason: str) -> dict:
@@ -177,10 +275,9 @@ class RepositoryStore:
 
 
 def default_adapters():
-    from darwin.adapters.sanchay_reporting import SanchayReportingAdapter
+    from darwin.adapters.registry import adapters_by_id
 
-    adapter = SanchayReportingAdapter()
-    return {adapter.id: adapter}
+    return adapters_by_id()
 
 
 class RepositoryEngine:
@@ -220,11 +317,14 @@ class RepositoryEngine:
         return self.store.get_inspection(ident)
 
     def submit(self, inspection_id: str, adapter_id: str | None = None, mode: str = 'quick',
-               include_source_tests: bool | None = None) -> dict:
+               include_source_tests: bool | None = None,
+               challenge: str = 'faster') -> dict:
         inspection = self.store.get_inspection(inspection_id)
         preset = PRESETS.get(mode)
         if not preset:
             raise RepositoryError('Unknown evaluation mode.', 'invalid_mode', 400)
+        if challenge not in {'faster', 'spike', 'resources', 'recover'}:
+            raise RepositoryError('Unknown challenge.', 'invalid_challenge', 400)
         screening = inspection.get('screening') or {}
         if adapter_id == SCREENING_ADAPTER_ID:
             if not screening.get('available'):
@@ -236,16 +336,22 @@ class RepositoryEngine:
             return self._submit_screening(inspection, mode, preset)
         if adapter_id is None and not inspection.get('execution_allowed') and screening.get('available'):
             return self._submit_screening(inspection, mode, preset)
-        if not inspection.get('execution_allowed'):
-            raise RepositoryError(
-                'This repository is inspection-only. DARWIN has no approved executable adapter for it, '
-                'and will not substitute the unrelated checkout lab.',
-                'execution_not_allowed', 409,
-            )
         support = next((item for item in inspection.get('supported_evaluations', [])
                         if item.get('adapter_id') == adapter_id), None)
-        if not support:
+        if adapter_id and not support:
             raise RepositoryError('That adapter is not supported for this source.', 'adapter_unsupported', 409)
+        if not inspection.get('execution_allowed'):
+            prerequisite = (inspection.get('prerequisites') or
+                            [item.get('prerequisite') for item in inspection.get('supported_evaluations') or []
+                             if item.get('prerequisite')])
+            raise RepositoryError(
+                ('A reviewed adapter matches this source, but execution is not available yet: '
+                 + (prerequisite[0] if prerequisite else 'no executable adapter is approved.'))
+                if support else
+                ('This repository is inspection-only. DARWIN has no approved executable adapter for it, '
+                 'and will not substitute the unrelated checkout lab.'),
+                'execution_not_allowed', 409,
+            )
         adapter = self.adapters.get(adapter_id)
         if not adapter:
             raise RepositoryError('That adapter is not installed in this DARWIN build.', 'adapter_missing', 503)
@@ -286,6 +392,7 @@ class RepositoryEngine:
                 'candidate': None,
                 'workload': {
                     'preset': mode,
+                    'challenge': challenge,
                     'seeds': list(preset['seeds']),
                     'sizes': list(preset['sizes']),
                     'repetitions': preset['repetitions'],
@@ -430,8 +537,11 @@ class RepositoryEngine:
                 if record['status'] in TERMINAL:
                     return
                 record.update(status='running', stage='preparing', started_at=now(),
-                              progress=_progress('preparing', 1, 4,
-                                                 'Preparing the pinned source and fictional ledgers'))
+                              progress=_progress(
+                                  'preparing', 1, 4,
+                                  'Preparing the pinned source and reviewed workload'
+                                  if record.get('evaluation_type') == 'backend_architecture'
+                                  else 'Preparing the pinned source and fictional ledgers'))
                 self.store.save_evaluation(record, 'Preparing evaluation')
             inspection = self.store.get_inspection(record['inspection_id'])
             adapter = self.adapters.get(record['adapter_id'])
@@ -453,14 +563,18 @@ class RepositoryEngine:
             if not support.supported:
                 raise AdapterError(support.reason, 'adapter_not_supported', 'NO_FEASIBLE_CANDIDATE')
             preset = PRESETS[record['mode']]
+            external = record.get('evaluation_type') == 'backend_architecture'
             budget = EvaluationBudget(
                 mode=record['mode'],
                 seeds=tuple(preset['seeds']),
                 sizes=tuple(preset['sizes']),
                 repetitions=preset['repetitions'],
                 warmups=preset['warmups'],
-                wall_clock_s=preset['wall_clock_s'],
+                wall_clock_s=(preset.get('external_wall_clock_s', preset['wall_clock_s'])
+                              if external else preset['wall_clock_s']),
                 include_source_tests=bool(record['workload'].get('include_source_tests')),
+                challenge=record['workload'].get('challenge') or 'faster',
+                search_mode='evolve' if external and record['mode'] == 'full' else 'compare',
             )
             prepared = adapter.prepare(source_root, work_dir, budget)
             candidates = adapter.candidates(prepared)
@@ -478,8 +592,11 @@ class RepositoryEngine:
             }
             record['workload']['fixtures'] = prepared.fixtures
             record.update(stage='checking_correctness',
-                          progress=_progress('checking_correctness', 2, 4,
-                                             'Running the real baseline and candidate on the same ledgers'))
+                          progress=_progress(
+                              'checking_correctness', 2, 4,
+                              'Deploying the baseline and each candidate in the isolated stack'
+                              if record.get('evaluation_type') == 'backend_architecture'
+                              else 'Running the real baseline and candidate on the same ledgers'))
             self.store.save_evaluation(record, 'Correctness harness prepared')
 
             measurements = adapter.measure(prepared, candidate, budget,
@@ -487,8 +604,11 @@ class RepositoryEngine:
             if self._check(stop):
                 raise AdapterCancelled('Cancelled before the verdict')
             record.update(stage='measuring',
-                          progress=_progress('measuring', 3, 4,
-                                             'Comparing measured report-calculation time'))
+                          progress=_progress(
+                              'measuring', 3, 4,
+                              'Comparing measured live architecture runs'
+                              if record.get('evaluation_type') == 'backend_architecture'
+                              else 'Comparing measured report-calculation time'))
             self.store.save_evaluation(record, 'Measurements captured')
 
             evidence = adapter.verify(prepared, candidate, measurements)
@@ -500,6 +620,19 @@ class RepositoryEngine:
             record['environment'] = evidence.get('environment')
             record['source_tests'] = evidence.get('source_tests')
             record['verdict'] = evidence.get('verdict')
+            if record.get('evaluation_type') == 'backend_architecture':
+                # The API must be able to show every measured run, not a hidden
+                # summary. benchmark.json keeps the same data as evidence.
+                record['architecture'] = {
+                    'challenge': measurements.get('challenge'),
+                    'runs': evidence.get('runs') or [],
+                    'pareto': evidence.get('pareto') or [],
+                    'comparison': evidence.get('comparison') or {},
+                    'environment': evidence.get('environment') or {},
+                    'complete': bool(measurements.get('complete', True)),
+                    'skipped': measurements.get('skipped') or [],
+                    'repetitions_requested': measurements.get('repetitions_requested'),
+                }
             record['stage'] = 'verdict'
             record['progress'] = _progress('verdict', 4, 4, 'Verdict derived from recorded evidence')
             self._write_evidence(record, prepared, evidence, measurements, inspection)
@@ -839,6 +972,7 @@ class RepositoryEngine:
         })
         _write_json(folder / 'workload.json', {
             'preset': record['mode'],
+            'challenge': record['workload'].get('challenge'),
             'seeds': record['workload']['seeds'],
             'sizes': record['workload']['sizes'],
             'repetitions': record['workload']['repetitions'],
@@ -851,6 +985,22 @@ class RepositoryEngine:
         if source_diff != target_diff:
             shutil.copy2(source_diff, target_diff)
         benchmark = measurements.get('benchmark') or {}
+        if record.get('evaluation_type') == 'backend_architecture':
+            benchmark = {
+                'evidence_kind': 'live',
+                'runs': measurements.get('runs') or [],
+                'pareto': measurements.get('pareto') or [],
+                'complete': measurements.get('complete'),
+                'skipped': measurements.get('skipped') or [],
+                'repetitions_requested': measurements.get('repetitions_requested'),
+                'wall_clock_s': measurements.get('wall_clock_s'),
+                'environment': measurements.get('environment'),
+                'note': (
+                    'Each run deployed a DARWIN-owned isolated Compose stack on loopback. '
+                    'The repository Compose file and Dockerfile were not used. '
+                    'Latency, throughput and recovery were measured live; simulation never wins.'
+                ),
+            }
         _write_json(folder / 'benchmark.json', benchmark)
         _write_json(folder / 'parity.json', {
             'passed': (evidence.get('parity') or {}).get('passed'),
@@ -858,6 +1008,8 @@ class RepositoryEngine:
             'source_tests': evidence.get('source_tests'),
         })
         _write_json(folder / 'verdict.json', evidence.get('verdict') or {})
+        (folder / 'change.md').write_text(
+            _change_text(record, evidence.get('verdict') or {}), encoding='utf-8')
         _write_json(folder / 'environment.json', {
             'benchmark_environment': evidence.get('environment'),
             'harness': evidence.get('harness'),
@@ -875,7 +1027,8 @@ class RepositoryEngine:
             '## API replay\n\n'
             '```powershell\n'
             f'$body = @{{ inspection_id = "{record["inspection_id"]}"; adapter_id = "{record["adapter_id"]}"; '
-            f'mode = "{record["mode"]}"; consent = $true }} | ConvertTo-Json\n'
+            f'mode = "{record["mode"]}"; challenge = "{record["workload"].get("challenge") or "faster"}"; '
+            'consent = $true } | ConvertTo-Json\n'
             'Invoke-RestMethod http://127.0.0.1:8000/api/project-evaluations -Method Post '
             '-ContentType application/json -Body $body\n'
             '```\n\n'
@@ -900,7 +1053,10 @@ class RepositoryEngine:
             'files': {},
         }
         for path in sorted(folder.iterdir()):
-            if not path.is_file() or path.name in ('manifest.json', 'evidence.zip'):
+            # Only reviewed artifacts are ever registered. Stray or partial files in
+            # the working folder must never become downloadable evidence.
+            if not path.is_file() or path.name not in ARTIFACT_NAMES \
+                    or path.name in ('manifest.json', 'evidence.zip'):
                 continue
             digest = _digest(path)
             files.append({'name': path.name, 'sha256': digest, 'bytes': path.stat().st_size})
@@ -915,6 +1071,26 @@ class RepositoryEngine:
     def get_evaluation(self, ident: str) -> dict:
         return self.store.get_evaluation(ident)
 
+    def export_change(self, ident: str) -> str:
+        record = self.store.get_evaluation(ident)
+        verdict = record.get('verdict') or {}
+        if record.get('status') != 'completed' or verdict.get('status') not in {
+                'VERIFIED_IMPROVEMENT', 'TRADEOFF_REQUIRES_CHOICE'}:
+            raise ValueError(
+                'No measured architecture change is exported for verdict '
+                f'{verdict.get("status") or record.get("status")}.'
+            )
+        try:
+            return self.evidence_path(ident, 'change.md').read_text(encoding='utf-8')
+        except (KeyError, OSError):
+            pass
+        try:
+            return _change_text(record, verdict)
+        except (KeyError, TypeError):
+            raise ValueError(
+                'The recorded change is incomplete; no deployment change is exported.'
+            ) from None
+
     def list_evaluations(self) -> list[dict]:
         return self.store.all_evaluations()
 
@@ -923,37 +1099,50 @@ class RepositoryEngine:
 
     def evidence_path(self, ident: str, name: str) -> Path:
         record = self.store.get_evaluation(ident)
-        registered = next((item for item in record.get('evidence', {}).get('files', [])
-                           if item['name'] == name), None)
-        if name not in ARTIFACT_NAMES or not registered:
+        evidence = record.get('evidence') or {}
+        registered = next((item for item in (evidence.get('files') or [])
+                           if isinstance(item, dict) and item.get('name') == name), None)
+        if name not in ARTIFACT_NAMES or not registered or not evidence.get('dir'):
             raise KeyError(name)
-        folder = (self.store.root / record['evidence']['dir']).resolve()
+        digest = registered.get('sha256')
+        folder = (self.store.root / evidence['dir']).resolve()
         path = (folder / name).resolve()
-        if not path.is_relative_to(folder) or not path.is_file() or _digest(path) != registered['sha256']:
+        if not digest or not path.is_relative_to(folder) or not path.is_file() \
+                or _digest(path) != digest:
             raise KeyError(name)
         return path
 
     def bundle(self, ident: str) -> Path:
         record = self.store.get_evaluation(ident)
-        folder = (self.store.root / record['evidence']['dir']).resolve()
+        evidence = record.get('evidence') or {}
+        if not evidence.get('dir'):
+            raise KeyError('manifest')
+        folder = (self.store.root / evidence['dir']).resolve()
         manifest_path = folder / 'manifest.json'
         if not manifest_path.is_file():
             raise KeyError('manifest')
         manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-        for name, digest in manifest['files'].items():
+        files = manifest.get('files')
+        if not isinstance(files, dict):
+            raise ValueError('The evidence manifest has no file table.')
+        # Only reviewed artifacts may leave the host. A stray manifest entry is
+        # ignored rather than packed, so the bundle cannot widen the download surface.
+        packed = {name: digest for name, digest in files.items() if name in ARTIFACT_NAMES}
+        for name, digest in packed.items():
             path = (folder / name).resolve()
             if not path.is_file() or not path.is_relative_to(folder) or _digest(path) != digest:
                 raise ValueError(f'Evidence file failed digest verification: {name}')
+        source = record.get('source') or {}
         target = folder / f'darwin-project-evidence-{ident}.zip'
         temporary = folder / f'.bundle-{uuid4().hex}.zip'
         with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED) as archive:
-            for name in sorted(manifest['files']):
+            for name in sorted(packed):
                 archive.write(folder / name, arcname=name)
             archive.write(manifest_path, arcname='manifest.json')
             archive.writestr('README.txt',
                              'DARWIN Real Project Mode evidence bundle.\n'
                              f'Evaluation: {ident}\n'
-                             f'Source commit: {record["source"]["commit_sha"]}\n'
+                             f'Source commit: {source.get("commit_sha", "unknown")}\n'
                              'Verify every file against manifest.json before trusting it.\n')
         os.replace(temporary, target)
         return target
