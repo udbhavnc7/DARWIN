@@ -595,6 +595,19 @@ class RepositoryEngine:
             record['environment'] = evidence.get('environment')
             record['source_tests'] = evidence.get('source_tests')
             record['verdict'] = evidence.get('verdict')
+            if record.get('evaluation_type') == 'backend_architecture':
+                # The API must be able to show every measured run, not a hidden
+                # summary. benchmark.json keeps the same data as evidence.
+                record['architecture'] = {
+                    'challenge': measurements.get('challenge'),
+                    'runs': evidence.get('runs') or [],
+                    'pareto': evidence.get('pareto') or [],
+                    'comparison': evidence.get('comparison') or {},
+                    'environment': evidence.get('environment') or {},
+                    'complete': bool(measurements.get('complete', True)),
+                    'skipped': measurements.get('skipped') or [],
+                    'repetitions_requested': measurements.get('repetitions_requested'),
+                }
             record['stage'] = 'verdict'
             record['progress'] = _progress('verdict', 4, 4, 'Verdict derived from recorded evidence')
             self._write_evidence(record, prepared, evidence, measurements, inspection)

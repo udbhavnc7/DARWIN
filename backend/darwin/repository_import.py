@@ -378,6 +378,17 @@ class RepositoryImporter:
                 'A reviewed adapter matches this pinned source, but the execution prerequisite is not met: '
                 + (prerequisites[0] if prerequisites else 'the isolated runtime is unavailable.')
             )
+        if execution_allowed:
+            # The generic inspection report cannot know whether a reviewed
+            # adapter exists. Do not claim "this repository is never executed"
+            # once an approved adapter will actually deploy it.
+            for item in classification['not_supported']:
+                if item.get('capability') == 'Measured runtime claims':
+                    item['reason'] = (
+                        'Measured claims are limited to the reviewed adapter scope: the pinned files '
+                        'in DARWIN-owned isolated containers, one host and one bounded workload window. '
+                        'The repository Compose file and Dockerfile are not executed.'
+                    )
 
         if not classification['supported_evaluations']:
             warnings.append(

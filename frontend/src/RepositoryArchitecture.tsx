@@ -12,6 +12,7 @@ type Props = {
   architecture?: Architecture | null;
   hotspots?: Hotspot[];
   screening?: ScreeningSupport | null;
+  measuredChange?: string;
 };
 
 type Stage = {title: string; detail: string; evidence: string; icon: IconName};
@@ -80,7 +81,7 @@ function backendRows(project: Inspection['project']): {label: string; value: str
 }
 
 export function RepositoryArchitecture({
-  project, facts, notSupported, guesses, architecture, hotspots = [], screening,
+  project, facts, notSupported, guesses, architecture, hotspots = [], screening, measuredChange,
 }: Props) {
   const map = stages(project);
   const backend = project.backend;
@@ -94,7 +95,7 @@ export function RepositoryArchitecture({
   return <section className="project-panel repository-panel" aria-labelledby="repository-title">
     <div className="section-title">
       <div className="panel-heading">
-        <span className="section-kicker">Step 2 · Understand it</span>
+        <span className="section-kicker">Repository understanding</span>
         <h2 id="repository-title">{project.display_type}</h2>
       </div>
       <span className={`status-chip ${project.is_server_backend ? 'active' : 'good'}`}>
@@ -118,7 +119,7 @@ export function RepositoryArchitecture({
       </div>
       <div>
         <span className="section-kicker">What can evolve</span>
-        <p>{note.evolution}</p>
+        <p>{measuredChange ?? note.evolution}</p>
       </div>
     </div>}
 
