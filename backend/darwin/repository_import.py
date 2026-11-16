@@ -175,7 +175,8 @@ class GitClient:
             'ref_not_found', 404,
         )
 
-    def checkout(self, url: str, ref: str, sha: str, target: Path) -> None:
+    def checkout(self, url: str, ref: str, sha: str, target: Path,
+                 sparse_paths: list[str] | None = None) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         temporary = target.parent / f'.tmp-{uuid4().hex}'
         hooks = target.parent / '.hooks-disabled'
@@ -187,6 +188,9 @@ class GitClient:
             self.run(['-C', str(temporary), 'config', 'core.symlinks', 'false'])
             self.run(['-C', str(temporary), 'config', 'submodule.recurse', 'false'])
             self.run(['-C', str(temporary), 'remote', 'add', 'origin', url])
+            if sparse_paths:
+                self.run(['-C', str(temporary), 'sparse-checkout', 'init', '--cone'])
+                self.run(['-C', str(temporary), 'sparse-checkout', 'set', *list(sparse_paths)])
             try:
                 self.run(['-C', str(temporary), 'fetch', '--depth', '1', '--no-tags', 'origin', sha], timeout=180)
             except RepositoryError:
@@ -335,7 +339,7 @@ class RepositoryImporter:
             if metadata.get('private'):
                 raise RepositoryError('Private repositories are not supported.', 'private_repository', 403)
 
-        source_root = self._source_root(repository, sha, requested_ref)
+        source_root = self._source_root(repository, sha, requested_ref, entry)
         # A configured local checkout is a test/demo hook. Its installed
         # dependencies are not part of the repository, so exclude them from the
         # source budget while still enforcing the file/byte ceilings elsewhere.
@@ -352,6 +356,9 @@ class RepositoryImporter:
         classification = inspect_source(source_root, repository.url, repository.owner,
                                         repository.name, sha, pinned)
         execution_allowed = bool(classification['supported_evaluations'] and pinned)
+        support_level = classification.get('support_level') or (
+            'READY_FOR_MEASURED_EVOLUTION' if execution_allowed else 'INSPECTABLE'
+        )
         if classification['supported_evaluations'] and not pinned:
             warnings.append(
                 'The repository has a known adapter, but this commit is not the pinned, audited revision. '
@@ -402,6 +409,7 @@ class RepositoryImporter:
             'readiness': classification['readiness'],
             'warnings': warnings,
             'execution_allowed': execution_allowed,
+            'support_level': support_level,
             'evaluation_status': 'NOT_MEASURED' if execution_allowed else 'UNSUPPORTED_PROJECT',
             '_source_root': str(source_root),
             'policy': {
@@ -413,7 +421,8 @@ class RepositoryImporter:
         }
         return record
 
-    def _source_root(self, repository: GitHubRepository, sha: str, ref: str) -> Path:
+    def _source_root(self, repository: GitHubRepository, sha: str, ref: str,
+                     entry: dict | None = None) -> Path:
         override = self.source_override.get(canonical_repository(repository.url))
         if override:
             if not override.is_dir():
@@ -429,7 +438,8 @@ class RepositoryImporter:
             except (OSError, ValueError):
                 pass
         _safe_rmtree(target)
-        self.git.checkout(repository.url, ref, sha, target)
+        sparse = (entry or {}).get('sparse_paths')
+        self.git.checkout(repository.url, ref, sha, target, sparse_paths=sparse)
         marker.write_text(json.dumps({
             'url': repository.url,
             'commit_sha': sha,
