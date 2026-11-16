@@ -198,6 +198,52 @@ def _sanchay_adapter(root: Path, pinned: bool) -> dict | None:
     }
 
 
+def _compose_adapter(root: Path, repository_url: str, commit_sha: str, pinned: bool) -> dict | None:
+    """Offer a catalogued containerized adapter only when its reviewed files match.
+
+    Detection is by source markers through the adapter itself; the catalog URL
+    merely identifies which reviewed adapter may apply. A mismatch returns None
+    so an unrelated Flask app is never silently treated as this sample.
+    """
+    from darwin.adapters.flask_redis import FlaskRedisAdapter
+
+    entry = catalog_entry(url=repository_url)
+    if not entry or entry['adapter']['adapter_id'] != 'flask-redis-compose-v1':
+        return None
+    adapter = FlaskRedisAdapter()
+    assessment = adapter.detect(root, commit_sha, pinned)
+    if not assessment.supported:
+        return None
+    catalog = entry['adapter']
+    return {
+        'adapter_id': adapter.id,
+        'adapter_version': adapter.version,
+        'display_name': catalog['display_name'],
+        'evaluation_type': adapter.evaluation_type,
+        'summary': (
+            'Measure the original single-replica Flask + Redis topology against reviewed '
+            'replica and gunicorn-worker changes in an isolated Linux Docker stack.'
+        ),
+        'change_summary': catalog['change_summary'],
+        'mechanism': catalog['mechanism'],
+        'correctness_rules': list(catalog['correctness_rules']),
+        'scope_note': catalog['scope_note'],
+        'modes': list(catalog['modes']),
+        'execution_allowed': bool(pinned and assessment.ready),
+        'ready': bool(assessment.ready),
+        'prerequisite': assessment.prerequisite,
+        'execution_note': (
+            assessment.reason if assessment.ready else
+            'The reviewed adapter matches, but this host cannot start an isolated Linux '
+            'container stack yet. ' + assessment.prerequisite
+        ),
+        'evidence': assessment.evidence,
+        'capabilities': adapter.capabilities(),
+        'dimensions': adapter.capabilities().get('dimensions', []),
+        'challenges': ['faster', 'recover', 'resources'],
+    }
+
+
 def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
                    commit_sha: str, pinned: bool) -> dict:
     root = Path(root).resolve()
@@ -238,6 +284,13 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     )
     is_client_app = bool(web_package and 'react' in dependencies)
     is_node_server = bool(server_frameworks and server_entry)
+    flask_redis_files = (_exists(root, 'flask-redis/app.py')
+                         and _exists(root, 'flask-redis/requirements.txt'))
+    flask_redis_text = _read(root / 'flask-redis/app.py') if flask_redis_files else ''
+    is_flask_redis_shape = bool(
+        flask_redis_files and 'from flask import Flask' in flask_redis_text
+        and 'Redis(host=' in flask_redis_text and 'This webpage has been viewed' in flask_redis_text
+    )
 
     if is_sanchay_shape:
         project_type = 'react_webview_local_app'
@@ -248,6 +301,17 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
         summary = (
             'A client-side personal-finance dashboard. The visible React application reads and '
             'writes browser-local data; there is no deployed server API or server database.'
+        )
+    elif is_flask_redis_shape:
+        project_type = 'containerized_backend'
+        display_type = 'Flask + Redis · containerized backend'
+        application_host = 'Linux containers (Docker)'
+        persistence = 'Redis (shared viewed-count)'
+        is_server_backend = True
+        summary = (
+            'A public Flask + Redis sample. One Flask process serves a hit counter stored in Redis. '
+            'DARWIN deploys a reviewed isolated stack from app.py and requirements.txt; the '
+            'repository Compose file and Dockerfile are never executed.'
         )
     elif is_client_app and not is_node_server:
         project_type = 'client_web_app'
@@ -309,6 +373,22 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
                 'confidence': 'low',
             })
 
+    if is_flask_redis_shape:
+        facts.append(_fact('Web application', 'Flask (app.py)', ['flask-redis/app.py']))
+        facts.append(_fact('Server runtime', 'gunicorn (DARWIN-owned image)', ['flask-redis/requirements.txt']))
+        facts.append(_fact('Gateway', 'nginx (DARWIN-generated config)', ['flask-redis/app.py']))
+        facts.append(_fact('Shared state', 'Redis viewed-count', ['flask-redis/app.py']))
+        not_supported.extend([
+            {'capability': 'Repository Compose / Dockerfile',
+             'reason': 'The sample’s own Compose file and Dockerfile are not executed; DARWIN writes its own stack.'},
+            {'capability': 'SQL database or queue faults',
+             'reason': 'This sample has no SQL database or queue; only service restart is measured.'},
+            {'capability': 'Framework conversion',
+             'reason': 'The reviewed boundary is deployable topology, not rewriting Flask in another stack.'},
+            {'capability': 'Production traffic forecasting',
+             'reason': 'The load generator and service share one host; absolute throughput is lab-only.'},
+        ])
+
     kotlin_count = _count_files(root, 'app/src/**/*.kt', cap=3000) if _exists(root, 'settings.gradle.kts') else 0
     if kotlin_count:
         facts.append(_fact(
@@ -323,6 +403,10 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
 
     adapter = _sanchay_adapter(root, pinned) if is_sanchay_shape else None
     supported = [adapter] if adapter else []
+    compose_adapter = (_compose_adapter(root, repository_url, commit_sha, pinned)
+                       if is_flask_redis_shape else None)
+    if compose_adapter:
+        supported.append(compose_adapter)
 
     if not supported:
         not_supported.append({
@@ -358,7 +442,7 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     screening = generic.get('screening') or {'available': False, 'controls': [],
                                               'reason': 'Architecture screening was not analysed.'}
 
-    if is_sanchay_shape:
+    if is_sanchay_shape or is_flask_redis_shape:
         project = {
             'type': project_type,
             'display_type': display_type,
@@ -403,12 +487,24 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
         **(generic.get('readiness') or {}),
         'node_available': shutil.which('node') is not None,
         'node_version': _node_version(),
-        'source_paths_present': bool(reporting_exists and persistence_exists) if is_sanchay_shape
-        else bool(generic_backend.get('services')),
-        'adapter_approved': bool(adapter and adapter['execution_allowed']),
+        'source_paths_present': (
+            bool(reporting_exists and persistence_exists) if is_sanchay_shape
+            else True if is_flask_redis_shape
+            else bool(generic_backend.get('services'))
+        ),
+        'adapter_approved': any(item.get('execution_allowed') for item in supported),
+        'container_runner_available': _container_runner_available() if is_flask_redis_shape else None,
         'source_tests_available': _exists(root, 'web/node_modules/vitest/package.json')
         if is_sanchay_shape else bool((generic_backend.get('tests') or {}).get('file_count')),
     }
+
+    support_level = (
+        'READY_FOR_MEASURED_EVOLUTION' if any(item.get('execution_allowed') for item in supported)
+        else 'EVALUABLE_WITH_SETUP' if supported
+        else 'INSPECTABLE'
+    )
+    prerequisites = [item.get('prerequisite') for item in supported
+                     if not item.get('execution_allowed') and item.get('prerequisite')]
 
     return {
         'project': project,
@@ -416,9 +512,19 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
         'facts': facts,
         'not_supported': not_supported,
         'supported_evaluations': supported,
+        'support_level': support_level,
+        'prerequisites': prerequisites,
         'hotspots': hotspots,
         'screening': screening,
         'guesses': guesses,
         'readiness': readiness,
         'evaluation_status': 'NOT_MEASURED' if supported else 'UNSUPPORTED_PROJECT',
     }
+
+
+def _container_runner_available() -> bool:
+    try:
+        from darwin.isolated_backend import runner_available
+        return runner_available()[0]
+    except Exception:
+        return False

@@ -21,7 +21,8 @@ def decide_architecture(*, challenge: str, checks: list[dict],
                         baseline: dict, candidates: list[dict],
                         infrastructure_ok: bool = True,
                         infrastructure_error: str | None = None,
-                        isolation_reason: str | None = None) -> dict:
+                        isolation_reason: str | None = None,
+                        incomplete_reason: str | None = None) -> dict:
     policy = {
         'minimum_improvement_pct': MIN_IMPROVEMENT_PCT,
         'maximum_error_rate': MAX_ERROR_RATE,
@@ -44,6 +45,7 @@ def decide_architecture(*, challenge: str, checks: list[dict],
         payload = {
             'status': status, 'label': label, 'reason': reason, 'policy': policy,
             'correctness': correctness, 'per_size': [], 'winner_id': winner,
+            'baseline_id': (baseline or {}).get('candidate_id'),
             'baseline_metrics': (baseline or {}).get('metrics'),
             'candidate_metrics': extra,
         }
@@ -63,6 +65,8 @@ def decide_architecture(*, challenge: str, checks: list[dict],
         return result('REJECTED_INCORRECT', 'Rejected — correctness failed',
                       f'A candidate failed a required check: {failed[0].get("name")}. '
                       'Availability smoke tests are not enough to call an architecture safe.')
+    if incomplete_reason:
+        return result('INCONCLUSIVE', 'Inconclusive', incomplete_reason)
 
     measured = [item for item in candidates if item.get('metrics')]
     if not measured:
@@ -81,6 +85,7 @@ def decide_architecture(*, challenge: str, checks: list[dict],
             'requests_per_s': metrics.get('requests_per_s'),
             'error_rate': metrics.get('error_rate'),
             'cpu_seconds': metrics.get('cpu_seconds'),
+            'memory_peak_mb': metrics.get('memory_peak_mb'),
             'recovery_s': item.get('recovery_s'),
             'replicas': item.get('replicas'),
             'workers': item.get('workers'),
@@ -124,6 +129,47 @@ def decide_architecture(*, challenge: str, checks: list[dict],
         'comparison': rows,
     }
 
+    # A win on the primary metric must not hide a regression elsewhere. Cost,
+    # tail latency and CPU count as part of the architecture decision.
+    regressions = []
+    for field, lower_is_better, label in (
+            ('p95_ms', True, 'p95 latency'),
+            ('cpu_seconds', True, 'CPU seconds per window'),
+            ('memory_peak_mb', True, 'peak memory'),
+            ('requests_per_s', False, 'requests per second')):
+        if field == primary:
+            continue
+        base_v = base_metrics.get(field)
+        cand_v = best.get(field)
+        if not base_v or cand_v is None:
+            continue
+        worse = (cand_v > base_v * (1 + REGRESSION_LIMIT_PCT / 100) if lower_is_better
+                 else cand_v < base_v * (1 - REGRESSION_LIMIT_PCT / 100))
+        if worse:
+            regressions.append({
+                'metric': field,
+                'label': label,
+                'baseline': base_v,
+                'candidate': cand_v,
+                'change_pct': round((cand_v - base_v) / base_v * 100, 2),
+            })
+    extra['regressions'] = regressions
+    if challenge == 'recover':
+        extra['recovery_notes'] = [
+            'Recovery is measured from fault injection until the gateway returns a healthy response.',
+            'The gateway is probed every 50 ms while web-1 restarts. A run with zero failed '
+            'probes means another replica served traffic and users saw no outage.',
+        ]
+    if regressions:
+        detail = ', '.join(
+            f'{item["label"]} {item["change_pct"]:+.1f}%' for item in regressions)
+        return result(
+            'TRADEOFF_REQUIRES_CHOICE', 'Tradeoff — choose',
+            f'{best["label"]} was {improvement:.1f}% better on {primary} but regressed on '
+            f'{detail}. DARWIN will not hide that cost behind a single winner score.',
+            winner=best['candidate_id'], extra=extra,
+        )
+
     if best['candidate_id'] == baseline.get('candidate_id'):
         return result('BASELINE_RETAINED', 'Baseline retained',
                       'No measured candidate beat the original architecture on the selected challenge.',
@@ -140,7 +186,7 @@ def decide_architecture(*, challenge: str, checks: list[dict],
         return result('TRADEOFF_REQUIRES_CHOICE', 'Tradeoff — choose',
                       f'{best["label"]} was {improvement:.1f}% better on {primary} but uses more replicas. '
                       'DARWIN will not pick a winner when the objective does not include cost.',
-                      extra=extra)
+                      winner=best['candidate_id'], extra=extra)
 
     explanation = (
         f'Your application currently uses {baseline.get("replicas", 1)} replica(s) and '

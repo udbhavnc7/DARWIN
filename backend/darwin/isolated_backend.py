@@ -50,26 +50,26 @@ def _dockerfile(manifest: BackendManifest) -> str:
         return '\n'.join([
             'FROM python:3.11-alpine',
             'WORKDIR /app',
-            'RUN adduser -D -u 65534 appuser',
+            # Alpine already ships uid/gid 65534 (nobody). Reuse it instead of
+            # creating another account, so the image stays reproducible.
             'COPY requirements.txt .',
             'RUN pip install --no-cache-dir -r requirements.txt gunicorn==23.0.0',
             'COPY app.py .',
-            'USER 65534',
+            'USER 65534:65534',
             'EXPOSE 8000',
-            'CMD gunicorn -b 0.0.0.0:8000 -w ${GUNICORN_WORKERS:-1} --timeout 10 app:app',
+            'ENTRYPOINT ["sh", "-c", "exec gunicorn -b 0.0.0.0:8000 -w ${GUNICORN_WORKERS:-1} --timeout 10 app:app"]',
             '',
         ])
     if manifest.runtime == 'uvicorn-fastapi':
         return '\n'.join([
             'FROM python:3.11-alpine',
             'WORKDIR /app',
-            'RUN adduser -D -u 65534 appuser',
             'COPY requirements.txt .',
             'RUN pip install --no-cache-dir -r requirements.txt uvicorn==0.34.0',
             'COPY app.py .',
-            'USER 65534',
+            'USER 65534:65534',
             'EXPOSE 8000',
-            'CMD uvicorn app:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-1}',
+            'ENTRYPOINT ["sh", "-c", "exec uvicorn app:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-1}"]',
             '',
         ])
     raise IsolationError(f'Unsupported reviewed runtime {manifest.runtime!r}', 'unsupported_runtime')
@@ -79,8 +79,19 @@ def _nginx_conf(replicas: int) -> str:
     servers = '\n'.join(f'        server web-{index}:8000 max_fails=1 fail_timeout=2s;'
                         for index in range(1, replicas + 1))
     return f'''
+worker_processes 1;
+pid /tmp/nginx.pid;
+error_log /dev/stderr warn;
+
 events {{ worker_connections 128; }}
 http {{
+    access_log off;
+    client_body_temp_path /tmp/client_body;
+    proxy_temp_path /tmp/proxy;
+    fastcgi_temp_path /tmp/fastcgi;
+    uwsgi_temp_path /tmp/uwsgi;
+    scgi_temp_path /tmp/scgi;
+
     upstream darwin_app {{
 {servers}
     }}
@@ -104,7 +115,9 @@ def generate_compose(manifest: BackendManifest, candidate: CandidateDimension, i
     if manifest.needs_redis:
         services['redis'] = {
             'image': 'redis:7-alpine',
-            'command': ['redis-server', '--save', '', '--appendonly', 'no'],
+            'entrypoint': ['redis-server'],
+            'command': ['--save', '', '--appendonly', 'no'],
+            'user': '999:999',
             'read_only': True,
             'security_opt': ['no-new-privileges:true'],
             'cap_drop': ['ALL'],
@@ -135,6 +148,8 @@ def generate_compose(manifest: BackendManifest, candidate: CandidateDimension, i
         services[name] = service
     services['gateway'] = {
         'image': 'nginx:1.27-alpine',
+        'entrypoint': ['nginx', '-g', 'daemon off;'],
+        'user': '101:101',
         'depends_on': [f'web-{index}' for index in range(1, replicas + 1)],
         'volumes': ['./nginx.conf:/etc/nginx/nginx.conf:ro'],
         'ports': [{'target': 8080, 'published': 0, 'host_ip': '127.0.0.1', 'protocol': 'tcp'}],
@@ -145,7 +160,7 @@ def generate_compose(manifest: BackendManifest, candidate: CandidateDimension, i
         'networks': ['sandbox', 'host_access'],
         'restart': 'no',
         'read_only': True,
-        'tmpfs': ['/var/run', '/var/cache/nginx', '/tmp'],
+        'tmpfs': ['/tmp'],
     }
     return {
         'name': 'darwin-external',
@@ -181,11 +196,14 @@ def copy_allowlisted_source(source_root: Path, dest: Path, files: list[str] | tu
     root = source_root.resolve()
     dest.mkdir(parents=True, exist_ok=True)
     for relative in validate_relative_files(files):
-        src = (root / relative).resolve()
+        candidate = root / relative
+        if candidate.is_symlink():
+            raise IsolationError(f'Refused symlink source: {relative}', 'symlink_rejected')
+        src = candidate.resolve()
         if not src.is_relative_to(root):
             raise IsolationError(f'Refused path outside the checkout: {relative}', 'path_escape')
-        if src.is_symlink() or not src.is_file():
-            raise IsolationError(f'Refused non-file or symlink source: {relative}', 'symlink_rejected')
+        if not src.is_file():
+            raise IsolationError(f'Refused non-file source: {relative}', 'symlink_rejected')
         target = dest / Path(relative).name
         shutil.copyfile(src, target)
         copied.append(Path(relative).name)
@@ -341,10 +359,134 @@ class IsolatedBackend:
                     pass
                 time.sleep(0.05)
 
-    def inject_restart(self, check) -> float:
+    def inject_restart(self, check) -> dict:
+        """Restart web-1 while probing the gateway, then wait for recovery.
+
+        recovery_s is the time from fault injection to the first healthy probe
+        after the last failed probe. A candidate that keeps serving traffic
+        through another replica reports 0.0 with zero failed probes, instead of
+        inheriting the duration of the Docker restart command.
+        """
+        import threading
+
         check()
-        self.compose('restart', '-t', '2', 'web-1', timeout=60)
-        return self.wait_ready(check, timeout_s=30)
+        probes: list[tuple[float, bool]] = []
+        stop = threading.Event()
+
+        def probe() -> None:
+            client = httpx.Client(base_url=self.url, timeout=1.0, trust_env=False)
+            try:
+                while not stop.is_set():
+                    began = time.perf_counter()
+                    try:
+                        response = client.get(self.manifest.health.path)
+                        ok = response.status_code == self.manifest.health.status and (
+                            not self.manifest.health.contains
+                            or self.manifest.health.contains in response.text)
+                    except httpx.HTTPError:
+                        ok = False
+                    probes.append((began, ok))
+                    time.sleep(0.05)
+            finally:
+                client.close()
+
+        thread = threading.Thread(target=probe, daemon=True, name='darwin-restart-probe')
+        thread.start()
+        injected = time.perf_counter()
+        try:
+            self.compose('restart', '-t', '2', 'web-1', timeout=60)
+            residual = self.wait_ready(check, timeout_s=30)
+        finally:
+            stop.set()
+            thread.join(timeout=2)
+        restart_s = round(time.perf_counter() - injected, 3)
+        failures = [at for at, ok in probes if not ok]
+        recovery_s = 0.0
+        if failures:
+            last_failure = failures[-1]
+            after = [at for at, ok in probes if ok and at >= last_failure]
+            recovery_s = round((after[0] if after else injected + residual) - injected, 3)
+        return {
+            'recovery_s': recovery_s,
+            'restart_command_s': restart_s,
+            'probes': len(probes),
+            'failed_probes': len(failures),
+            'observed_outage': bool(failures),
+            'note': (
+                'No gateway-level outage observed: another replica served traffic while web-1 restarted.'
+                if not failures else
+                f'{len(failures)} of {len(probes)} gateway probes failed during the restart; '
+                f'the first healthy response after the last failure arrived {recovery_s:.3f}s after injection.'
+            ),
+        }
+
+    def _app_containers(self) -> list[str]:
+        services = [f'web-{index}' for index in range(1, max(1, self.candidate.replicas) + 1)]
+        if self.manifest.needs_redis:
+            services.append('redis')
+        ident = []
+        for service in services:
+            try:
+                output = self.compose('ps', '-q', service, timeout=20)
+            except IsolationError:
+                continue
+            ident.extend(line.strip() for line in output.splitlines() if line.strip())
+        return ident
+
+    def _cgroup_file(self, container: str, relative: str) -> str | None:
+        try:
+            completed = subprocess.run(
+                [self.cli, 'exec', container, 'cat', f'/sys/fs/cgroup/{relative}'],
+                capture_output=True, text=True, timeout=10, stdin=subprocess.DEVNULL,
+                env=docker_environment(self.cli),
+                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return completed.stdout if completed.returncode == 0 else None
+
+    def resource_snapshot(self) -> dict:
+        """Read cgroup v2 counters from DARWIN-owned containers.
+
+        cpu_seconds is a real cumulative counter (usage_usec). memory is the
+        per-container cgroup peak when the kernel exposes it; otherwise the
+        current value, flagged as such. No value is invented when unreadable.
+        """
+        ids = self._app_containers()
+        cpu_us = 0
+        cpu_ok = bool(ids)
+        memory = []
+        peak_basis = True
+        for container in ids:
+            stat = self._cgroup_file(container, 'cpu.stat')
+            match = None
+            if stat:
+                for line in stat.splitlines():
+                    if line.startswith('usage_usec'):
+                        match = line.split()[1]
+                if match and match.isdigit():
+                    cpu_us += int(match)
+                else:
+                    cpu_ok = False
+            else:
+                cpu_ok = False
+            peak = self._cgroup_file(container, 'memory.peak')
+            current = self._cgroup_file(container, 'memory.current')
+            value = None
+            if peak and peak.strip().isdigit():
+                value = int(peak.strip())
+            elif current and current.strip().isdigit():
+                value = int(current.strip())
+                peak_basis = False
+            if value is not None:
+                memory.append(value)
+        return {
+            'cpu_us': cpu_us if cpu_ok else None,
+            'memory_bytes': sum(memory) if memory else None,
+            'memory_basis': 'cgroup_peak_sum' if peak_basis and memory else (
+                'cgroup_current_sum' if memory else None),
+            'containers': len(ids),
+        }
 
     def verify_counter_monotonic(self, check, probes: int = 5) -> dict:
         import re
@@ -366,26 +508,71 @@ class IsolatedBackend:
             'values': values,
         }
 
-    def measure(self, seed: int, check, include_fault: bool) -> dict:
-        ready_s = self.wait_ready(check)
-        self.warmup(check)
-        samples = self.http_samples(seed, check)
-        summary = summarise_samples(samples, cpu_seconds=0.0, peak_mb=0.0)
-        correctness = self.verify_counter_monotonic(check) if self.manifest.needs_redis else {
+    def measure(self, seed: int, check, include_fault: bool, deadline: float | None = None) -> dict:
+        def guard() -> None:
+            if deadline is not None and time.perf_counter() > deadline:
+                raise IsolationError(
+                    'The wall-clock budget expired before this candidate finished. '
+                    'No metrics are reported for it.', 'budget_exhausted',
+                )
+            check()
+
+        ready_s = self.wait_ready(guard)
+        self.warmup(guard)
+        before = self.resource_snapshot()
+        samples = self.http_samples(seed, guard)
+        after = self.resource_snapshot()
+        resource_measured = bool(
+            before.get('cpu_us') is not None and after.get('cpu_us') is not None
+            and after.get('memory_bytes') is not None
+        )
+        cpu_seconds = 0.0
+        peak_mb = 0.0
+        if resource_measured:
+            cpu_seconds = round(max(0, after['cpu_us'] - before['cpu_us']) / 1_000_000, 4)
+            peak_mb = round(after['memory_bytes'] / (1024 * 1024), 3)
+        summary = summarise_samples(
+            samples, cpu_seconds=cpu_seconds, peak_mb=peak_mb,
+            window_s=self.manifest.workload.window_s,
+        )
+        correctness = self.verify_counter_monotonic(guard) if self.manifest.needs_redis else {
             'passed': all(row['ok'] for row in samples[:3]),
             'detail': 'HTTP smoke only; no business counter is defined',
             'values': [],
         }
         recovery_s = None
+        recovery_detail = None
         if include_fault and self.manifest.allow_fault_restart:
-            recovery_s = self.inject_restart(check)
+            recovery_detail = self.inject_restart(guard)
+            recovery_s = recovery_detail['recovery_s']
+            if self.manifest.needs_redis:
+                after_restart = self.verify_counter_monotonic(guard)
+                correctness = {
+                    'passed': bool(correctness.get('passed') and after_restart.get('passed')),
+                    'detail': (
+                        'Shared Redis counter increased before and after the web replica restart'
+                        if correctness.get('passed') and after_restart.get('passed')
+                        else after_restart.get('detail') or correctness.get('detail')
+                    ),
+                    'values': list(correctness.get('values') or []) + list(after_restart.get('values') or []),
+                    'phases': ['before_restart', 'after_restart'],
+                }
         return {
             'candidate_id': self.candidate.candidate_id,
             'ready_s': ready_s,
             'recovery_s': recovery_s,
+            'recovery_detail': recovery_detail,
             'metrics': summary,
             'samples': samples,
             'correctness': correctness,
+            'resources': {
+                'measured': resource_measured,
+                'cpu_seconds': cpu_seconds if resource_measured else None,
+                'memory_peak_mb': peak_mb if resource_measured else None,
+                'memory_basis': after.get('memory_basis'),
+                'containers': after.get('containers') or 0,
+                'source': 'docker-cgroup-v2' if resource_measured else 'unavailable',
+            },
             'url_loopback': True,
         }
 

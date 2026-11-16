@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from pathlib import Path
 import secrets
 from typing import Literal
 
@@ -36,6 +37,7 @@ class EvaluationRequest(BaseModel):
     inspection_id: str = Field(min_length=1, max_length=100)
     adapter_id: str | None = Field(default=None, max_length=100)
     mode: Literal['quick', 'full'] = 'quick'
+    challenge: Literal['faster', 'spike', 'resources', 'recover'] = 'faster'
     include_source_tests: bool | None = None
 
 
@@ -136,8 +138,11 @@ def start_evaluation(body: EvaluationRequest, request: Request):
     adapter_id = body.adapter_id
     screening = inspection_record.get('screening') or {}
     if adapter_id is None:
-        if inspection_record.get('execution_allowed') and inspection_record.get('supported_evaluations'):
-            adapter_id = inspection_record['supported_evaluations'][0]['adapter_id']
+        supports = inspection_record.get('supported_evaluations') or []
+        if supports:
+            # A reviewed adapter matches. Let submit() explain the exact
+            # prerequisite instead of a generic "nothing available" message.
+            adapter_id = supports[0]['adapter_id']
         elif screening.get('available'):
             adapter_id = SCREENING_ADAPTER_ID
     if not adapter_id:
@@ -147,11 +152,69 @@ def start_evaluation(body: EvaluationRequest, request: Request):
         )
     try:
         return _public(engine.submit(body.inspection_id, adapter_id, body.mode,
-                                     body.include_source_tests))
+                                     body.include_source_tests, body.challenge))
     except RepositoryError as exc:
         raise _repository_error(exc)
     except RuntimeError as exc:
         raise HTTPException(503, str(exc))
+
+
+@router.get('/api/repositories/inspections/{ident}/candidates')
+def inspection_candidates(ident: str, request: Request):
+    """Preview eligible architecture candidates without executing anything."""
+    engine = repositories(request)
+    try:
+        inspection = engine.get_inspection(ident)
+    except KeyError:
+        raise HTTPException(404, 'Repository inspection not found')
+    supports = inspection.get('supported_evaluations') or []
+    if not supports:
+        return {
+            'eligible': False,
+            'reason': 'No reviewed executable adapter matches this source.',
+            'support_level': inspection.get('support_level', 'INSPECTABLE'),
+            'candidates': [],
+            'challenges': [],
+        }
+    support = supports[0]
+    adapter = engine.adapters.get(support['adapter_id'])
+    if adapter is None:
+        raise HTTPException(503, 'That adapter is not installed in this DARWIN build.')
+    manifest = adapter.describe(Path(inspection.get('_source_root', '')),
+                                inspection['source']['commit_sha'],
+                                bool(inspection['source']['trusted']))
+    return {
+        'eligible': bool(inspection.get('execution_allowed')),
+        'support_level': inspection.get('support_level'),
+        'prerequisites': inspection.get('prerequisites') or [],
+        'adapter_id': support['adapter_id'],
+        'adapter_version': support['adapter_version'],
+        'capabilities': adapter.capabilities(),
+        'challenges': support.get('challenges') or [],
+        'unsupported': manifest.get('unsupported') or [],
+        'candidates': [
+            {
+                'candidate_id': item['candidate_id'],
+                'label': item['label'],
+                'description': item['description'],
+                'dimension': {'replicas': item['replicas'], 'workers': item['workers']},
+                'challenges': list(item.get('challenges') or []),
+            }
+            for item in (manifest.get('manifest') or {}).get('candidates') or []
+        ],
+    }
+
+
+@router.get('/api/project-evaluations/{ident}/change')
+def evaluation_change(ident: str, request: Request):
+    """Reviewable deployment change for the recorded verdict, plus rollback notes."""
+    engine = repositories(request)
+    _evaluation(engine, ident)
+    try:
+        text = engine.export_change(ident)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc))
+    return PlainTextResponse(text, media_type='text/markdown')
 
 
 @router.get('/api/project-evaluations')

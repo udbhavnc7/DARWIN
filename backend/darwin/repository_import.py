@@ -355,10 +355,16 @@ class RepositoryImporter:
 
         classification = inspect_source(source_root, repository.url, repository.owner,
                                         repository.name, sha, pinned)
-        execution_allowed = bool(classification['supported_evaluations'] and pinned)
-        support_level = classification.get('support_level') or (
-            'READY_FOR_MEASURED_EVOLUTION' if execution_allowed else 'INSPECTABLE'
+        execution_allowed = bool(
+            pinned and any(item.get('execution_allowed', True)
+                           for item in classification['supported_evaluations'])
         )
+        support_level = classification.get('support_level') or (
+            'READY_FOR_MEASURED_EVOLUTION' if execution_allowed
+            else 'EVALUABLE_WITH_SETUP' if classification['supported_evaluations']
+            else 'INSPECTABLE'
+        )
+        prerequisites = classification.get('prerequisites') or []
         if classification['supported_evaluations'] and not pinned:
             warnings.append(
                 'The repository has a known adapter, but this commit is not the pinned, audited revision. '
@@ -366,6 +372,12 @@ class RepositoryImporter:
             )
             classification['supported_evaluations'] = []
             classification['evaluation_status'] = 'UNSUPPORTED_PROJECT'
+            support_level = 'INSPECTABLE'
+        elif classification['supported_evaluations'] and not execution_allowed:
+            warnings.append(
+                'A reviewed adapter matches this pinned source, but the execution prerequisite is not met: '
+                + (prerequisites[0] if prerequisites else 'the isolated runtime is unavailable.')
+            )
 
         if not classification['supported_evaluations']:
             warnings.append(
@@ -410,6 +422,7 @@ class RepositoryImporter:
             'warnings': warnings,
             'execution_allowed': execution_allowed,
             'support_level': support_level,
+            'prerequisites': prerequisites,
             'evaluation_status': 'NOT_MEASURED' if execution_allowed else 'UNSUPPORTED_PROJECT',
             '_source_root': str(source_root),
             'policy': {

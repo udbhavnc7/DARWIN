@@ -33,6 +33,8 @@ class SupportAssessment:
     evaluation_type: str
     reason: str
     evidence: list[str] = field(default_factory=list)
+    ready: bool = True
+    prerequisite: str = ''
 
 
 @dataclass(frozen=True)

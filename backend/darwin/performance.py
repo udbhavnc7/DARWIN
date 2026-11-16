@@ -29,13 +29,15 @@ def latency(samples, quantile):
     return values[math.ceil(quantile * len(values)) - 1]
 
 
-def metrics(samples, cpu_seconds, peak_mb):
+def metrics(samples, cpu_seconds, peak_mb, window_s=WINDOW_S):
     if not samples:
         raise ValueError('Measurement produced no observations')
+    if window_s <= 0:
+        raise ValueError('Measurement window must be positive')
     return Metrics(p50_ms=latency(samples, .50), p95_ms=latency(samples, .95),
                    p99_ms=latency(samples, .99), sample_count=len(samples),
                    error_rate=sum(not s['ok'] for s in samples) / len(samples),
-                   requests_per_s=sum(s['finished_s'] <= WINDOW_S for s in samples) / WINDOW_S,
+                   requests_per_s=sum(s['finished_s'] <= window_s for s in samples) / window_s,
                    cpu_seconds=cpu_seconds, memory_peak_mb=peak_mb).model_dump()
 
 
