@@ -1,0 +1,72 @@
+{
+  "status": "VERIFIED_IMPROVEMENT",
+  "label": "Verified improvement",
+  "reason": "All 40 correctness checks passed. The candidate was 59.4% faster at 50,000 rows with a 100% paired win rate, and no measured size regressed by 5% or more.",
+  "policy": {
+    "minimum_improvement_pct": 5.0,
+    "regression_limit_pct": 5.0,
+    "minimum_paired_win_rate": 0.8,
+    "primary_rule": "largest measured ledger size",
+    "evidence_kind": "live"
+  },
+  "per_size": [
+    {
+      "size": 10000,
+      "seeds": [
+        7
+      ],
+      "baseline_median_ms": 1.43315,
+      "candidate_median_ms": 0.62945,
+      "baseline_p95_ms": 1.9923,
+      "candidate_p95_ms": 0.7611,
+      "baseline_range_ms": [
+        1.3025,
+        1.9923
+      ],
+      "candidate_range_ms": [
+        0.6101,
+        0.7611
+      ],
+      "change_pct": 56.08,
+      "paired_win_rate": 1.0,
+      "paired_lower_decile_pct": 51.49,
+      "samples": 10
+    },
+    {
+      "size": 50000,
+      "seeds": [
+        7
+      ],
+      "baseline_median_ms": 8.0242,
+      "candidate_median_ms": 3.25825,
+      "baseline_p95_ms": 9.646,
+      "candidate_p95_ms": 3.7435,
+      "baseline_range_ms": [
+        7.0936,
+        9.646
+      ],
+      "candidate_range_ms": [
+        3.0168,
+        3.7435
+      ],
+      "change_pct": 59.39,
+      "paired_win_rate": 1.0,
+      "paired_lower_decile_pct": 55.9,
+      "samples": 10
+    }
+  ],
+  "primary_size": 50000,
+  "baseline_median_ms": 8.024,
+  "candidate_median_ms": 3.258,
+  "change_pct": 59.39,
+  "correctness": {
+    "passed": true,
+    "checks_passed": 40,
+    "checks_total": 40,
+    "failures": []
+  },
+  "source_tests": {
+    "status": "not_run",
+    "reason": "Quick mode does not run the repository test overlay."
+  }
+}

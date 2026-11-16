@@ -1,0 +1,42 @@
+{
+  "benchmark_environment": {
+    "node_version": "v26.13.1",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13450HX",
+    "total_memory_bytes": 25463480320,
+    "heap_limit_bytes": 637534208,
+    "forced_gc": false
+  },
+  "harness": {
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "--no-warnings",
+      "--max-old-space-size=512",
+      "runner.mjs",
+      "config.json"
+    ],
+    "duration_s": 2.016,
+    "stdout_tail": "{\"ok\":true,\"parity\":true,\"checks\":\"65/65\",\"summaries\":[{\"fixture_id\":\"seed7-size1000\",\"seed\":7,\"size\":1000,\"currency\":\"GBP\",\"baseline_median_ns\":144400,\"candidate_median_ns\":125300,\"baseline_p95_ns\":220400,\"candidate_p95_ns\":203200,\"baseline_min_ns\":130800,\"baseline_max_ns\":220400,\"candidate_min_ns\":117200,\"candidate_max_ns\":203200,\"change_pct\":13.227146814404433,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed7-size10000\",\"seed\":7,\"size\":10000,\"currency\":\"EUR\",\"baseline_median_ns\":1466300,\"candidate_median_ns\":1233900,\"baseline_p95_ns\":3457500,\"candidate_p95_ns\":1306000,\"baseline_min_ns\":1340900,\"baseline_max_ns\":3457500,\"candidate_min_ns\":1189700,\"candidate_max_ns\":1306000,\"change_pct\":15.849416899679467,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed7-size50000\",\"seed\":7,\"size\":50000,\"currency\":\"EUR\",\"baseline_median_ns\":8773200,\"candidate_median_ns\":6195400,\"baseline_p95_ns\":9835500,\"candidate_p95_ns\":7386100,\"baseline_min_ns\":7778300,\"baseline_max_ns\":9835500,\"candidate_min_ns\":5824000,\"candidate_max_ns\":7386100,\"change_pct\":29.38266539005152,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed21-size1000\",\"seed\":21,\"size\":1000,\"currency\":\"EUR\",\"baseline_median_ns\":127300,\"candidate_median_ns\":116200,\"baseline_p95_ns\":143600,\"candidate_p95_ns\":143800,\"baseline_min_ns\":126000,\"baseline_max_ns\":143600,\"candidate_min_ns\":113500,\"candidate_max_ns\":143800,\"change_pct\":8.719560094265514,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed21-size10000\",\"seed\":21,\"size\":10000,\"currency\":\"USD\",\"baseline_median_ns\":1332400,\"candidate_median_ns\":1156800,\"baseline_p95_ns\":1533100,\"candidate_p95_ns\":1251500,\"baseline_min_ns\":1306700,\"baseline_max_ns\":1533100,\"candidate_min_ns\":1137600,\"candidate_max_ns\":1251500,\"change_pct\":13.179225457820474,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed21-size50000\",\"seed\":21,\"size\":50000,\"currency\":\"USD\",\"baseline_median_ns\":8851000,\"candidate_median_ns\":6411100,\"baseline_p95_ns\":9970000,\"candidate_p95_ns\":7178200,\"baseline_min_ns\":7150900,\"baseline_max_ns\":9970000,\"candidate_min_ns\":5927800,\"candidate_max_ns\":7178200,\"change_pct\":27.566376680601063,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed2026-size1000\",\"seed\":2026,\"size\":1000,\"currency\":\"EUR\",\"baseline_median_ns\":125800,\"candidate_median_ns\":113400,\"baseline_p95_ns\":328100,\"candidate_p95_ns\":233600,\"baseline_min_ns\":123900,\"baseline_max_ns\":328100,\"candidate_min_ns\":111000,\"candidate_max_ns\":233600,\"change_pct\":9.85691573926868,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed2026-size10000\",\"seed\":2026,\"size\":10000,\"currency\":\"USD\",\"baseline_median_ns\":1287300,\"candidate_median_ns\":1124400,\"baseline_p95_ns\":1389100,\"candidate_p95_ns\":1258000,\"baseline_min_ns\":1228300,\"baseline_max_ns\":1389100,\"candidate_min_ns\":1083500,\"candidate_max_ns\":1258000,\"change_pct\":12.654392915404333,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed2026-size50000\",\"seed\":2026,\"size\":50000,\"currency\":\"USD\",\"baseline_median_ns\":7999200,\"candidate_median_ns\":6044000,\"baseline_p95_ns\":9319300,\"candidate_p95_ns\":6922700,\"baseline_min_ns\":7409400,\"baseline_max_ns\":9319300,\"candidate_min_ns\":5874400,\"candidate_max_ns\":6922700,\"change_pct\":24.44244424442444,\"paired_candidate_wins\":10,\"samples\":10}],\"node\":\"v26.13.1\"}",
+    "stderr_tail": ""
+  },
+  "source_tests": {
+    "status": "passed",
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "~\\Downloads\\Sanchay\\Sanchay\\web\\node_modules\\vitest\\vitest.mjs",
+      "run",
+      "src/utils/reporting.test.ts",
+      "--reporter=dot"
+    ],
+    "duration_s": 1.0,
+    "exit_code": 0,
+    "output_tail": "RUN  v5.0.5 ~/Downloads/DARWIN/artifacts/experiments/project-evaluations/141c9b56-fd17-4052-881f-1708a451768b/source-tests\n\n·····························\n\n Test Files  1 passed (1)\n      Tests  29 passed (29)\n   Start at  22:11:00\n   Duration  472ms (transform 55%, import 32%, tests 12%, worker 1%)",
+    "suite": "web/src/utils/reporting.test.ts",
+    "tests_passed": 29,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "tests_total": 29
+  },
+  "measurement_scope": "pure report aggregation functions; currency filtering and React rendering are outside the timed region"
+}

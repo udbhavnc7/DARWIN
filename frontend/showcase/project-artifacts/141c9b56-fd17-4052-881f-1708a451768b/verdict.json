@@ -1,0 +1,114 @@
+{
+  "status": "VERIFIED_IMPROVEMENT",
+  "label": "Verified improvement",
+  "reason": "All 68 correctness checks passed. The candidate was 28.5% faster at 50,000 rows with a 100% paired win rate, and no measured size regressed by 5% or more.",
+  "policy": {
+    "minimum_improvement_pct": 5.0,
+    "regression_limit_pct": 5.0,
+    "minimum_paired_win_rate": 0.8,
+    "primary_rule": "largest measured ledger size",
+    "evidence_kind": "live"
+  },
+  "per_size": [
+    {
+      "size": 1000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 0.1313,
+      "candidate_median_ms": 0.1178,
+      "baseline_p95_ms": 0.2204,
+      "candidate_p95_ms": 0.2032,
+      "baseline_range_ms": [
+        0.1239,
+        0.3281
+      ],
+      "candidate_range_ms": [
+        0.111,
+        0.2336
+      ],
+      "change_pct": 10.28,
+      "paired_win_rate": 0.9,
+      "paired_lower_decile_pct": -4.66,
+      "samples": 30
+    },
+    {
+      "size": 10000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 1.34635,
+      "candidate_median_ms": 1.18975,
+      "baseline_p95_ms": 1.6729,
+      "candidate_p95_ms": 1.2716,
+      "baseline_range_ms": [
+        1.2283,
+        3.4575
+      ],
+      "candidate_range_ms": [
+        1.0835,
+        1.306
+      ],
+      "change_pct": 11.63,
+      "paired_win_rate": 1.0,
+      "paired_lower_decile_pct": 6.99,
+      "samples": 30
+    },
+    {
+      "size": 50000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 8.7572,
+      "candidate_median_ms": 6.2625,
+      "baseline_p95_ms": 9.8355,
+      "candidate_p95_ms": 7.2052,
+      "baseline_range_ms": [
+        7.1509,
+        9.97
+      ],
+      "candidate_range_ms": [
+        5.824,
+        7.3861
+      ],
+      "change_pct": 28.49,
+      "paired_win_rate": 1.0,
+      "paired_lower_decile_pct": 15.44,
+      "samples": 30
+    }
+  ],
+  "primary_size": 50000,
+  "baseline_median_ms": 8.757,
+  "candidate_median_ms": 6.263,
+  "change_pct": 28.49,
+  "correctness": {
+    "passed": true,
+    "checks_passed": 68,
+    "checks_total": 68,
+    "failures": []
+  },
+  "source_tests": {
+    "status": "passed",
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "~\\Downloads\\Sanchay\\Sanchay\\web\\node_modules\\vitest\\vitest.mjs",
+      "run",
+      "src/utils/reporting.test.ts",
+      "--reporter=dot"
+    ],
+    "duration_s": 1.0,
+    "exit_code": 0,
+    "output_tail": "RUN  v5.0.5 ~/Downloads/DARWIN/artifacts/experiments/project-evaluations/141c9b56-fd17-4052-881f-1708a451768b/source-tests\n\n·····························\n\n Test Files  1 passed (1)\n      Tests  29 passed (29)\n   Start at  22:11:00\n   Duration  472ms (transform 55%, import 32%, tests 12%, worker 1%)",
+    "suite": "web/src/utils/reporting.test.ts",
+    "tests_passed": 29,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "tests_total": 29
+  }
+}

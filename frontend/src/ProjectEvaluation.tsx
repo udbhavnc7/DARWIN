@@ -62,7 +62,7 @@ export function ProjectEvaluation() {
   const adapter = inspection?.supported_evaluations[0] ?? null;
   const canRun = Boolean(inspectionId && (inspection?.execution_allowed ?? true) && adapter);
   const canOpen = (number: number) =>
-    number === 1 || (number >= 2 && Boolean(project)) || (number >= 3 && Boolean(evaluation))
+    number === 1 || (number === 2 && Boolean(project)) || (number === 3 && Boolean(evaluation))
     || (number === 4 && Boolean(evaluation?.verdict));
 
   async function loadCatalog() {
@@ -535,7 +535,7 @@ export function ProjectEvaluation() {
 
     {step === 4 && evaluation && (evaluation.verdict
       ? <ProjectVerdict evaluation={evaluation} onRerun={rerun} onChooseAnother={reset}
-          downloadsAvailable={!recordedShowcase}/>
+          downloadsAvailable={!recordedShowcase} recordedView={recordedShowcase}/>
       : <section className="project-panel">
         <h2 id="project-stage-title" tabIndex={-1}>No verdict</h2>
         <p className="project-lede">This evaluation has no recorded verdict.</p>

@@ -1205,6 +1205,7 @@ body:has(.splash) { overflow: hidden; }
 .project-verdict-callout p { max-width: 88ch; margin: 6px 0 0; font-size: 13.5px; line-height: 1.65; }
 .project-metrics { margin-top: 16px; }
 .project-verdict-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .8fr); gap: 22px; margin-top: 4px; }
+.project-verdict-grid > * { min-width: 0; }
 .project-table { margin-top: 7px; }
 .project-table table { min-width: 560px; }
 .project-table th, .project-table td { padding: 8px 9px; font-size: 11.5px; }
@@ -1227,6 +1228,10 @@ body:has(.splash) { overflow: hidden; }
 .project-check-list small { display: block; color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
 .project-evidence-links { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; padding: 0; }
 .project-evidence-links .artifact-link { font-size: 10.5px; }
+.artifact-recorded { color: var(--accent); font: inherit; cursor: pointer; }
+.artifact-recorded:hover { text-decoration: underline; }
+.project-artifact-view { margin-top: 12px; }
+.project-artifact-view summary { font-size: 11.5px; }
 .project-digest { margin-left: 5px; color: var(--muted); font: 8.5px var(--mono); }
 .project-pre { max-height: 420px; overflow: auto; margin: 8px 0; padding: 13px; border: 1px solid var(--line); background: var(--field); color: var(--text); font: 10.5px/1.55 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 .project-diff { margin-top: 18px; }
@@ -1252,9 +1257,11 @@ body:has(.splash) { overflow: hidden; }
   .project-candidate-arrow { justify-self: center; transform: rotate(90deg); }
   .project-mode-grid { grid-template-columns: 1fr; }
   .project-intro { flex-direction: column; gap: 10px; }
-  .project-recent li > button { grid-template-columns: 1fr auto; }
+  .project-recent li > button { grid-template-columns: minmax(0, 1fr) auto; }
+  .project-recent li > button > .status-chip { grid-column: 1 / -1; justify-self: start; }
+  .project-recent strong { min-width: 0; overflow-wrap: anywhere; }
   .project-recent small { grid-column: 1; }
-  .project-recent li > button > span:last-child { grid-row: 1; }
+  .project-recent li > button > span:last-child { grid-column: 2; grid-row: 2 / 4; align-self: center; }
 }
 @media (max-width: 500px) {
   .project-stepper { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; }

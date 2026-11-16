@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 
 from darwin.repository_catalog import SANCHAY_ADAPTER_ID, SANCHAY_ADAPTER_VERSION, catalog_entry
 
@@ -59,8 +60,6 @@ def _node_version() -> str | None:
     if not executable:
         return None
     try:
-        import subprocess
-
         completed = subprocess.run(
             [executable, '--version'], capture_output=True, text=True, timeout=5,
             creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0), check=False,

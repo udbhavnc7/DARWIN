@@ -44,9 +44,9 @@ export async function probeLive(timeout = 20000): Promise<string | null> {
 /** Absolute URL for a live API or shop path; relative in recorded mode. */
 export const liveUrl = (path: string) => showcase && live ? `${path.startsWith('/shop/') ? shopBase : apiBase}${path}` : path;
 
-export type Manifest = {captured_at: string; commit: string; experiments: number; searches: number};
+export type Manifest = {captured_at: string; commit: string; experiments: number; searches: number; project_evaluations?: number};
 type Genome = {app_replicas: number; catalog_cache_ttl_s: number; notification_mode: string; retry_policy: string};
-type Keyed = {experiment_id?: string; search_id?: string};
+type Keyed = {experiment_id?: string; search_id?: string; inspection_id?: string; evaluation_id?: string};
 
 const root = `${import.meta.env.BASE_URL}showcase/`;
 const cache = new Map<string, Promise<unknown>>();
@@ -79,8 +79,14 @@ async function find(file: string, field: keyof Keyed, id: string) {
   return row ? json(row) : missing();
 }
 
-async function events(kind: 'experiment' | 'search', id: string) {
+async function events(kind: 'experiment' | 'search' | 'project-evaluation', id: string) {
   try {return json(await load(`events/${kind}-${encodeURIComponent(id)}.json`));} catch {return json([]);}
+}
+
+async function text(file: string): Promise<Response> {
+  const response = await nativeFetch(root + file);
+  if (!response.ok) return missing(`Missing showcase snapshot ${file}`);
+  return new Response(await response.text(), {headers: {'Content-Type': 'text/plain; charset=utf-8'}});
 }
 
 async function answer(method: string, url: URL, init?: RequestInit): Promise<Response> {
@@ -91,6 +97,27 @@ async function answer(method: string, url: URL, init?: RequestInit): Promise<Res
     if (path === '/api/preflight') return json(await load('preflight.json'));
     if (path === '/api/exhibition/scenarios') {
       return json(await load(`scenarios-${url.searchParams.get('runtime') === 'docker' ? 'docker' : 'native'}.json`));
+    }
+    if (path === '/api/repositories/catalog') return json(await load('project-catalog.json'));
+    if (path === '/api/repositories/inspections') return json(await load('project-inspections.json'));
+    if ((match = path.match(/^\/api\/repositories\/inspections\/([^/]+)$/))) {
+      return find('project-inspections.json', 'inspection_id', decodeURIComponent(match[1]));
+    }
+    if (path === '/api/project-evaluations') return json(await load('project-evaluations.json'));
+    if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)\/events$/))) {
+      return events('project-evaluation', decodeURIComponent(match[1]));
+    }
+    if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)\/diff$/))) {
+      return text(`project-diffs/${encodeURIComponent(decodeURIComponent(match[1]))}.diff`);
+    }
+    if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)\/artifacts\/([^/]+)$/))) {
+      return text(`project-artifacts/${encodeURIComponent(decodeURIComponent(match[1]))}/${encodeURIComponent(decodeURIComponent(match[2]))}`);
+    }
+    if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)\/bundle$/))) {
+      return missing('The evidence bundle download needs a live DARWIN bench.');
+    }
+    if ((match = path.match(/^\/api\/project-evaluations\/([^/]+)$/))) {
+      return find('project-evaluations.json', 'evaluation_id', decodeURIComponent(match[1]));
     }
     if (path === '/api/experiments') return json(await load('experiments.json'));
     if ((match = path.match(/^\/api\/experiments\/([^/]+)\/events$/))) return events('experiment', decodeURIComponent(match[1]));

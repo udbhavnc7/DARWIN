@@ -1,0 +1,359 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "candidate is wired into the Reports tab call site",
+      "passed": true,
+      "detail": "web/src/components/ReportsTab.tsx"
+    },
+    {
+      "name": "Reports tab no longer calls the three original aggregations",
+      "passed": true,
+      "detail": "the candidate replaces the three independent traversal hooks"
+    },
+    {
+      "name": "Reporting module re-exports the candidate for the real call site",
+      "passed": true,
+      "detail": "web/src/utils/reporting.ts"
+    },
+    {
+      "name": "seed7-size1000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size1000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size1000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size10000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size10000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size10000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size50000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size50000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size50000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size1000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size1000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size1000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size10000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size10000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size10000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size50000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size50000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size50000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size1000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size1000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size1000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size10000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size10000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size10000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size50000: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size50000: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size50000: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-empty: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-empty: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-empty: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-empty: baseline matches documented finance semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-single-expense: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-single-expense: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-single-expense: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-single-expense: baseline matches documented finance semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-refund: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-refund: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-refund: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-refund: baseline matches documented finance semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-transfers-and-goal: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-transfers-and-goal: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-transfers-and-goal: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-transfers-and-goal: baseline matches documented finance semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-pending-failed: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-pending-failed: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-pending-failed: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-pending-failed: baseline matches documented finance semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-jpy-precision: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-jpy-precision: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-jpy-precision: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-jpy-precision: baseline matches documented finance semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-multicurrency-scope: real currency scoping selected the expected rows",
+      "passed": true,
+      "detail": "selected 2, expected 2"
+    },
+    {
+      "name": "edge-multicurrency-scope: baseline and candidate match",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-multicurrency-scope: candidate is deterministic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-multicurrency-scope: ledger input is not mutated",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "edge-multicurrency-scope: baseline matches documented finance semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size1000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size10000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed7-size50000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size1000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size10000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed21-size50000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size1000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size10000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "seed2026-size50000: every measured repetition returned the same result",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "source_tests": {
+    "status": "passed",
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "~\\Downloads\\Sanchay\\Sanchay\\web\\node_modules\\vitest\\vitest.mjs",
+      "run",
+      "src/utils/reporting.test.ts",
+      "--reporter=dot"
+    ],
+    "duration_s": 1.015,
+    "exit_code": 0,
+    "output_tail": "\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.5 \u001b[39m\u001b[90m~/Downloads/DARWIN/artifacts/experiments/project-evaluations/8e3d4ef1-1edd-490a-b846-544b0439a2ee/source-tests\u001b[39m\n\n\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m29 passed\u001b[39m\u001b[22m\u001b[90m (29)\u001b[39m\n\u001b[2m   Start at \u001b[22m 22:20:19\n\u001b[2m   Duration \u001b[22m 481ms\u001b[2m (transform 58%, import 29%, tests 12%, worker 1%)\u001b[22m",
+    "suite": "web/src/utils/reporting.test.ts"
+  }
+}

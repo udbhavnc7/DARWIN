@@ -1,0 +1,110 @@
+{
+  "status": "VERIFIED_IMPROVEMENT",
+  "label": "Verified improvement",
+  "reason": "All 68 correctness checks passed. The candidate was 20.9% faster at 50,000 rows with a 100% paired win rate, and no measured size regressed by 5% or more.",
+  "policy": {
+    "minimum_improvement_pct": 5.0,
+    "regression_limit_pct": 5.0,
+    "minimum_paired_win_rate": 0.8,
+    "primary_rule": "largest measured ledger size",
+    "evidence_kind": "live"
+  },
+  "per_size": [
+    {
+      "size": 1000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 0.1325,
+      "candidate_median_ms": 0.11805,
+      "baseline_p95_ms": 0.1559,
+      "candidate_p95_ms": 0.1605,
+      "baseline_range_ms": [
+        0.1236,
+        0.1732
+      ],
+      "candidate_range_ms": [
+        0.1125,
+        0.1925
+      ],
+      "change_pct": 10.91,
+      "paired_win_rate": 0.867,
+      "paired_lower_decile_pct": -10.92,
+      "samples": 30
+    },
+    {
+      "size": 10000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 1.358,
+      "candidate_median_ms": 1.17525,
+      "baseline_p95_ms": 1.7038,
+      "candidate_p95_ms": 1.7101,
+      "baseline_range_ms": [
+        1.1912,
+        1.7397
+      ],
+      "candidate_range_ms": [
+        1.0596,
+        3.1678
+      ],
+      "change_pct": 13.46,
+      "paired_win_rate": 0.933,
+      "paired_lower_decile_pct": 7.1,
+      "samples": 30
+    },
+    {
+      "size": 50000,
+      "seeds": [
+        7,
+        21,
+        2026
+      ],
+      "baseline_median_ms": 7.85385,
+      "candidate_median_ms": 6.20985,
+      "baseline_p95_ms": 9.7148,
+      "candidate_p95_ms": 6.9234,
+      "baseline_range_ms": [
+        6.8156,
+        9.9103
+      ],
+      "candidate_range_ms": [
+        5.738,
+        7.4997
+      ],
+      "change_pct": 20.93,
+      "paired_win_rate": 1.0,
+      "paired_lower_decile_pct": 11.91,
+      "samples": 30
+    }
+  ],
+  "primary_size": 50000,
+  "baseline_median_ms": 7.854,
+  "candidate_median_ms": 6.21,
+  "change_pct": 20.93,
+  "correctness": {
+    "passed": true,
+    "checks_passed": 68,
+    "checks_total": 68,
+    "failures": []
+  },
+  "source_tests": {
+    "status": "passed",
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "~\\Downloads\\Sanchay\\Sanchay\\web\\node_modules\\vitest\\vitest.mjs",
+      "run",
+      "src/utils/reporting.test.ts",
+      "--reporter=dot"
+    ],
+    "duration_s": 1.015,
+    "exit_code": 0,
+    "output_tail": "\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.5 \u001b[39m\u001b[90m~/Downloads/DARWIN/artifacts/experiments/project-evaluations/8e3d4ef1-1edd-490a-b846-544b0439a2ee/source-tests\u001b[39m\n\n\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m29 passed\u001b[39m\u001b[22m\u001b[90m (29)\u001b[39m\n\u001b[2m   Start at \u001b[22m 22:20:19\n\u001b[2m   Duration \u001b[22m 481ms\u001b[2m (transform 58%, import 29%, tests 12%, worker 1%)\u001b[22m",
+    "suite": "web/src/utils/reporting.test.ts"
+  }
+}

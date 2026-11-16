@@ -1,0 +1,162 @@
+{
+  "preset": "full",
+  "seeds": [
+    7,
+    21,
+    2026
+  ],
+  "sizes": [
+    1000,
+    10000,
+    50000
+  ],
+  "repetitions": 10,
+  "warmups": 2,
+  "fixtures": [
+    {
+      "id": "seed7-size1000",
+      "seed": 7,
+      "size": 1000,
+      "currency": "GBP",
+      "timed": true,
+      "file": "seed7-size1000.json",
+      "checksum_sha256": "eff410e60cf5275c3f0404ac9e480d84233805d8c914b70fe3ea85a4e1a601a5"
+    },
+    {
+      "id": "seed7-size10000",
+      "seed": 7,
+      "size": 10000,
+      "currency": "EUR",
+      "timed": true,
+      "file": "seed7-size10000.json",
+      "checksum_sha256": "2ac02f33d00556ee5b4da41ef754872160bccc2b867215e46e0c10c90e24b8a3"
+    },
+    {
+      "id": "seed7-size50000",
+      "seed": 7,
+      "size": 50000,
+      "currency": "EUR",
+      "timed": true,
+      "file": "seed7-size50000.json",
+      "checksum_sha256": "5464bdca5a20a3a73fc015438badcac971172b58233cac5e2f74534a81847249"
+    },
+    {
+      "id": "seed21-size1000",
+      "seed": 21,
+      "size": 1000,
+      "currency": "EUR",
+      "timed": true,
+      "file": "seed21-size1000.json",
+      "checksum_sha256": "1f6f22a9561f3d4f5f01ae5225db84804fb84deda89095323d543affb119b4fe"
+    },
+    {
+      "id": "seed21-size10000",
+      "seed": 21,
+      "size": 10000,
+      "currency": "USD",
+      "timed": true,
+      "file": "seed21-size10000.json",
+      "checksum_sha256": "b115f072e0fc6322cb9722b2d3e04dfad140b7cdc8d6441ceb19f53a8afafdf1"
+    },
+    {
+      "id": "seed21-size50000",
+      "seed": 21,
+      "size": 50000,
+      "currency": "USD",
+      "timed": true,
+      "file": "seed21-size50000.json",
+      "checksum_sha256": "70d60da916f0d20646c1ade6fd7a692f4ba518d7d3b345f284c087a6ab4a3b39"
+    },
+    {
+      "id": "seed2026-size1000",
+      "seed": 2026,
+      "size": 1000,
+      "currency": "EUR",
+      "timed": true,
+      "file": "seed2026-size1000.json",
+      "checksum_sha256": "610de8b4d75c4d9db2397198bc07524acd1cc6c183f34d2b704edf88e265e402"
+    },
+    {
+      "id": "seed2026-size10000",
+      "seed": 2026,
+      "size": 10000,
+      "currency": "USD",
+      "timed": true,
+      "file": "seed2026-size10000.json",
+      "checksum_sha256": "7e948e0ee4679482b42d3eaade4347bde65adf1904027d5c330faeb4bee89077"
+    },
+    {
+      "id": "seed2026-size50000",
+      "seed": 2026,
+      "size": 50000,
+      "currency": "USD",
+      "timed": true,
+      "file": "seed2026-size50000.json",
+      "checksum_sha256": "bd1b7c30be48c3fe133c5218f54d1e5e1e2c331829202bb28d7565778f4c09ae"
+    },
+    {
+      "id": "edge-empty",
+      "seed": 0,
+      "size": 0,
+      "currency": "INR",
+      "timed": false,
+      "file": "edge-empty.json",
+      "checksum_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "id": "edge-single-expense",
+      "seed": 0,
+      "size": 1,
+      "currency": "INR",
+      "timed": false,
+      "file": "edge-single-expense.json",
+      "checksum_sha256": "2701ad19fa361cd0224b81e685bfd92d9c8bcbd93e2fe85b7de4536a8a6fe4f3"
+    },
+    {
+      "id": "edge-refund",
+      "seed": 0,
+      "size": 2,
+      "currency": "INR",
+      "timed": false,
+      "file": "edge-refund.json",
+      "checksum_sha256": "c01f0774661573784489510deba4399ffb80f3737f21ebb7d15942635037c229"
+    },
+    {
+      "id": "edge-transfers-and-goal",
+      "seed": 0,
+      "size": 4,
+      "currency": "INR",
+      "timed": false,
+      "file": "edge-transfers-and-goal.json",
+      "checksum_sha256": "5874b39a71225a970284c47946be64a996a7b0f2b2ea8beb2c4206c31ee91bf0"
+    },
+    {
+      "id": "edge-pending-failed",
+      "seed": 0,
+      "size": 3,
+      "currency": "INR",
+      "timed": false,
+      "file": "edge-pending-failed.json",
+      "checksum_sha256": "f713517e09295cbf49209127cede76b9cfdbc883fe165bc7923888279d5e3373"
+    },
+    {
+      "id": "edge-jpy-precision",
+      "seed": 0,
+      "size": 2,
+      "currency": "JPY",
+      "timed": false,
+      "file": "edge-jpy-precision.json",
+      "checksum_sha256": "7d8b8d76c89b9e3349aa999f0e4d87d07db38d4e33f902d9e09682c9d4219917"
+    },
+    {
+      "id": "edge-multicurrency-scope",
+      "seed": 0,
+      "size": 3,
+      "currency": "INR",
+      "timed": false,
+      "file": "edge-multicurrency-scope.json",
+      "checksum_sha256": "68ebe0f11e08b110370139ee500ad2c5ab45534879115c51ecff86b7ff08104e"
+    }
+  ],
+  "measurement_scope": "pure report aggregation functions; currency filtering and React rendering are outside the timed region"
+}

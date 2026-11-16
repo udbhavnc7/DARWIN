@@ -10,6 +10,7 @@ type Props = {
   onRerun: () => void;
   onChooseAnother: () => void;
   downloadsAvailable: boolean;
+  recordedView: boolean;
 };
 
 function speedLabel(value?: number | null): string {
@@ -41,16 +42,20 @@ function MeasurementRow({item, primary}: {item: Measurement; primary: boolean}) 
   </tr>;
 }
 
-export function ProjectVerdict({evaluation, onRerun, onChooseAnother, downloadsAvailable}: Props) {
+export function ProjectVerdict({evaluation, onRerun, onChooseAnother, downloadsAvailable, recordedView}: Props) {
   const verdict = evaluation.verdict;
   const [diff, setDiff] = useState<string | null>(null);
   const [diffState, setDiffState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [diffError, setDiffError] = useState('');
+  const [artifact, setArtifact] = useState<{name: string; text: string} | null>(null);
+  const [artifactBusy, setArtifactBusy] = useState('');
+  const [artifactError, setArtifactError] = useState('');
   const primary = verdict?.primary_size;
   const tests = checkLabel(evaluation.source_tests);
   const checks = evaluation.correctness?.checks ?? [];
   const failures = verdict?.correctness.failures ?? [];
   const env = evaluation.environment;
+  const liveEvidence = !recordedView && evaluation.evidence_kind === 'live';
 
   async function loadDiff() {
     if (diff !== null) return;
@@ -61,6 +66,21 @@ export function ProjectVerdict({evaluation, onRerun, onChooseAnother, downloadsA
     } catch (reason) {
       setDiffState('error');
       setDiffError(reason instanceof Error ? reason.message : 'The diff could not be loaded.');
+    }
+  }
+
+  async function openArtifact(name: string) {
+    setArtifactBusy(name);
+    setArtifactError('');
+    try {
+      const response = await fetch(artifactUrl(evaluation.evaluation_id, name));
+      if (!response.ok) throw Error(`The recorded artifact could not be loaded (HTTP ${response.status}).`);
+      setArtifact({name, text: await response.text()});
+    } catch (reason) {
+      setArtifact(null);
+      setArtifactError(reason instanceof Error ? reason.message : 'The recorded artifact could not be loaded.');
+    } finally {
+      setArtifactBusy('');
     }
   }
 
@@ -84,8 +104,11 @@ export function ProjectVerdict({evaluation, onRerun, onChooseAnother, downloadsA
         <span className="section-kicker">Step 4 · Verdict</span>
         <h2 id="project-verdict-title">{verdict.label}</h2>
       </div>
-      <span className="status-chip good" title="This verdict comes from stored current-run evidence, not a live feed.">
-        Recorded evidence
+      <span className={`status-chip ${liveEvidence ? 'good' : ''}`}
+        title={liveEvidence
+          ? 'Measured by the DARWIN bench on this computer and stored as evidence. It is not a continuously updating feed.'
+          : 'This verdict comes from a saved recorded run, not a live measurement.'}>
+        {liveEvidence ? 'Live measurement' : 'Recorded evidence'}
       </span>
     </div>
 
@@ -127,6 +150,8 @@ export function ProjectVerdict({evaluation, onRerun, onChooseAnother, downloadsA
           <div><dt>Recorded</dt><dd>{formatDate(evaluation.finished_at)}</dd></div>
           <div><dt>Run time</dt><dd>{formatDuration(evaluation.duration_s)}</dd></div>
           <div><dt>Source tests</dt><dd><span className={`status-chip ${tests.tone}`}>{tests.text}</span></dd></div>
+          {evaluation.source_tests?.status === 'skipped' && evaluation.source_tests.reason &&
+            <div><dt>Why skipped</dt><dd>{evaluation.source_tests.reason}</dd></div>}
         </dl>
         {env && <details>
           <summary>Runtime and hardware</summary>
@@ -154,7 +179,7 @@ export function ProjectVerdict({evaluation, onRerun, onChooseAnother, downloadsA
         </p>
         <ul className="project-check-list">
           {checks.map(check => <li key={check.name} className={check.passed ? 'passed' : 'failed'}>
-            <span className="status-chip {check.passed ? 'good' : 'bad'}">{check.passed ? 'Pass' : 'Fail'}</span>
+            <span className={`status-chip ${check.passed ? 'good' : 'bad'}`}>{check.passed ? 'Pass' : 'Fail'}</span>
             <span>{check.name}{check.detail && <small>{check.detail}</small>}</span>
           </li>)}
         </ul>
@@ -165,11 +190,21 @@ export function ProjectVerdict({evaluation, onRerun, onChooseAnother, downloadsA
         <h3>Evidence files</h3>
         <ul className="project-evidence-links">
           {evaluation.evidence.files.map(file => <li key={file.name}>
-            <a className="artifact-link" href={artifactUrl(evaluation.evaluation_id, file.name)}>
-              <Icon name="download"/>{file.name}<span className="project-digest">{file.sha256.slice(0, 10)}</span>
-            </a>
+            {downloadsAvailable
+              ? <a className="artifact-link" href={artifactUrl(evaluation.evaluation_id, file.name)}>
+                <Icon name="download"/>{file.name}<span className="project-digest">{file.sha256.slice(0, 10)}</span>
+              </a>
+              : <button type="button" className="artifact-link artifact-recorded" aria-busy={artifactBusy === file.name}
+                title={`Open the recorded ${file.name}`} onClick={() => void openArtifact(file.name)}>
+                <Icon name="book"/>{file.name}<span className="project-digest">{file.sha256.slice(0, 10)}</span>
+              </button>}
           </li>)}
         </ul>
+        {artifact && <details open className="project-artifact-view">
+          <summary>Recorded artifact · {artifact.name}</summary>
+          <pre className="project-pre">{artifact.text}</pre>
+        </details>}
+        {artifactError && <p className="notice" role="alert">{artifactError}</p>}
         <p className="project-footnote">Verify every file against <code>manifest.json</code>. Raw samples live in <code>benchmark.json</code>.</p>
       </div>
     </details>

@@ -79,15 +79,15 @@ A visitor or judge can select a genuine external GitHub repository, understand i
 1. **Choose a project:** Select a trusted catalog example (e.g. **Sanchay**) or inspect any public GitHub repository URL.
 2. **Understand it:** DARWIN inspects the source at a pinned commit SHA and produces an honest architecture map (separating proven facts from unsupported features).
 3. **Test the change:** Runs the baseline and candidate on identical deterministic fixtures in an isolated overlay.
-4. **Read the verdict:** Conservative policy yields one of `VERIFIED_IMPROVEMENT`, `BASELINE_RETAINED`, `INCONCLUSIVE`, `REJECTED_INCORRECT`, or `NO_FEASIBLE_CANDIDATE`.
+4. **Read the verdict:** Conservative policy yields one of `VERIFIED_IMPROVEMENT`, `BASELINE_RETAINED`, `INCONCLUSIVE`, `REJECTED_INCORRECT`, or `NO_FEASIBLE_CANDIDATE`. Unsupported, unmeasured, interrupted, and infrastructure-failure outcomes stay visibly distinct instead of being forced into a winner.
 
 ### First Reference Adapter: Sanchay (`sanchay-reporting-v1`)
 
 - **Target:** Sanchay personal finance application (pinned commit `7e1bc4cd`).
 - **Architecture Reality:** React 19 + TypeScript in an Android WebView with browser-local `localStorage` persistence — **not** a cloud backend or microservice.
 - **Candidate:** Replaces three independent report traversals in `ReportsTab.tsx` with a unified single-pass aggregation (`reportBundle.ts`).
-- **Correctness Gate:** 68/68 checks passing, including refund deductions, transfer exclusions, currency scoping, and 29/29 Sanchay unit tests passing against the candidate overlay.
-- **Measured Result:** **+20.9%** latency reduction on 50,000 rows with a 100% paired win rate. See [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
+- **Correctness Gate:** 68/68 checks passing in both recorded and live full runs, including refund deductions, transfer exclusions, currency scoping, determinism, and input immutability. When the checkout has installed dependencies, the harness also runs Sanchay's real `reporting.test.ts` (29/29 passing in the recorded full run). A fetched cache without an installed Vitest runtime reports source tests as skipped, with the reason shown in the verdict; DARWIN does not run package installation.
+- **Measured Result:** The recorded full run was **28.5% faster** at 50,000 rows with a 100% paired win rate and 29/29 source tests. A live full run from the fetched cache was **22.4% faster** at 50,000 rows with a 97% paired win rate and 68/68 correctness checks. Both are `VERIFIED_IMPROVEMENT`; see the [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
 
 ---
 
@@ -486,10 +486,10 @@ npm --prefix frontend run build
 
 CI runs the backend suite (including PostgreSQL and Redis integrations) and the dashboard build on every push and pull request. Docker acceptance stays a manual workflow because it needs a Linux cgroup v2 engine and takes tens of minutes.
 
-Latest local run (2026-11-15):
+Latest local run (2026-11-16):
 
 - **158 passed, 14 skipped.** Added full test suites for repository import, Sanchay reporting adapter, verdict policy, project capabilities, and project evaluation API. The 14 skipped tests are optional PostgreSQL/Redis integration tests.
-- **Real Project Mode verified**: Sanchay evaluation completed with 68/68 correctness checks passing, 29/29 Vitest tests passing on the candidate overlay, and +20.9% latency improvement on 50,000 rows. See [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
+- **Real Project Mode verified**: recorded full run `141c9b56` passed 68/68 correctness checks and 29/29 Vitest tests, with a 28.5% latency improvement and 100% paired wins at 50,000 rows. Live full run `e3057b59` passed 68/68 checks with a 22.4% improvement and 97% paired wins; source tests were skipped because the fetched cache has no installed Vitest runtime, and the verdict shows that reason. See [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
 - **14 shop integration tests passed** against the dedicated `darwin_shop_test` database, including replay, concurrency, ledger, and reset.
 - **Frontend production build passed**, including `tsc --noEmit`.
 - **Quick checkout smoke completed in 18 s** with three measured attempts and verified cleanup; the unsafe-payment scenario rejected all three repetitions.

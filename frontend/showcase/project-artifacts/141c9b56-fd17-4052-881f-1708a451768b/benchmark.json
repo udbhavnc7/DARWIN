@@ -1,0 +1,914 @@
+{
+  "schema_version": 1,
+  "ok": true,
+  "measurement_scope": "pure report aggregation functions; currency filtering and React rendering are outside the timed region",
+  "parity": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "seed7-size1000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size1000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size1000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size10000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size10000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size10000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size1000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size1000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size1000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size10000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size10000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size10000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size50000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size50000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size50000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size1000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size1000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size1000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size10000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size10000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size10000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size50000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size50000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size50000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: real currency scoping selected the expected rows",
+        "passed": true,
+        "detail": "selected 2, expected 2"
+      },
+      {
+        "name": "edge-multicurrency-scope: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size1000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size10000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size1000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size10000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed21-size50000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size1000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size10000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed2026-size50000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      }
+    ],
+    "total": 65,
+    "passed_count": 65
+  },
+  "environment": {
+    "node_version": "v26.13.1",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13450HX",
+    "total_memory_bytes": 25463480320,
+    "heap_limit_bytes": 637534208,
+    "forced_gc": false
+  },
+  "config": {
+    "sizes": [
+      1000,
+      10000,
+      50000
+    ],
+    "seeds": [
+      7,
+      21,
+      2026
+    ],
+    "repetitions": 10,
+    "warmups": 2,
+    "payee_limit": 5
+  },
+  "summaries": [
+    {
+      "fixture_id": "seed7-size1000",
+      "seed": 7,
+      "size": 1000,
+      "currency": "GBP",
+      "baseline_median_ns": 144400,
+      "candidate_median_ns": 125300,
+      "baseline_p95_ns": 220400,
+      "candidate_p95_ns": 203200,
+      "baseline_min_ns": 130800,
+      "baseline_max_ns": 220400,
+      "candidate_min_ns": 117200,
+      "candidate_max_ns": 203200,
+      "change_pct": 13.227146814404433,
+      "paired_candidate_wins": 9,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed7-size10000",
+      "seed": 7,
+      "size": 10000,
+      "currency": "EUR",
+      "baseline_median_ns": 1466300,
+      "candidate_median_ns": 1233900,
+      "baseline_p95_ns": 3457500,
+      "candidate_p95_ns": 1306000,
+      "baseline_min_ns": 1340900,
+      "baseline_max_ns": 3457500,
+      "candidate_min_ns": 1189700,
+      "candidate_max_ns": 1306000,
+      "change_pct": 15.849416899679467,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed7-size50000",
+      "seed": 7,
+      "size": 50000,
+      "currency": "EUR",
+      "baseline_median_ns": 8773200,
+      "candidate_median_ns": 6195400,
+      "baseline_p95_ns": 9835500,
+      "candidate_p95_ns": 7386100,
+      "baseline_min_ns": 7778300,
+      "baseline_max_ns": 9835500,
+      "candidate_min_ns": 5824000,
+      "candidate_max_ns": 7386100,
+      "change_pct": 29.38266539005152,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed21-size1000",
+      "seed": 21,
+      "size": 1000,
+      "currency": "EUR",
+      "baseline_median_ns": 127300,
+      "candidate_median_ns": 116200,
+      "baseline_p95_ns": 143600,
+      "candidate_p95_ns": 143800,
+      "baseline_min_ns": 126000,
+      "baseline_max_ns": 143600,
+      "candidate_min_ns": 113500,
+      "candidate_max_ns": 143800,
+      "change_pct": 8.719560094265514,
+      "paired_candidate_wins": 9,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed21-size10000",
+      "seed": 21,
+      "size": 10000,
+      "currency": "USD",
+      "baseline_median_ns": 1332400,
+      "candidate_median_ns": 1156800,
+      "baseline_p95_ns": 1533100,
+      "candidate_p95_ns": 1251500,
+      "baseline_min_ns": 1306700,
+      "baseline_max_ns": 1533100,
+      "candidate_min_ns": 1137600,
+      "candidate_max_ns": 1251500,
+      "change_pct": 13.179225457820474,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed21-size50000",
+      "seed": 21,
+      "size": 50000,
+      "currency": "USD",
+      "baseline_median_ns": 8851000,
+      "candidate_median_ns": 6411100,
+      "baseline_p95_ns": 9970000,
+      "candidate_p95_ns": 7178200,
+      "baseline_min_ns": 7150900,
+      "baseline_max_ns": 9970000,
+      "candidate_min_ns": 5927800,
+      "candidate_max_ns": 7178200,
+      "change_pct": 27.566376680601063,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed2026-size1000",
+      "seed": 2026,
+      "size": 1000,
+      "currency": "EUR",
+      "baseline_median_ns": 125800,
+      "candidate_median_ns": 113400,
+      "baseline_p95_ns": 328100,
+      "candidate_p95_ns": 233600,
+      "baseline_min_ns": 123900,
+      "baseline_max_ns": 328100,
+      "candidate_min_ns": 111000,
+      "candidate_max_ns": 233600,
+      "change_pct": 9.85691573926868,
+      "paired_candidate_wins": 9,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed2026-size10000",
+      "seed": 2026,
+      "size": 10000,
+      "currency": "USD",
+      "baseline_median_ns": 1287300,
+      "candidate_median_ns": 1124400,
+      "baseline_p95_ns": 1389100,
+      "candidate_p95_ns": 1258000,
+      "baseline_min_ns": 1228300,
+      "baseline_max_ns": 1389100,
+      "candidate_min_ns": 1083500,
+      "candidate_max_ns": 1258000,
+      "change_pct": 12.654392915404333,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed2026-size50000",
+      "seed": 2026,
+      "size": 50000,
+      "currency": "USD",
+      "baseline_median_ns": 7999200,
+      "candidate_median_ns": 6044000,
+      "baseline_p95_ns": 9319300,
+      "candidate_p95_ns": 6922700,
+      "baseline_min_ns": 7409400,
+      "baseline_max_ns": 9319300,
+      "candidate_min_ns": 5874400,
+      "candidate_max_ns": 6922700,
+      "change_pct": 24.44244424442444,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    }
+  ],
+  "runs": [
+    {
+      "fixture_id": "seed7-size1000",
+      "seed": 7,
+      "size": 1000,
+      "currency": "GBP",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        144400,
+        141100,
+        137100,
+        135200,
+        130800,
+        163900,
+        205600,
+        214400,
+        211500,
+        220400
+      ],
+      "candidate_ns": [
+        127400,
+        123200,
+        121800,
+        117200,
+        136900,
+        118400,
+        125300,
+        159200,
+        203200,
+        188300
+      ],
+      "baseline_hash": "73f32a2f7d38e1a7",
+      "candidate_hash": "73f32a2f7d38e1a7"
+    },
+    {
+      "fixture_id": "seed7-size10000",
+      "seed": 7,
+      "size": 10000,
+      "currency": "EUR",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        1340900,
+        3457500,
+        1361300,
+        1672900,
+        1419400,
+        1385500,
+        1668000,
+        1478000,
+        1466300,
+        1595700
+      ],
+      "candidate_ns": [
+        1264000,
+        1191400,
+        1265600,
+        1263800,
+        1189700,
+        1189800,
+        1306000,
+        1271600,
+        1233900,
+        1221000
+      ],
+      "baseline_hash": "3bf1ec28bcf6524c",
+      "candidate_hash": "3bf1ec28bcf6524c"
+    },
+    {
+      "fixture_id": "seed7-size50000",
+      "seed": 7,
+      "size": 50000,
+      "currency": "EUR",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        8995000,
+        8773800,
+        8773200,
+        8775800,
+        9498800,
+        7970000,
+        9835500,
+        7778300,
+        8741200,
+        8073600
+      ],
+      "candidate_ns": [
+        7205200,
+        6177600,
+        5824000,
+        5905400,
+        6227000,
+        6397000,
+        6186000,
+        6195400,
+        6583500,
+        7386100
+      ],
+      "baseline_hash": "93df1cfa4efe58a2",
+      "candidate_hash": "93df1cfa4efe58a2"
+    },
+    {
+      "fixture_id": "seed21-size1000",
+      "seed": 21,
+      "size": 1000,
+      "currency": "EUR",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        130500,
+        130000,
+        127000,
+        127300,
+        126600,
+        126800,
+        126000,
+        131300,
+        143600,
+        132100
+      ],
+      "candidate_ns": [
+        117000,
+        116000,
+        116200,
+        114300,
+        125800,
+        114800,
+        143800,
+        119300,
+        137100,
+        113500
+      ],
+      "baseline_hash": "70c6b5f5447eeb2e",
+      "candidate_hash": "70c6b5f5447eeb2e"
+    },
+    {
+      "fixture_id": "seed21-size10000",
+      "seed": 21,
+      "size": 10000,
+      "currency": "USD",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        1332400,
+        1319500,
+        1306700,
+        1313900,
+        1388200,
+        1533100,
+        1412400,
+        1362500,
+        1319600,
+        1336300
+      ],
+      "candidate_ns": [
+        1158400,
+        1151800,
+        1154300,
+        1137600,
+        1144000,
+        1251500,
+        1206100,
+        1204700,
+        1156800,
+        1160400
+      ],
+      "baseline_hash": "cf79584eb61fbfb2",
+      "candidate_hash": "cf79584eb61fbfb2"
+    },
+    {
+      "fixture_id": "seed21-size50000",
+      "seed": 21,
+      "size": 50000,
+      "currency": "USD",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        9636700,
+        8138500,
+        7150900,
+        8851000,
+        9377900,
+        8963100,
+        9970000,
+        9709900,
+        8585000,
+        7927100
+      ],
+      "candidate_ns": [
+        6648600,
+        5927800,
+        6676300,
+        6411100,
+        6146600,
+        6688000,
+        6291100,
+        6406200,
+        7178200,
+        6457800
+      ],
+      "baseline_hash": "aadb52aa5dcd32ec",
+      "candidate_hash": "aadb52aa5dcd32ec"
+    },
+    {
+      "fixture_id": "seed2026-size1000",
+      "seed": 2026,
+      "size": 1000,
+      "currency": "EUR",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        125800,
+        124500,
+        131300,
+        125300,
+        133300,
+        124700,
+        123900,
+        133000,
+        129200,
+        328100
+      ],
+      "candidate_ns": [
+        113500,
+        113900,
+        113400,
+        111000,
+        116500,
+        112300,
+        112000,
+        111300,
+        178400,
+        233600
+      ],
+      "baseline_hash": "c69d3d12a63d2d6c",
+      "candidate_hash": "c69d3d12a63d2d6c"
+    },
+    {
+      "fixture_id": "seed2026-size10000",
+      "seed": 2026,
+      "size": 10000,
+      "currency": "USD",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        1389100,
+        1302000,
+        1278200,
+        1351800,
+        1254600,
+        1311900,
+        1287300,
+        1228300,
+        1303000,
+        1248800
+      ],
+      "candidate_ns": [
+        1258000,
+        1238800,
+        1188900,
+        1213000,
+        1124400,
+        1110700,
+        1109200,
+        1083500,
+        1127300,
+        1087900
+      ],
+      "baseline_hash": "fbc2e894e2504cc6",
+      "candidate_hash": "fbc2e894e2504cc6"
+    },
+    {
+      "fixture_id": "seed2026-size50000",
+      "seed": 2026,
+      "size": 50000,
+      "currency": "USD",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        7409400,
+        7460400,
+        8811000,
+        8186600,
+        7999200,
+        8427000,
+        9016900,
+        7519000,
+        7533400,
+        9319300
+      ],
+      "candidate_ns": [
+        5931900,
+        5874400,
+        6005200,
+        6922700,
+        6630300,
+        6581800,
+        6233900,
+        6222600,
+        6044000,
+        5986700
+      ],
+      "baseline_hash": "03adf5224c5a7418",
+      "candidate_hash": "03adf5224c5a7418"
+    }
+  ]
+}

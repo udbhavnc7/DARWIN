@@ -9,3 +9,4 @@ artifacts/
 .runtime/
 *.tsbuildinfo
 
+.gstack/

@@ -77,12 +77,54 @@ def main() -> None:
     (staging / 'events').mkdir(parents=True)
 
     def write(name: str, value: object) -> None:
-        (staging / name).write_text(redact(json.dumps(value, separators=(',', ':'))), encoding='utf-8')
+        target = staging / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(redact(json.dumps(value, separators=(',', ':'))), encoding='utf-8')
+
+    def write_bytes(name: str, payload: bytes) -> None:
+        target = staging / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            target.write_text(redact(payload.decode('utf-8')), encoding='utf-8')
+        except UnicodeDecodeError:
+            target.write_bytes(payload)
 
     write('project.json', client.get('/api/project'))
     write('preflight.json', client.get('/api/preflight'))
     for runtime in ('native', 'docker'):
         write(f'scenarios-{runtime}.json', client.get(f'/api/exhibition/scenarios?runtime={runtime}'))
+
+    project_catalog = client.get('/api/repositories/catalog')
+    project_inspections = client.get('/api/repositories/inspections')
+    project_evaluations = client.get('/api/project-evaluations')
+    write('project-catalog.json', project_catalog)
+    write('project-inspections.json', project_inspections)
+    write('project-evaluations.json', project_evaluations)
+    for inspection in project_inspections:
+        write(f"project-inspections/{inspection['inspection_id']}.json", inspection)
+    for evaluation in project_evaluations:
+        ident = evaluation['evaluation_id']
+        write(f'project-evaluations/{ident}.json', evaluation)
+        try:
+            write(f'events/project-evaluation-{ident}.json',
+                  client.get(f'/api/project-evaluations/{ident}/events'))
+        except (urllib.error.URLError, TimeoutError) as error:
+            print(f'project events not captured for {ident}: {error}')
+        try:
+            diff = client.request(client.api + f'/api/project-evaluations/{ident}/diff')
+            write_bytes(f'project-diffs/{ident}.diff', diff)
+        except (urllib.error.URLError, TimeoutError) as error:
+            print(f'project diff not captured for {ident}: {error}')
+        for item in evaluation.get('evidence', {}).get('files', []):
+            name = item.get('name')
+            if not name:
+                continue
+            try:
+                payload = client.request(
+                    client.api + f'/api/project-evaluations/{ident}/artifacts/{name}')
+                write_bytes(f'project-artifacts/{ident}/{name}', payload)
+            except (urllib.error.URLError, TimeoutError) as error:
+                print(f"project artifact {name} not captured for {ident}: {error}")
 
     experiments = client.get('/api/experiments')
     write('experiments.json', experiments)
@@ -117,13 +159,15 @@ def main() -> None:
     write('manifest.json', {
         'captured_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
         'commit': commit, 'experiments': len(experiments), 'searches': len(searches),
+        'project_evaluations': len(project_evaluations),
     })
     # Copy rather than rename: a running Vite dev server may hold a watch handle on the staging folder.
     shutil.rmtree(args.output, ignore_errors=True)
     shutil.copytree(staging, args.output)
     shutil.rmtree(staging, ignore_errors=True)
     size = sum(path.stat().st_size for path in args.output.rglob('*') if path.is_file())
-    print(f'captured {len(experiments)} experiments and {len(searches)} searches into {args.output} ({size / 1e6:.1f} MB)')
+    print(f'captured {len(experiments)} experiments, {len(searches)} searches and '
+          f'{len(project_evaluations)} project evaluations into {args.output} ({size / 1e6:.1f} MB)')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,20 @@
+{
+  "source": {
+    "url": "https://github.com/udbhavnc7/Sanchay",
+    "owner": "udbhavnc7",
+    "repo": "Sanchay",
+    "requested_ref": "main",
+    "commit_sha": "7e1bc4cdd31e53380e7896b4a20a864bbebcee1e",
+    "short_sha": "7e1bc4cdd31e",
+    "trusted": true,
+    "cache_key": "udbhavnc7__Sanchay__7e1bc4cdd31e",
+    "file_count": 2047,
+    "size_bytes": 27295188,
+    "metadata": {}
+  },
+  "adapter": {
+    "adapter_id": "sanchay-reporting-v1",
+    "adapter_version": "1.0.0"
+  },
+  "inspection_id": "6dcbfb3d-dc81-463a-a81a-d1b94dda4674"
+}

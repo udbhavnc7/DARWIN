@@ -1,0 +1,38 @@
+{
+  "benchmark_environment": {
+    "node_version": "v26.13.1",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13450HX",
+    "total_memory_bytes": 25463480320,
+    "heap_limit_bytes": 637534208,
+    "forced_gc": false
+  },
+  "harness": {
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "--no-warnings",
+      "--max-old-space-size=512",
+      "runner.mjs",
+      "config.json"
+    ],
+    "duration_s": 2.016,
+    "stdout_tail": "{\"ok\":true,\"parity\":true,\"checks\":\"65/65\",\"summaries\":[{\"fixture_id\":\"seed7-size1000\",\"seed\":7,\"size\":1000,\"currency\":\"GBP\",\"baseline_median_ns\":144700,\"candidate_median_ns\":122600,\"baseline_p95_ns\":149600,\"candidate_p95_ns\":192500,\"baseline_min_ns\":133600,\"baseline_max_ns\":149600,\"candidate_min_ns\":116800,\"candidate_max_ns\":192500,\"change_pct\":15.272978576364892,\"paired_candidate_wins\":8,\"samples\":10},{\"fixture_id\":\"seed7-size10000\",\"seed\":7,\"size\":10000,\"currency\":\"EUR\",\"baseline_median_ns\":1451300,\"candidate_median_ns\":1217600,\"baseline_p95_ns\":1739700,\"candidate_p95_ns\":3167800,\"baseline_min_ns\":1357800,\"baseline_max_ns\":1739700,\"candidate_min_ns\":1174900,\"candidate_max_ns\":3167800,\"change_pct\":16.10280438227796,\"paired_candidate_wins\":8,\"samples\":10},{\"fixture_id\":\"seed7-size50000\",\"seed\":7,\"size\":50000,\"currency\":\"EUR\",\"baseline_median_ns\":8448400,\"candidate_median_ns\":6207600,\"baseline_p95_ns\":9910300,\"candidate_p95_ns\":7499700,\"baseline_min_ns\":7235000,\"baseline_max_ns\":9910300,\"candidate_min_ns\":5738000,\"candidate_max_ns\":7499700,\"change_pct\":26.523365370957812,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed21-size1000\",\"seed\":21,\"size\":1000,\"currency\":\"EUR\",\"baseline_median_ns\":131000,\"candidate_median_ns\":117700,\"baseline_p95_ns\":155900,\"candidate_p95_ns\":151800,\"baseline_min_ns\":127800,\"baseline_max_ns\":155900,\"candidate_min_ns\":114600,\"candidate_max_ns\":151800,\"change_pct\":10.15267175572519,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed21-size10000\",\"seed\":21,\"size\":10000,\"currency\":\"USD\",\"baseline_median_ns\":1340100,\"candidate_median_ns\":1156900,\"baseline_p95_ns\":1703800,\"candidate_p95_ns\":1238000,\"baseline_min_ns\":1292500,\"baseline_max_ns\":1703800,\"candidate_min_ns\":1123100,\"candidate_max_ns\":1238000,\"change_pct\":13.670621595403329,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed21-size50000\",\"seed\":21,\"size\":50000,\"currency\":\"USD\",\"baseline_median_ns\":7197500,\"candidate_median_ns\":6268400,\"baseline_p95_ns\":8864400,\"candidate_p95_ns\":6858000,\"baseline_min_ns\":7020300,\"baseline_max_ns\":8864400,\"candidate_min_ns\":5741600,\"candidate_max_ns\":6858000,\"change_pct\":12.908648836401529,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed2026-size1000\",\"seed\":2026,\"size\":1000,\"currency\":\"EUR\",\"baseline_median_ns\":128100,\"candidate_median_ns\":116000,\"baseline_p95_ns\":173200,\"candidate_p95_ns\":155700,\"baseline_min_ns\":123600,\"baseline_max_ns\":173200,\"candidate_min_ns\":112500,\"candidate_max_ns\":155700,\"change_pct\":9.44574551131928,\"paired_candidate_wins\":9,\"samples\":10},{\"fixture_id\":\"seed2026-size10000\",\"seed\":2026,\"size\":10000,\"currency\":\"USD\",\"baseline_median_ns\":1254600,\"candidate_median_ns\":1079600,\"baseline_p95_ns\":1478700,\"candidate_p95_ns\":1201100,\"baseline_min_ns\":1191200,\"baseline_max_ns\":1478700,\"candidate_min_ns\":1059600,\"candidate_max_ns\":1201100,\"change_pct\":13.94866889845369,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed2026-size50000\",\"seed\":2026,\"size\":50000,\"currency\":\"USD\",\"baseline_median_ns\":7847900,\"candidate_median_ns\":6071000,\"baseline_p95_ns\":8527300,\"candidate_p95_ns\":6420700,\"baseline_min_ns\":6815600,\"baseline_max_ns\":8527300,\"candidate_min_ns\":5759000,\"candidate_max_ns\":6420700,\"change_pct\":22.64172581200066,\"paired_candidate_wins\":10,\"samples\":10}],\"node\":\"v26.13.1\"}",
+    "stderr_tail": ""
+  },
+  "source_tests": {
+    "status": "passed",
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "~\\Downloads\\Sanchay\\Sanchay\\web\\node_modules\\vitest\\vitest.mjs",
+      "run",
+      "src/utils/reporting.test.ts",
+      "--reporter=dot"
+    ],
+    "duration_s": 1.015,
+    "exit_code": 0,
+    "output_tail": "\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.5 \u001b[39m\u001b[90m~/Downloads/DARWIN/artifacts/experiments/project-evaluations/8e3d4ef1-1edd-490a-b846-544b0439a2ee/source-tests\u001b[39m\n\n\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\u001b[33m\u001b[39m\u001b[32m·\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m29 passed\u001b[39m\u001b[22m\u001b[90m (29)\u001b[39m\n\u001b[2m   Start at \u001b[22m 22:20:19\n\u001b[2m   Duration \u001b[22m 481ms\u001b[2m (transform 58%, import 29%, tests 12%, worker 1%)\u001b[22m",
+    "suite": "web/src/utils/reporting.test.ts"
+  },
+  "measurement_scope": "pure report aggregation functions; currency filtering and React rendering are outside the timed region"
+}
