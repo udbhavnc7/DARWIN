@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 import subprocess
 
+from darwin.project_architecture import analyse_repository
 from darwin.repository_catalog import SANCHAY_ADAPTER_ID, SANCHAY_ADAPTER_VERSION, catalog_entry
 
 MAX_TEXT_BYTES = 2_000_000
@@ -53,6 +54,84 @@ def _count_files(root: Path, pattern: str, cap: int = 5000) -> int:
 
 def _fact(label: str, value: str, evidence: list[str]) -> dict:
     return {'label': label, 'value': value, 'evidence': evidence}
+
+
+def _merge_facts(*groups: list[dict]) -> list[dict]:
+    seen = set()
+    result = []
+    for group in groups:
+        for fact in group:
+            key = (fact.get('label'), fact.get('value'))
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(fact)
+    return result
+
+
+def _merge_capabilities(*groups: list[dict]) -> list[dict]:
+    seen = set()
+    result = []
+    for group in groups:
+        for item in group:
+            capability = item.get('capability')
+            if capability in seen:
+                continue
+            seen.add(capability)
+            result.append(item)
+    return result
+
+
+def _merge_guesses(*groups: list[dict]) -> list[dict]:
+    seen = set()
+    result = []
+    for group in groups:
+        for item in group:
+            key = (item.get('label'), item.get('guess'))
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(item)
+    return result
+
+
+def _empty_generic(reason: str) -> dict:
+    note = {
+        'what_it_is': 'The repository was inspected, but deep static analysis could not classify it.',
+        'backend': 'No backend model was produced for this source.',
+        'how_it_works': 'DARWIN did not execute any repository code.',
+        'evolution': 'Architecture screening is unavailable because the backend model could not be built.',
+        'readme_used': False,
+    }
+    return {
+        'project': {
+            'type': 'unknown_repository', 'display_type': 'Repository inspected',
+            'summary': 'Deep static analysis could not classify this source.',
+            'note': note, 'application_host': 'Not classified from source',
+            'persistence': 'Not classified from source', 'is_server_backend': False,
+            'languages': [], 'backend': {'detected': False, 'services': [], 'routes': [],
+                                           'route_count': 0, 'datastores': [], 'queues': [],
+                                           'auth': [], 'external_services': [],
+                                           'deployment': [], 'tests': {'frameworks': [],
+                                                                       'file_count': 0,
+                                                                       'evidence': []},
+                                           'models': [], 'model_count': 0, 'migrations': [],
+                                           'background_jobs': [], 'gateway': '',
+                                           'confidence': 'low', 'evidence': []},
+            'adapter_checks': {},
+        },
+        'architecture': {'nodes': [], 'edges': [], 'flow': [],
+                         'summary': 'No architecture graph was produced.'},
+        'facts': [],
+        'not_supported': [{'capability': 'Deep static analysis',
+                           'reason': reason}],
+        'hotspots': [],
+        'screening': {'available': False, 'reason': reason, 'controls': []},
+        'guesses': [],
+        'readiness': {'node_available': shutil.which('node') is not None,
+                      'node_version': None, 'source_paths_present': False,
+                      'adapter_approved': False, 'source_tests_available': False},
+    }
 
 
 def _node_version() -> str | None:
@@ -263,28 +342,82 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     else:
         adapter_facts = {}
 
-    readiness = {
-        'node_available': shutil.which('node') is not None,
-        'node_version': _node_version(),
-        'source_paths_present': bool(reporting_exists and persistence_exists) if is_sanchay_shape else False,
-        'adapter_approved': bool(adapter and adapter['execution_allowed']),
-        'source_tests_available': _exists(root, 'web/node_modules/vitest/package.json'),
-    }
+    generic = _empty_generic('Deep static analysis did not complete for this source.')
+    try:
+        generic = analyse_repository(root, repository_url, owner, repo)
+    except Exception as exc:  # Inspection must survive one malformed source tree.
+        generic = _empty_generic(f'Deep static analysis failed safely: {exc}')
 
-    return {
-        'project': {
+    generic_project = generic.get('project') or {}
+    generic_backend = generic_project.get('backend') or {}
+    generic_detected = bool(generic_backend.get('detected') or generic_backend.get('services'))
+    generic_type = generic_project.get('type') or 'unknown_repository'
+    architecture = generic.get('architecture') or {'nodes': [], 'edges': [], 'flow': [],
+                                                   'summary': 'No architecture graph was produced.'}
+    hotspots = generic.get('hotspots') or []
+    screening = generic.get('screening') or {'available': False, 'controls': [],
+                                              'reason': 'Architecture screening was not analysed.'}
+
+    if is_sanchay_shape:
+        project = {
             'type': project_type,
             'display_type': display_type,
             'summary': summary,
+            'note': generic_project.get('note') or {},
+            'application_host': application_host,
+            'persistence': persistence,
+            'is_server_backend': is_server_backend,
+            'languages': sorted(set(languages) | set(generic_project.get('languages') or [])),
+            'backend': generic_backend,
+            'adapter_checks': adapter_facts,
+        }
+        facts = _merge_facts(facts, generic.get('facts') or [])
+        not_supported = _merge_capabilities(not_supported, generic.get('not_supported') or [])
+        guesses = _merge_guesses(guesses, generic.get('guesses') or [])
+    elif generic_type != 'unknown_repository' or generic_detected:
+        project = {
+            **generic_project,
+            'adapter_checks': adapter_facts,
+        }
+        facts = generic.get('facts') or []
+        not_supported = generic.get('not_supported') or []
+        guesses = generic.get('guesses') or []
+    else:
+        project = {
+            'type': project_type,
+            'display_type': display_type,
+            'summary': summary,
+            'note': generic_project.get('note') or {},
             'application_host': application_host,
             'persistence': persistence,
             'is_server_backend': is_server_backend,
             'languages': sorted(set(languages)),
+            'backend': generic_backend,
             'adapter_checks': adapter_facts,
-        },
+        }
+        facts = _merge_facts(facts, generic.get('facts') or [])
+        not_supported = _merge_capabilities(not_supported, generic.get('not_supported') or [])
+        guesses = _merge_guesses(guesses, generic.get('guesses') or [])
+
+    readiness = {
+        **(generic.get('readiness') or {}),
+        'node_available': shutil.which('node') is not None,
+        'node_version': _node_version(),
+        'source_paths_present': bool(reporting_exists and persistence_exists) if is_sanchay_shape
+        else bool(generic_backend.get('services')),
+        'adapter_approved': bool(adapter and adapter['execution_allowed']),
+        'source_tests_available': _exists(root, 'web/node_modules/vitest/package.json')
+        if is_sanchay_shape else bool((generic_backend.get('tests') or {}).get('file_count')),
+    }
+
+    return {
+        'project': project,
+        'architecture': architecture,
         'facts': facts,
         'not_supported': not_supported,
         'supported_evaluations': supported,
+        'hotspots': hotspots,
+        'screening': screening,
         'guesses': guesses,
         'readiness': readiness,
         'evaluation_status': 'NOT_MEASURED' if supported else 'UNSUPPORTED_PROJECT',

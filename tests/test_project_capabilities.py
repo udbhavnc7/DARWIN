@@ -93,3 +93,43 @@ def test_package_name_alone_does_not_create_a_server(tmp_path):
     write(tmp_path, 'package.json', json.dumps({'dependencies': {'express': '^5.0.0'}}))
     result = inspect_source(tmp_path, 'https://github.com/example/app', 'example', 'app', 'd' * 40, False)
     assert result['project']['is_server_backend'] is False
+
+
+def test_generic_inspection_exposes_architecture_and_screening(tmp_path):
+    write(tmp_path, 'package.json', json.dumps({
+        'name': 'small-api', 'dependencies': {'express': '^5.0.0', 'pg': '^8.0.0'},
+    }))
+    write(tmp_path, 'server.js', '''
+const express = require('express');
+const app = express();
+app.get('/api/health', (req, res) => res.json({ok: true}));
+app.get('/api/items', (req, res) => res.json([]));
+app.post('/api/items', (req, res) => res.status(201).json({}));
+''')
+    result = inspect_source(tmp_path, 'https://github.com/example/small-api', 'example',
+                            'small-api', 'e' * 40, False)
+
+    assert result['project']['type'] == 'node_service'
+    assert result['project']['note']['what_it_is']
+    assert result['project']['backend']['route_count'] == 3
+    assert result['architecture']['nodes']
+    assert any(node['kind'] == 'service' for node in result['architecture']['nodes'])
+    assert result['screening']['available'] is True
+    assert 'db_pool' in result['screening']['controls']
+    assert result['supported_evaluations'] == []
+    assert result['evaluation_status'] == 'UNSUPPORTED_PROJECT'
+
+
+def test_sanchay_keeps_its_measured_adapter_and_generic_screening_is_independent(tmp_path):
+    root = sanchay_tree(tmp_path)
+    result = inspect_source(root, 'https://github.com/udbhavnc7/Sanchay', 'udbhavnc7',
+                            'Sanchay', SANCHAY_COMMIT, True)
+
+    assert result['project']['type'] == 'react_webview_local_app'
+    assert result['supported_evaluations'][0]['adapter_id'] == 'sanchay-reporting-v1'
+    assert result['evaluation_status'] == 'NOT_MEASURED'
+    assert result['project']['note']['what_it_is']
+    assert result['project']['backend']['frontend_detected'] is True
+    assert result['project']['backend']['services'] == []
+    assert result['screening']['available'] is False
+    assert result['screening']['controls'] == []

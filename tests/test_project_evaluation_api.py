@@ -102,7 +102,7 @@ class FakeImporter:
         return json.loads(json.dumps(self.record))
 
 
-def inspection_record(source_root: Path, *, allowed=True):
+def inspection_record(source_root: Path, *, allowed=True, screening=None, backend=None):
     return {
         'schema_version': 1,
         'inspection_id': str(uuid4()),
@@ -120,7 +120,10 @@ def inspection_record(source_root: Path, *, allowed=True):
             'application_host': 'Browser', 'persistence': 'Browser storage',
             'is_server_backend': False, 'languages': ['TypeScript/React'],
             'adapter_checks': {'reporting_exports': True},
+            'backend': backend or {},
         },
+        'architecture': {'nodes': [], 'edges': [], 'flow': [], 'summary': 'Test graph'},
+        'hotspots': [],
         'facts': [{'label': 'Visible application', 'value': 'React + TypeScript',
                    'evidence': ['web/package.json']}],
         'not_supported': [{'capability': 'API replica scaling', 'reason': 'No server exists.'}],
@@ -132,6 +135,8 @@ def inspection_record(source_root: Path, *, allowed=True):
             'modes': [], 'execution_allowed': True, 'execution_note': 'Test adapter.',
             'evidence': ['src/reporting.ts'],
         }] if allowed else []),
+        'screening': screening or {'available': False, 'controls': [],
+                                   'reason': 'No backend service was detected.'},
         'guesses': [],
         'readiness': {'node_available': True, 'node_version': 'v26.13.1',
                       'source_paths_present': True, 'adapter_approved': allowed,
@@ -141,6 +146,48 @@ def inspection_record(source_root: Path, *, allowed=True):
         'evaluation_status': 'NOT_MEASURED' if allowed else 'UNSUPPORTED_PROJECT',
         '_source_root': str(source_root),
         'policy': {'download': 'consent'},
+    }
+
+
+def screening_backend():
+    return {
+        'detected': True,
+        'services': [{'name': 'fake-api', 'path': '', 'language': 'JavaScript/TypeScript',
+                      'framework': 'Express', 'kind': 'http_api',
+                      'entry_points': ['server.js'], 'evidence': ['package.json']}],
+        'routes': [
+            {'method': 'GET', 'path': '/api/health', 'file': 'server.js', 'line': 1,
+             'service_path': '', 'snippet': 'app.get'},
+            {'method': 'GET', 'path': '/api/items', 'file': 'server.js', 'line': 2,
+             'service_path': '', 'snippet': 'app.get'},
+            {'method': 'POST', 'path': '/api/items', 'file': 'server.js', 'line': 3,
+             'service_path': '', 'snippet': 'app.post'},
+        ],
+        'route_count': 3, 'datastores': [], 'queues': [], 'auth': [],
+        'external_services': [{'name': 'Stripe', 'evidence': ['server.js']}],
+        'deployment': [], 'tests': {'frameworks': [], 'file_count': 0, 'evidence': []},
+        'models': [], 'model_count': 0, 'migrations': [], 'background_jobs': [],
+        'gateway': '', 'confidence': 'high', 'evidence': ['package.json'],
+    }
+
+
+def screening_support():
+    return {
+        'available': True,
+        'adapter_id': 'architecture-screening-v1',
+        'adapter_version': '1.0.0',
+        'display_name': 'Backend architecture evolution (simulated)',
+        'evaluation_type': 'architecture_screening',
+        'summary': 'Model deployment variants from inspected source.',
+        'change_summary': 'Only deployment-level controls change.',
+        'mechanism': 'Deterministic queueing model. Repository code is never executed.',
+        'scope_note': 'Simulated screening, not a measured winner.',
+        'correctness_rules': ['Every model input is file-backed or an explicit assumption.'],
+        'controls': ['replicas', 'cache_ttl_s', 'offload_jobs', 'retry_policy', 'rate_limit'],
+        'modes': [{'id': 'quick', 'label': 'Quick screening', 'estimated_seconds': 8,
+                   'description': 'One seed.'}],
+        'execution_note': 'Simulation only. No repository code is executed.',
+        'evidence': ['package.json'],
     }
 
 
@@ -249,3 +296,99 @@ def test_missing_evaluation_and_inspection_are_404(api):
     assert client.post('/api/project-evaluations', json={
         'inspection_id': 'nope', 'mode': 'quick',
     }).status_code == 404
+
+
+def test_generic_repository_runs_simulated_screening_without_an_adapter(api):
+    client, engine, source = api
+    record = inspection_record(source, allowed=False, screening=screening_support(),
+                               backend=screening_backend())
+    record['project'].update({'type': 'node_service', 'display_type': 'Express service',
+                              'is_server_backend': True})
+    engine.store.save_inspection(record)
+    engine.adapters = {}
+
+    response = client.post('/api/project-evaluations', json={
+        'inspection_id': record['inspection_id'], 'mode': 'quick',
+    })
+    assert response.status_code == 202
+    started = response.json()
+    assert started['adapter_id'] == 'architecture-screening-v1'
+    assert started['evaluation_type'] == 'architecture_screening'
+    assert started['evidence_kind'] == 'simulated'
+
+    detail = wait(client, started['evaluation_id'])
+    assert detail['status'] == 'completed'
+    assert detail['adapter_id'] == 'architecture-screening-v1'
+    assert detail['evidence_kind'] == 'simulated'
+    assert detail['measurements'] == []
+    assert detail['candidate'] is None
+    assert detail['screening']['label'] == 'SIMULATED'
+    assert detail['screening']['not_measured'] is True
+    assert detail['verdict']['status'] == 'NOT_MEASURED'
+    assert detail['recommendation']['measured'] is False
+    assert detail['recommendation']['evidence_kind'] == 'simulated'
+    assert detail['correctness']['checks_total'] == 0
+    assert '_source_root' not in detail
+
+    architecture = client.get(
+        f'/api/project-evaluations/{detail["evaluation_id"]}/artifacts/architecture.json'
+    )
+    assert architecture.status_code == 200
+    assert architecture.json()['project']['backend']['route_count'] == 3
+    screening = client.get(
+        f'/api/project-evaluations/{detail["evaluation_id"]}/artifacts/screening.json'
+    )
+    assert screening.status_code == 200
+    assert screening.json()['evidence_kind'] == 'simulated'
+    note = client.get(
+        f'/api/project-evaluations/{detail["evaluation_id"]}/artifacts/project-note.md'
+    )
+    assert note.status_code == 200
+    assert 'No repository code was executed' in note.text
+
+    bundle = client.get(f'/api/project-evaluations/{detail["evaluation_id"]}/bundle')
+    assert bundle.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(bundle.content)) as archive:
+        names = archive.namelist()
+        assert {'screening.json', 'verdict.json', 'project-note.md'} <= set(names)
+        assert 'benchmark.json' not in names
+        manifest = json.loads(archive.read('manifest.json'))
+        assert manifest['evidence_kind'] == 'simulated'
+        assert 'screening.json' in manifest['files']
+
+
+def test_cancelled_screening_has_no_recommendation(api, monkeypatch):
+    client, engine, source = api
+    record = inspection_record(source, allowed=False, screening=screening_support(),
+                               backend=screening_backend())
+    engine.store.save_inspection(record)
+
+    def slow_model(analysis, mode):
+        time.sleep(0.3)
+        from darwin.project_simulation import screen_repository as real_model
+        return real_model(analysis, mode)
+
+    monkeypatch.setattr('darwin.repository_evaluations.screen_repository', slow_model)
+    started = client.post('/api/project-evaluations', json={
+        'inspection_id': record['inspection_id'], 'mode': 'quick',
+    }).json()
+    time.sleep(0.1)
+    cancelled = client.post(f'/api/project-evaluations/{started["evaluation_id"]}/cancel')
+    assert cancelled.status_code == 200
+
+    detail = wait(client, started['evaluation_id'])
+    assert detail['status'] == 'cancelled'
+    assert detail['verdict']['status'] == 'NOT_MEASURED'
+    assert detail['recommendation']['status'] == 'INCONCLUSIVE'
+    assert detail['recommendation']['measured'] is False
+    assert detail['recommendation']['changes'] == []
+    assert not any(file['name'] == 'screening.json'
+                   for file in detail['evidence'].get('files', []))
+
+
+def test_catalog_labels_screening_as_simulated(api):
+    client, _, _ = api
+    catalog = client.get('/api/repositories/catalog').json()
+    assert catalog['screening']['adapter_id'] == 'architecture-screening-v1'
+    assert catalog['screening']['evidence_kind'] == 'simulated'
+    assert catalog['screening']['label'] == 'SIMULATED'

@@ -365,6 +365,11 @@ class RepositoryImporter:
                 'Repository inspected. No runnable optimization adapter is approved for this source, '
                 'so DARWIN will not execute it or substitute the unrelated checkout lab.'
             )
+        if (classification.get('screening') or {}).get('available'):
+            warnings.append(
+                'A simulated architecture screening is available. It models deployment controls from '
+                'source and is not a measured runtime result.'
+            )
 
         record = {
             'schema_version': 1,
@@ -387,9 +392,12 @@ class RepositoryImporter:
                              if metadata.get(key) is not None},
             },
             'project': classification['project'],
+            'architecture': classification.get('architecture') or {},
             'facts': classification['facts'],
             'not_supported': classification['not_supported'],
             'supported_evaluations': classification['supported_evaluations'],
+            'hotspots': classification.get('hotspots') or [],
+            'screening': classification.get('screening') or {'available': False, 'controls': []},
             'guesses': classification['guesses'],
             'readiness': classification['readiness'],
             'warnings': warnings,
