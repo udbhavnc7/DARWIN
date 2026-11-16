@@ -8,6 +8,211 @@ export type UnsupportedCapability = {capability: string; reason: string};
 export type Guess = {label: string; guess: string; confidence: string};
 export type AdapterMode = {id: 'quick' | 'full'; label: string; description: string; estimated_seconds?: number};
 
+export type ProjectNote = {
+  what_it_is: string;
+  backend: string;
+  how_it_works: string;
+  evolution: string;
+  readme_used?: boolean;
+};
+
+export type BackendService = {
+  name: string;
+  path: string;
+  language: string;
+  framework: string;
+  kind: string;
+  entry_points: string[];
+  evidence: string[];
+  route_count?: number;
+  node_id?: string;
+};
+
+export type BackendRoute = {
+  method: string;
+  path: string;
+  file: string;
+  line: number;
+  service_path: string;
+  snippet: string;
+};
+
+export type BackendSignal = {name: string; evidence: string[]; role?: string; node_id?: string};
+
+export type BackendProfile = {
+  detected: boolean;
+  services: BackendService[];
+  routes: BackendRoute[];
+  route_count: number;
+  datastores: BackendSignal[];
+  queues: BackendSignal[];
+  auth: BackendSignal[];
+  external_services: BackendSignal[];
+  deployment: {name: string; evidence: string}[];
+  tests: {frameworks: string[]; file_count: number; evidence: string[]};
+  models: {name: string; framework: string; file: string; line: number}[];
+  model_count: number;
+  migrations: string[];
+  background_jobs: BackendSignal[];
+  gateway: string;
+  confidence: string;
+  evidence: string[];
+  languages?: {language: string; files: number; evidence: string}[];
+  primary_language?: string;
+  frontend_detected?: boolean;
+  frontend_evidence?: string[];
+};
+
+export type ArchitectureNode = {
+  id: string;
+  label: string;
+  kind: string;
+  detail: string;
+  evidence: string[];
+};
+
+export type ArchitectureEdge = {source: string; target: string; label: string};
+
+export type Architecture = {
+  nodes: ArchitectureNode[];
+  edges: ArchitectureEdge[];
+  flow: string[];
+  summary: string;
+};
+
+export type Hotspot = {
+  id: string;
+  title: string;
+  detail: string;
+  severity: string;
+  confidence: string;
+  evidence: {file: string; line?: number; snippet: string}[];
+  recommendation: string;
+  control: string;
+};
+
+export type ScreeningSupport = {
+  available: boolean;
+  reason?: string;
+  adapter_id?: string;
+  adapter_version?: string;
+  display_name?: string;
+  evaluation_type?: string;
+  summary?: string;
+  change_summary?: string;
+  mechanism?: string;
+  scope_note?: string;
+  correctness_rules?: string[];
+  controls: string[];
+  modes?: AdapterMode[];
+  execution_note?: string;
+  evidence?: string[];
+};
+
+export type ScreeningChange = {
+  control: string;
+  label: string;
+  from: unknown;
+  to: unknown;
+  unit: string;
+};
+
+export type ScreeningMetrics = {
+  p50_ms: number;
+  p95_ms: number;
+  throughput_rps: number;
+  error_rate_pct: number;
+  cost_index: number;
+  utilization: number;
+  db_wait_ms: number;
+};
+
+export type ScreeningRun = ScreeningMetrics & {seed: number};
+
+export type ScreeningVariant = {
+  id: string;
+  label: string;
+  controls: Record<string, unknown>;
+  changes: ScreeningChange[];
+  metrics: ScreeningMetrics;
+  runs: ScreeningRun[];
+  change_pct: number;
+  error_delta_pct: number;
+  cost_multiplier: number;
+  qualifies: boolean;
+  score: number;
+};
+
+export type ScreeningRecommendation = {
+  status: 'IMPROVEMENT_CANDIDATE' | 'BASELINE_RETAINED' | 'INCONCLUSIVE';
+  label: string;
+  summary: string;
+  candidate_id: string;
+  controls: Record<string, unknown>;
+  changes: ScreeningChange[];
+  modelled_change_pct: number;
+  baseline_p95_ms?: number;
+  candidate_p95_ms?: number;
+  error_rate_pct?: number;
+  cost_multiplier?: number;
+  measured: false;
+  evidence_kind: 'simulated';
+  seed_sensitivity?: {seeds: number[]; min_change_pct: number; max_change_pct: number};
+  mode?: 'quick' | 'full';
+};
+
+export type ScreeningResult = {
+  adapter_id: string;
+  adapter_version: string;
+  model_version: string;
+  evaluation_type: 'architecture_screening';
+  evidence_kind: 'simulated';
+  label: 'SIMULATED';
+  not_measured: true;
+  mode: 'quick' | 'full';
+  seeds: number[];
+  workload: {
+    name: string;
+    arrival_rate_rps: number;
+    burst_factor: number;
+    routes: number;
+    read_routes: number;
+    read_ratio: number;
+    write_ratio: number;
+    external_integrations: number;
+    datastores: number;
+    queues: number;
+    auth: boolean;
+    services: number;
+    note: string;
+  };
+  controls: string[];
+  baseline: {
+    label: string;
+    controls: Record<string, unknown>;
+    metrics: ScreeningMetrics;
+    runs: ScreeningRun[];
+  };
+  variants: ScreeningVariant[];
+  recommendation: ScreeningRecommendation;
+  verdict: Verdict;
+  policy: {
+    minimum_improvement_pct?: number;
+    regression_limit_pct?: number;
+    maximum_error_rate_pct?: number;
+    maximum_error_delta_pct?: number;
+    maximum_cost_multiplier?: number;
+    primary_metric?: string;
+    evidence_kind?: string;
+    label?: string;
+    not_measured?: boolean;
+  };
+  assumptions: string[];
+  limitations: string[];
+  hotspots_addressed: {hotspot: string; title: string; control: string; addressed: boolean}[];
+};
+
+
 export type SupportedEvaluation = {
   adapter_id: string;
   adapter_version: string;
@@ -47,15 +252,20 @@ export type Inspection = {
     type: string;
     display_type: string;
     summary: string;
+    note?: ProjectNote;
     application_host: string;
     persistence: string;
     is_server_backend: boolean;
     languages: string[];
+    backend?: BackendProfile;
     adapter_checks: Record<string, boolean>;
   };
+  architecture?: Architecture;
   facts: ProjectFact[];
   not_supported: UnsupportedCapability[];
   supported_evaluations: SupportedEvaluation[];
+  hotspots?: Hotspot[];
+  screening?: ScreeningSupport;
   guesses: Guess[];
   readiness: {
     node_available: boolean;
@@ -102,9 +312,14 @@ export type Verdict = {
   reason: string;
   policy: {
     evidence_kind?: string;
+    label?: string;
+    not_measured?: boolean;
     minimum_improvement_pct?: number;
     regression_limit_pct?: number;
     minimum_paired_win_rate?: number;
+    maximum_error_rate_pct?: number;
+    maximum_error_delta_pct?: number;
+    maximum_cost_multiplier?: number;
     primary_rule?: string;
   };
   per_size: Measurement[];
@@ -117,7 +332,9 @@ export type Verdict = {
     checks_passed: number;
     checks_total: number;
     failures: {name: string; passed: boolean; detail?: string}[];
+    note?: string;
   };
+  recommendation?: ScreeningRecommendation;
 };
 
 export type Check = {name: string; passed: boolean; detail?: string};
@@ -157,8 +374,11 @@ export type Evaluation = {
   source: Source;
   inspection: {
     project: Inspection['project'];
+    architecture?: Architecture;
     facts: ProjectFact[];
     not_supported: UnsupportedCapability[];
+    hotspots?: Hotspot[];
+    screening?: ScreeningSupport;
     guesses: Guess[];
     readiness: Inspection['readiness'];
     warnings: string[];
@@ -200,6 +420,8 @@ export type Evaluation = {
     forced_gc?: boolean;
   };
   source_tests: SourceTest | null;
+  screening?: ScreeningResult | null;
+  recommendation?: ScreeningRecommendation | null;
   verdict: Verdict | null;
   error: string | null;
   cleanup_status: string;
@@ -239,6 +461,15 @@ export type Catalog = {
     };
   }[];
   policy: Record<string, string>;
+  screening?: {
+    adapter_id: string;
+    adapter_version: string;
+    display_name: string;
+    evaluation_type: string;
+    evidence_kind: string;
+    label: string;
+    scope_note: string;
+  };
   presets: Record<'quick' | 'full', {
     seeds: number[];
     sizes: number[];
@@ -274,11 +505,14 @@ export const api = {
   }),
   evaluations: () => request<Evaluation[]>('/api/project-evaluations'),
   evaluation: (id: string) => request<Evaluation>(`/api/project-evaluations/${encodeURIComponent(id)}`),
-  start: (inspectionId: string, mode: 'quick' | 'full', includeSourceTests?: boolean) =>
+  start: (inspectionId: string, mode: 'quick' | 'full', includeSourceTests?: boolean, adapterId?: string) =>
     request<Evaluation>('/api/project-evaluations', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({inspection_id: inspectionId, mode, include_source_tests: includeSourceTests}),
+      body: JSON.stringify({
+        inspection_id: inspectionId, adapter_id: adapterId, mode,
+        include_source_tests: includeSourceTests,
+      }),
     }),
   cancel: (id: string) => request<Evaluation>(`/api/project-evaluations/${encodeURIComponent(id)}/cancel`, {
     method: 'POST',
@@ -352,10 +586,26 @@ export function changeLabel(value?: number | null): string {
   return `${value > 0 ? '−' : '+'}${Math.abs(value).toFixed(1)}%`;
 }
 
+const controlNames: Record<string, string> = {
+  replicas: 'Service replicas',
+  cache_ttl_s: 'Cache TTL',
+  offload_jobs: 'Background offload',
+  retry_policy: 'Retry policy',
+  db_pool: 'Database pool',
+  read_replicas: 'Read replicas',
+  rate_limit: 'Rate limit',
+};
+
+export function controlLabel(control: string): string {
+  return controlNames[control] ?? control.replaceAll('_', ' ');
+}
+
 export function stageLabel(stage?: string): string {
   return {
     queued: 'Queued',
     preparing: 'Preparing pinned source',
+    simulating: 'Simulating architecture variants',
+    evaluating: 'Applying the screening policy',
     checking_correctness: 'Checking correctness',
     measuring: 'Measuring report time',
     verdict: 'Deriving verdict',
@@ -366,7 +616,7 @@ export function stageLabel(stage?: string): string {
   }[stage ?? ''] ?? 'Waiting';
 }
 
-export const stageOrder = ['queued', 'preparing', 'checking_correctness', 'measuring', 'verdict', 'done'] as const;
+export const stageOrder = ['queued', 'preparing', 'simulating', 'evaluating', 'checking_correctness', 'measuring', 'verdict', 'done'] as const;
 
 export function stageState(current: string, stage: string): 'done' | 'current' | 'pending' {
   const currentIndex = stageOrder.indexOf(current as typeof stageOrder[number]);

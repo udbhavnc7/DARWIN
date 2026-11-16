@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.EXE",
+    "~\\Downloads\\Sanchay\\Sanchay\\web\\node_modules\\vitest\\vitest.mjs",
+    "run",
+    "src/utils/reporting.test.ts",
+    "--reporter=dot"
+  ],
+  "duration_s": 1.0,
+  "exit_code": 0,
+  "output_tail": "RUN  v5.0.5 ~/Downloads/DARWIN/artifacts/experiments/project-evaluations/141c9b56-fd17-4052-881f-1708a451768b/source-tests\n\n·····························\n\n Test Files  1 passed (1)\n      Tests  29 passed (29)\n   Start at  22:11:00\n   Duration  472ms (transform 55%, import 32%, tests 12%, worker 1%)",
+  "suite": "web/src/utils/reporting.test.ts",
+  "tests_passed": 29,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "tests_total": 29
+}

@@ -446,7 +446,7 @@ class SanchayReportingAdapter:
              'Required Sanchay report source files or exports were not found.')
         )
         return SupportAssessment(self.id, self.version, supported, self.evaluation_type,
-                                 reason, required)
+                                 reason, list(required))
 
     def describe(self, source_root: Path, commit_sha: str, pinned: bool) -> dict:
         return {

@@ -21,6 +21,9 @@ from uuid import uuid4
 import zipfile
 
 from darwin.adapters.base import AdapterCancelled, AdapterError, EvaluationBudget
+from darwin.project_simulation import (
+    SCREENING_ADAPTER_ID, SCREENING_ADAPTER_VERSION, empty_screening_verdict, screen_repository,
+)
 from darwin.repository_import import RepositoryError, RepositoryImporter
 
 TERMINAL = {'completed', 'failed', 'cancelled'}
@@ -47,6 +50,7 @@ PRESETS = {
 ARTIFACT_NAMES = {
     'source.json', 'workload.json', 'candidate.diff', 'benchmark.json',
     'parity.json', 'verdict.json', 'environment.json', 'source-tests.json',
+    'architecture.json', 'screening.json', 'project-note.md',
     'replay.md', 'manifest.json',
 }
 
@@ -197,7 +201,10 @@ class RepositoryEngine:
                     cleanup_status='requires_review',
                     error='Repository evaluation was interrupted by a process restart. No metrics were retained.',
                 )
-                record['verdict'] = _empty_verdict(
+                record['verdict'] = empty_screening_verdict(
+                    'The screening worker stopped before completing this evaluation. '
+                    'No recommendation is reported.'
+                ) if record.get('adapter_id') == SCREENING_ADAPTER_ID else _empty_verdict(
                     'INTERRUPTED', 'Interrupted',
                     'The worker stopped before completing this evaluation. No winner is reported.',
                 )
@@ -212,9 +219,23 @@ class RepositoryEngine:
     def get_inspection(self, ident: str) -> dict:
         return self.store.get_inspection(ident)
 
-    def submit(self, inspection_id: str, adapter_id: str, mode: str = 'quick',
+    def submit(self, inspection_id: str, adapter_id: str | None = None, mode: str = 'quick',
                include_source_tests: bool | None = None) -> dict:
         inspection = self.store.get_inspection(inspection_id)
+        preset = PRESETS.get(mode)
+        if not preset:
+            raise RepositoryError('Unknown evaluation mode.', 'invalid_mode', 400)
+        screening = inspection.get('screening') or {}
+        if adapter_id == SCREENING_ADAPTER_ID:
+            if not screening.get('available'):
+                raise RepositoryError(
+                    'Architecture screening is not available for this source: '
+                    + (screening.get('reason') or 'no backend request path was detected.'),
+                    'screening_unavailable', 409,
+                )
+            return self._submit_screening(inspection, mode, preset)
+        if adapter_id is None and not inspection.get('execution_allowed') and screening.get('available'):
+            return self._submit_screening(inspection, mode, preset)
         if not inspection.get('execution_allowed'):
             raise RepositoryError(
                 'This repository is inspection-only. DARWIN has no approved executable adapter for it, '
@@ -228,9 +249,6 @@ class RepositoryEngine:
         adapter = self.adapters.get(adapter_id)
         if not adapter:
             raise RepositoryError('That adapter is not installed in this DARWIN build.', 'adapter_missing', 503)
-        preset = PRESETS.get(mode)
-        if not preset:
-            raise RepositoryError('Unknown evaluation mode.', 'invalid_mode', 400)
         with self.guard:
             if self.shutdown.is_set():
                 raise RuntimeError('Repository worker is shutting down')
@@ -255,8 +273,11 @@ class RepositoryEngine:
                 'source': source,
                 'inspection': {
                     'project': inspection.get('project'),
+                    'architecture': inspection.get('architecture'),
                     'facts': inspection.get('facts', []),
                     'not_supported': inspection.get('not_supported', []),
+                    'hotspots': inspection.get('hotspots', []),
+                    'screening': inspection.get('screening'),
                     'guesses': inspection.get('guesses', []),
                     'readiness': inspection.get('readiness'),
                     'warnings': inspection.get('warnings', []),
@@ -277,6 +298,8 @@ class RepositoryEngine:
                 'measurements': [],
                 'environment': None,
                 'source_tests': None,
+                'screening': None,
+                'recommendation': None,
                 'verdict': None,
                 'error': None,
                 'cleanup_status': 'not_started',
@@ -284,6 +307,67 @@ class RepositoryEngine:
             }
             self.cancels[ident] = threading.Event()
             self.store.save_evaluation(record, 'Queued repository evaluation')
+            self.pending.put(ident)
+            return record
+
+    def _submit_screening(self, inspection: dict, mode: str, preset: dict) -> dict:
+        with self.guard:
+            if self.shutdown.is_set():
+                raise RuntimeError('Repository worker is shutting down')
+            if sum(record['status'] not in TERMINAL for record in self.store.all_evaluations()) >= 5:
+                raise RuntimeError('Repository evaluation queue is full')
+            ident = str(uuid4())
+            record = {
+                'schema_version': 1,
+                'evaluation_id': ident,
+                'inspection_id': inspection['inspection_id'],
+                'created_at': now(),
+                'requested_at': now(),
+                'status': 'queued',
+                'stage': 'queued',
+                'progress': _progress('queued', 0, 4, 'Queued for the local screening model'),
+                'evidence_kind': 'simulated',
+                'adapter_id': SCREENING_ADAPTER_ID,
+                'adapter_version': SCREENING_ADAPTER_VERSION,
+                'evaluation_type': 'architecture_screening',
+                'mode': mode,
+                'source': _public(inspection['source']),
+                'inspection': {
+                    'project': inspection.get('project'),
+                    'architecture': inspection.get('architecture'),
+                    'facts': inspection.get('facts', []),
+                    'not_supported': inspection.get('not_supported', []),
+                    'hotspots': inspection.get('hotspots', []),
+                    'screening': inspection.get('screening'),
+                    'guesses': inspection.get('guesses', []),
+                    'readiness': inspection.get('readiness'),
+                    'warnings': inspection.get('warnings', []),
+                    'policy': inspection.get('policy'),
+                },
+                'candidate': None,
+                'workload': {
+                    'preset': mode,
+                    'seeds': list(preset['seeds']),
+                    'sizes': [],
+                    'repetitions': 0,
+                    'warmups': 0,
+                    'include_source_tests': False,
+                    'fixtures': 'synthetic workload derived from the inspected architecture',
+                    'note': 'No repository code is executed. All values are model outputs.',
+                },
+                'correctness': None,
+                'measurements': [],
+                'environment': None,
+                'source_tests': None,
+                'screening': None,
+                'recommendation': None,
+                'verdict': None,
+                'error': None,
+                'cleanup_status': 'not_started',
+                'evidence': {'dir': f'project-evaluations/{ident}', 'files': []},
+            }
+            self.cancels[ident] = threading.Event()
+            self.store.save_evaluation(record, 'Queued simulated architecture screening')
             self.pending.put(ident)
             return record
 
@@ -295,8 +379,12 @@ class RepositoryEngine:
                 if record['status'] == 'queued':
                     record.update(status='cancelled', stage='cancelled', finished_at=now(),
                                   cleanup_status='not_needed',
-                                  verdict=_empty_verdict('INTERRUPTED', 'Interrupted',
-                                                         'Cancelled before execution. No metrics were produced.'))
+                                  verdict=empty_screening_verdict(
+                                      'Cancelled before the screening model ran. '
+                                      'No recommendation was produced.'
+                                  ) if record.get('adapter_id') == SCREENING_ADAPTER_ID else
+                                  _empty_verdict('INTERRUPTED', 'Interrupted',
+                                                 'Cancelled before execution. No metrics were produced.'))
                     self.store.save_evaluation(record, 'Cancelled before execution')
             return self.store.get_evaluation(ident)
 
@@ -315,7 +403,9 @@ class RepositoryEngine:
                         status='failed', stage='failed', error=str(exc),
                         finished_at=now(), cleanup_status='requires_review',
                     )
-                    record['verdict'] = _empty_verdict(
+                    record['verdict'] = empty_screening_verdict(
+                        'The screening worker stopped unexpectedly. No recommendation is reported.'
+                    ) if record.get('adapter_id') == SCREENING_ADAPTER_ID else _empty_verdict(
                         'FAILED_INFRASTRUCTURE', 'Infrastructure failed',
                         'The evaluator stopped unexpectedly. No metrics are reported as valid.',
                     )
@@ -327,6 +417,9 @@ class RepositoryEngine:
         return stop.is_set() or self.shutdown.is_set()
 
     def execute(self, ident: str) -> None:
+        existing = self.store.get_evaluation(ident)
+        if existing.get('adapter_id') == SCREENING_ADAPTER_ID:
+            return self.execute_screening(ident)
         record = None
         inspection = None
         prepared = None
@@ -466,10 +559,120 @@ class RepositoryEngine:
                 with self.guard:
                     self.cancels.pop(ident, None)
 
+    def execute_screening(self, ident: str) -> None:
+        """Run the deterministic model. No repository code or dependency is touched."""
+        record = None
+        inspection = None
+        stop = self.cancels.get(ident) or threading.Event()
+        try:
+            with self.guard:
+                record = self.store.get_evaluation(ident)
+                if record['status'] in TERMINAL:
+                    return
+                record.update(
+                    status='running', stage='preparing', started_at=now(),
+                    progress=_progress('preparing', 1, 4,
+                                       'Loading the read-only architecture model'),
+                )
+                self.store.save_evaluation(record, 'Loading the inspected architecture model')
+            inspection = self.store.get_inspection(record['inspection_id'])
+            if self._check(stop):
+                raise AdapterCancelled('Cancelled before screening')
+            analysis = {
+                'project': inspection.get('project') or {},
+                'architecture': inspection.get('architecture') or {},
+                'hotspots': inspection.get('hotspots') or [],
+                'screening': inspection.get('screening') or {},
+            }
+            with self.guard:
+                record.update(
+                    stage='simulating',
+                    progress=_progress('simulating', 2, 4,
+                                       'Evaluating deployment variants with the deterministic model'),
+                )
+                self.store.save_evaluation(record, 'Simulating architecture variants')
+            if self._check(stop):
+                raise AdapterCancelled('Cancelled during screening')
+            result = screen_repository(analysis, record['mode'])
+            record['screening'] = result
+            record['recommendation'] = result['recommendation']
+            record['verdict'] = result['verdict']
+            record['correctness'] = result['verdict']['correctness']
+            record['measurements'] = []
+            record.update(
+                stage='evaluating',
+                progress=_progress('evaluating', 3, 4,
+                                   'Checking seed sensitivity and recommendation policy'),
+            )
+            self.store.save_evaluation(record, 'Screening policy evaluated')
+            if self._check(stop):
+                raise AdapterCancelled('Cancelled before the screening recommendation')
+            record['stage'] = 'verdict'
+            record['progress'] = _progress('verdict', 4, 4,
+                                           'Simulated recommendation recorded')
+            self._write_screening_evidence(record, inspection)
+            record['status'] = 'completed'
+            record['stage'] = 'done'
+            record['progress'] = _progress('done', 4, 4, 'Screening complete')
+            record['cleanup_status'] = 'completed'
+            record['finished_at'] = now()
+        except AdapterCancelled as exc:
+            if record is None:
+                raise
+            record.update(status='cancelled', stage='cancelled', error=str(exc),
+                          cleanup_status='completed', finished_at=now())
+            record['verdict'] = empty_screening_verdict(
+                'The screening was cancelled. No recommendation is reported.'
+            )
+            record['correctness'] = record['verdict']['correctness']
+            record['recommendation'] = record['verdict']['recommendation']
+            record['screening'] = None
+            self._safe_failure_evidence(record, inspection)
+        except BaseException as exc:
+            if record is None:
+                raise
+            record.update(status='failed', stage='failed', error=str(exc),
+                          cleanup_status='requires_review', finished_at=now())
+            record['verdict'] = empty_screening_verdict(
+                'The screening model stopped unexpectedly. No recommendation is reported.'
+            )
+            record['correctness'] = record['verdict']['correctness']
+            record['recommendation'] = record['verdict']['recommendation']
+            record['screening'] = None
+            self._safe_failure_evidence(record, inspection)
+        finally:
+            if record is None:
+                return
+            if not record.get('finished_at'):
+                record['finished_at'] = now()
+            if record.get('started_at') and record.get('finished_at'):
+                try:
+                    start = datetime.fromisoformat(record['started_at'])
+                    end = datetime.fromisoformat(record['finished_at'])
+                    record['duration_s'] = round(max(0.0, (end - start).total_seconds()), 3)
+                except ValueError:
+                    pass
+            if record.get('status') not in TERMINAL:
+                record.update(status='failed', stage='failed', cleanup_status='requires_review')
+                record['verdict'] = empty_screening_verdict(
+                    'The screening stopped before a recommendation. No result is reported.'
+                )
+                record['correctness'] = record['verdict']['correctness']
+                record['recommendation'] = record['verdict']['recommendation']
+                record['screening'] = None
+            try:
+                self.store.save_evaluation(record, 'Screening finished')
+            finally:
+                with self.guard:
+                    self.cancels.pop(ident, None)
+
     def _safe_failure_evidence(self, record: dict, inspection: dict | None) -> None:
         """Failure evidence is useful but must never take down the worker."""
         try:
-            self._write_failure_evidence(record, inspection or {})
+            if record.get('adapter_id') == SCREENING_ADAPTER_ID:
+                self._write_screening_failure_evidence(record, inspection or {})
+            else:
+                self._write_failure_evidence(record, inspection or {})
         except BaseException as exc:
             record['evidence_error'] = f'Could not persist failure evidence: {exc}'
 
@@ -493,6 +696,137 @@ class RepositoryEngine:
             'note': 'No valid measurements were retained for this evaluation.',
         })
         self._register_evidence(record, folder)
+
+    def _write_screening_failure_evidence(self, record: dict, inspection: dict) -> None:
+        folder = self.store.root / record['evidence']['dir']
+        folder.mkdir(parents=True, exist_ok=True)
+        _write_json(folder / 'source.json', {
+            'source': _public(inspection.get('source', {})),
+            'adapter': {'adapter_id': record.get('adapter_id'),
+                        'adapter_version': record.get('adapter_version')},
+            'inspection_id': record.get('inspection_id'),
+            'evidence_kind': 'simulated',
+        })
+        _write_json(folder / 'architecture.json', {
+            'project': _public(inspection.get('project') or {}),
+            'backend': (inspection.get('project') or {}).get('backend') or {},
+            'architecture': inspection.get('architecture') or {},
+            'hotspots': inspection.get('hotspots') or [],
+            'facts': inspection.get('facts') or [],
+            'not_supported': inspection.get('not_supported') or [],
+            'guesses': inspection.get('guesses') or [],
+            'screening_support': inspection.get('screening') or {},
+        })
+        _write_json(folder / 'workload.json', {
+            'preset': record.get('mode'),
+            'seeds': (record.get('workload') or {}).get('seeds'),
+            'note': 'No screening result was retained. No repository code was executed.',
+        })
+        _write_json(folder / 'verdict.json', record.get('verdict') or {})
+        (folder / 'project-note.md').write_text(
+            self._project_note_markdown(inspection), encoding='utf-8'
+        )
+        self._register_evidence(record, folder)
+
+    def _write_screening_evidence(self, record: dict, inspection: dict) -> None:
+        folder = self.store.root / record['evidence']['dir']
+        folder.mkdir(parents=True, exist_ok=True)
+        backend = (inspection.get('project') or {}).get('backend') or {}
+        _write_json(folder / 'source.json', {
+            'source': _public(inspection.get('source', {})),
+            'adapter': {'adapter_id': record['adapter_id'],
+                        'adapter_version': record['adapter_version']},
+            'inspection_id': record['inspection_id'],
+            'evidence_kind': 'simulated',
+        })
+        _write_json(folder / 'architecture.json', {
+            'project': _public(inspection.get('project') or {}),
+            'backend': backend,
+            'architecture': inspection.get('architecture') or {},
+            'hotspots': inspection.get('hotspots') or [],
+            'facts': inspection.get('facts') or [],
+            'not_supported': inspection.get('not_supported') or [],
+            'guesses': inspection.get('guesses') or [],
+            'screening_support': inspection.get('screening') or {},
+        })
+        _write_json(folder / 'workload.json', {
+            'preset': record['mode'],
+            'seeds': record['workload']['seeds'],
+            'fixtures': record['workload']['fixtures'],
+            'note': record['workload'].get('note'),
+            'model_workload': (record.get('screening') or {}).get('workload'),
+            'assumptions': (record.get('screening') or {}).get('assumptions'),
+        })
+        _write_json(folder / 'screening.json', record.get('screening') or {})
+        _write_json(folder / 'verdict.json', record.get('verdict') or {})
+        (folder / 'project-note.md').write_text(
+            self._project_note_markdown(inspection), encoding='utf-8'
+        )
+        recommendation = record.get('recommendation') or {}
+        (folder / 'replay.md').write_text(
+            '# Replay this simulated architecture screening\n\n'
+            f'- Evaluation: `{record["evaluation_id"]}`\n'
+            f'- Adapter: `{record["adapter_id"]}` version `{record["adapter_version"]}`\n'
+            f'- Source: {record["source"]["url"]} at `{record["source"]["commit_sha"]}`\n'
+            f'- Mode: `{record["mode"]}`\n'
+            f'- Evidence kind: `simulated`\n'
+            f'- Recommendation: `{recommendation.get("status", "INCONCLUSIVE")}`\n\n'
+            '## API replay\n\n'
+            '```powershell\n'
+            f'$body = @{{ inspection_id = "{record["inspection_id"]}"; '
+            f'adapter_id = "{record["adapter_id"]}"; mode = "{record["mode"]}"; '
+            'consent = $true } | ConvertTo-Json\n'
+            'Invoke-RestMethod http://127.0.0.1:8000/api/project-evaluations -Method Post '
+            '-ContentType application/json -Body $body\n'
+            '```\n\n'
+            '## What ran\n\n'
+            'The deterministic `architecture-screening-v1` model read the architecture recorded in '
+            '`architecture.json` and evaluated deployment-level controls. No repository code, '
+            'dependency, package manager, container or service was started. The source checkout '
+            'was never edited, committed or pushed.\n\n'
+            '## Important\n\n'
+            'The recommendation is SIMULATED and NOT_MEASURED. It is an uncalibrated candidate for '
+            'real deployment validation, not a measured winner.\n',
+            encoding='utf-8',
+        )
+        self._register_evidence(record, folder)
+
+    @staticmethod
+    def _project_note_markdown(inspection: dict) -> str:
+        project = inspection.get('project') or {}
+        note = project.get('note') or {}
+        backend = project.get('backend') or {}
+        lines = [
+            f'# {project.get("display_type") or "Project"}',
+            '',
+            (project.get('summary') or 'No summary was recorded.'),
+            '',
+            '## What the project is',
+            '',
+            note.get('what_it_is') or 'Not classified from source.',
+            '',
+            '## How the backend works',
+            '',
+            note.get('backend') or 'No backend request path was detected.',
+            '',
+            note.get('how_it_works') or '',
+            '',
+            '## Evolution scope',
+            '',
+            note.get('evolution') or '',
+            '',
+            '## Evidence',
+            '',
+            f'- Services detected: {len(backend.get("services") or [])}',
+            f'- HTTP routes detected: {backend.get("route_count", 0)}',
+            f'- Data stores detected: {len(backend.get("datastores") or [])}',
+            f'- Queues detected: {len(backend.get("queues") or [])}',
+            f'- External integrations detected: {len(backend.get("external_services") or [])}',
+            '',
+            'Every statement above comes from the inspected source. No repository code was executed.',
+            '',
+        ]
+        return '\n'.join(lines)
 
     def _write_evidence(self, record: dict, prepared, evidence: dict,
                         measurements: dict, inspection: dict) -> None:

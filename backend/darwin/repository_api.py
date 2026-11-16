@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from darwin.repository_catalog import adapter_catalog
 from darwin.repository_evaluations import PRESETS, TERMINAL
 from darwin.repository_import import RepositoryError
+from darwin.project_simulation import SCREENING_ADAPTER_ID, SCREENING_ADAPTER_VERSION
 
 router = APIRouter()
 
@@ -77,6 +78,18 @@ def catalog():
     """Trusted examples plus the inspection/execution boundary."""
     return {
         **adapter_catalog(),
+        'screening': {
+            'adapter_id': SCREENING_ADAPTER_ID,
+            'adapter_version': SCREENING_ADAPTER_VERSION,
+            'display_name': 'Backend architecture evolution (simulated)',
+            'evaluation_type': 'architecture_screening',
+            'evidence_kind': 'simulated',
+            'label': 'SIMULATED',
+            'scope_note': (
+                'Models deployment-level architecture variants from inspected source. '
+                'No repository code is executed and no runtime is measured.'
+            ),
+        },
         'presets': {
             key: {
                 'seeds': list(value['seeds']),
@@ -120,12 +133,18 @@ def start_evaluation(body: EvaluationRequest, request: Request):
         inspection_record = engine.get_inspection(body.inspection_id)
     except KeyError:
         raise HTTPException(404, 'Repository inspection not found')
-    adapter_id = body.adapter_id or next(
-        (item['adapter_id'] for item in inspection_record.get('supported_evaluations', [])),
-        None,
-    )
+    adapter_id = body.adapter_id
+    screening = inspection_record.get('screening') or {}
+    if adapter_id is None:
+        if inspection_record.get('execution_allowed') and inspection_record.get('supported_evaluations'):
+            adapter_id = inspection_record['supported_evaluations'][0]['adapter_id']
+        elif screening.get('available'):
+            adapter_id = SCREENING_ADAPTER_ID
     if not adapter_id:
-        raise HTTPException(409, 'No approved executable adapter is available for this source.')
+        raise HTTPException(
+            409,
+            'No approved executable adapter or architecture screening is available for this source.',
+        )
     try:
         return _public(engine.submit(body.inspection_id, adapter_id, body.mode,
                                      body.include_source_tests))

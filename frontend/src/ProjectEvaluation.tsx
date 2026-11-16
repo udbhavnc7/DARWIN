@@ -4,22 +4,29 @@ import {ProjectVerdict} from './ProjectVerdict';
 import {RepositoryArchitecture} from './RepositoryArchitecture';
 import {isLive, showcase} from './showcase';
 import {
-  api, formatDate, formatDuration, formatRows, isRunning, isTerminal, stageLabel, stageState,
-  tone, type Catalog, type Evaluation, type Inspection, type ProjectEvent,
+  api, controlLabel, formatDate, formatDuration, formatRows, isRunning, isTerminal, stageLabel,
+  stageState, tone, type Catalog, type Evaluation, type Inspection, type ProjectEvent,
 } from './projectApi';
 
 const steps = [
   {number: 1, label: 'Choose a project'},
   {number: 2, label: 'Understand it'},
-  {number: 3, label: 'Test the change'},
-  {number: 4, label: 'Read the verdict'},
+  {number: 3, label: 'Run the analysis'},
+  {number: 4, label: 'Read the result'},
 ] as const;
 
-const runStages = [
+const measuredStages = [
   {id: 'preparing', label: 'Prepare pinned source', detail: 'Copy the real report modules into a temporary overlay.'},
   {id: 'checking_correctness', label: 'Check correctness', detail: 'Compare every report result on timed and edge-case ledgers.'},
   {id: 'measuring', label: 'Measure report time', detail: 'Paired repetitions after warm-up on this computer.'},
   {id: 'verdict', label: 'Derive the verdict', detail: 'Correctness gates first; speed only decides afterwards.'},
+] as const;
+
+const screeningStages = [
+  {id: 'preparing', label: 'Load the architecture', detail: 'Read the file-backed service, route and integration model.'},
+  {id: 'simulating', label: 'Simulate variants', detail: 'Compare deployment controls with the deterministic model.'},
+  {id: 'evaluating', label: 'Apply the policy', detail: 'Gate the recommendation on modelled error rate and cost.'},
+  {id: 'verdict', label: 'Record the recommendation', detail: 'Store a SIMULATED, NOT_MEASURED candidate.'},
 ] as const;
 
 function message(reason: unknown): string {
@@ -29,6 +36,19 @@ function message(reason: unknown): string {
 function stageProgress(evaluation: Evaluation): number {
   if (evaluation.status === 'queued') return 0;
   return evaluation.progress?.percent ?? 0;
+}
+
+function resultLabel(item: Evaluation): string {
+  if (item.evaluation_type === 'architecture_screening' || item.evidence_kind === 'simulated') {
+    const change = item.recommendation?.modelled_change_pct;
+    return Number.isFinite(change)
+      ? `SIMULATED · ${Math.abs(change as number).toFixed(1)}% modelled`
+      : 'SIMULATED · no measured runtime';
+  }
+  if (item.verdict?.change_pct !== undefined) {
+    return `${item.verdict.change_pct > 0 ? '−' : '+'}${Math.abs(item.verdict.change_pct).toFixed(1)}% measured`;
+  }
+  return 'No measured change';
 }
 
 export function ProjectEvaluation() {
@@ -59,10 +79,17 @@ export function ProjectEvaluation() {
   const facts = inspection?.facts ?? evaluation?.inspection.facts ?? [];
   const notSupported = inspection?.not_supported ?? evaluation?.inspection.not_supported ?? [];
   const guesses = inspection?.guesses ?? evaluation?.inspection.guesses ?? [];
+  const architecture = inspection?.architecture ?? evaluation?.inspection.architecture ?? null;
+  const hotspots = inspection?.hotspots ?? evaluation?.inspection.hotspots ?? [];
+  const screening = inspection?.screening ?? evaluation?.inspection.screening ?? null;
   const adapter = inspection?.supported_evaluations[0] ?? null;
-  const canRun = Boolean(inspectionId && (inspection?.execution_allowed ?? true) && adapter);
+  const measuredReady = Boolean((inspection?.execution_allowed ?? true) && adapter);
+  const screeningReady = Boolean(screening?.available) && !measuredReady;
+  const canRun = Boolean(inspectionId && (screeningReady || measuredReady));
+  const isScreening = evaluation?.evaluation_type === 'architecture_screening';
+  const activeStages = isScreening ? screeningStages : measuredStages;
   const canOpen = (number: number) =>
-    number === 1 || (number >= 2 && Boolean(project)) || (number >= 3 && Boolean(evaluation))
+    number === 1 || (number === 2 && Boolean(project)) || (number === 3 && Boolean(evaluation))
     || (number === 4 && Boolean(evaluation?.verdict));
 
   async function loadCatalog() {
@@ -158,7 +185,7 @@ export function ProjectEvaluation() {
 
   function chooseMode(next: 'quick' | 'full') {
     setMode(next);
-    setIncludeTests(next === 'full');
+    setIncludeTests(next === 'full' && !screeningReady);
   }
 
   async function startRun() {
@@ -166,7 +193,8 @@ export function ProjectEvaluation() {
     setStarting(true);
     setRunError('');
     try {
-      const value = await api.start(inspectionId, mode, includeTests);
+      const value = await api.start(inspectionId, mode, includeTests,
+        screeningReady ? 'architecture-screening-v1' : undefined);
       lastSequence.current = 0;
       setEvaluation(value);
       setEvents([]);
@@ -254,10 +282,11 @@ export function ProjectEvaluation() {
       <div className="project-intro">
         <div>
           <span className="section-kicker">Real Project Mode · step 1</span>
-          <h2 id="project-stage-title" tabIndex={-1}>Choose a real project.</h2>
+          <h2 id="project-stage-title" tabIndex={-1}>Choose any public project.</h2>
           <p className="project-lede">
-            DARWIN pins one exact commit, reads the source and measures a narrowly scoped change.
-            It never substitutes the checkout lab for a project it cannot actually run.
+            DARWIN pins one exact commit, reads the source and builds a file-backed picture of the project
+            and its backend. A catalogued measured adapter can run a real scoped comparison; every other
+            repository can receive a simulated architecture screening. Arbitrary repository code is never executed.
           </p>
         </div>
         <span className={`status-chip ${recordedShowcase ? 'warn' : 'active'}`}>
@@ -278,7 +307,7 @@ export function ProjectEvaluation() {
             className={`project-choice-card${selectedExample ? ' selected' : ''}`}>
             <div className="project-choice-top">
               <span className="project-choice-mark"><Icon name="project"/></span>
-              <span className="status-chip good">Trusted adapter</span>
+              <span className="status-chip good">Optional measured example</span>
             </div>
             <h3>{item.name}</h3>
             <p>{item.subtitle}</p>
@@ -302,7 +331,7 @@ export function ProjectEvaluation() {
         </div>
 
         <form className="project-url-card" onSubmit={event => { event.preventDefault(); void inspectProject(); }}>
-          <span className="section-kicker">Or inspect another public repository</span>
+          <span className="section-kicker">Inspect any public GitHub repository</span>
           <label htmlFor="project-url">Public GitHub URL</label>
           <input id="project-url" value={url} onChange={event => setUrl(event.target.value)}
             placeholder="https://github.com/owner/repo" autoComplete="off" spellCheck={false}/>
@@ -318,7 +347,8 @@ export function ProjectEvaluation() {
             {inspecting ? 'Pinning the commit…' : 'Inspect this project'}
           </Action>
           <p className="project-footnote">
-            Only repositories in DARWIN's audited adapter catalog can execute. Everything else is inspection-only.
+            Only repositories in DARWIN's audited adapter catalog can execute. Other repositories are
+            read-only: DARWIN can model architecture variants, but it does not run their code or dependencies.
           </p>
           {inspectionError && <p className="notice" role="alert">{inspectionError}</p>}
         </form>
@@ -342,9 +372,7 @@ export function ProjectEvaluation() {
               </span>
               <strong>{item.source.owner}/{item.source.repo}</strong>
               <small>{item.mode} · {formatDate(item.finished_at ?? item.created_at)}</small>
-              <span>{item.verdict?.change_pct !== undefined
-                ? `${item.verdict.change_pct > 0 ? '−' : '+'}${Math.abs(item.verdict.change_pct).toFixed(1)}%`
-                : 'No measured change'}</span>
+              <span>{resultLabel(item)}</span>
             </button>
           </li>)}
         </ul>
@@ -353,42 +381,132 @@ export function ProjectEvaluation() {
     </section>}
 
     {step === 2 && project && <div className="project-stage">
-      <RepositoryArchitecture project={project} facts={facts} notSupported={notSupported} guesses={guesses}/>
+      <RepositoryArchitecture project={project} facts={facts} notSupported={notSupported}
+        guesses={guesses} architecture={architecture} hotspots={hotspots} screening={screening}/>
 
       <section className="project-panel project-run-setup" aria-labelledby="project-stage-title">
         <div className="section-title">
           <div className="panel-heading">
-            <span className="section-kicker">Step 2 · Choose the scoped change</span>
-            <h2 id="project-stage-title" tabIndex={-1}>Test one measured change.</h2>
+            <span className="section-kicker">
+              {screeningReady ? 'Step 2 · Scope the architecture screening' : 'Step 2 · Choose the scoped change'}
+            </span>
+            <h2 id="project-stage-title" tabIndex={-1}>
+              {screeningReady ? 'Evolve the backend without running it.'
+                : measuredReady ? 'Test one measured change.' : 'This project is read-only.'}
+            </h2>
           </div>
-          <span className={`status-chip ${canRun ? 'good' : 'warn'}`}>{canRun ? 'Adapter approved' : 'Inspection only'}</span>
+          <span className={`status-chip ${screeningReady ? 'warn' : measuredReady ? 'good' : 'warn'}`}>
+            {screeningReady ? 'SIMULATED · NOT MEASURED'
+              : measuredReady ? 'Measured adapter approved' : 'Inspection only'}
+          </span>
         </div>
 
-        <div className="project-stage-note">
-          <p><strong>What is happening.</strong> DARWIN compares the original report functions with one candidate on identical fictional ledgers.</p>
-          <p><strong>Why it matters.</strong> A report that is fast but changes a budget total is not an improvement.</p>
-        </div>
+        {screeningReady ? <div className="project-stage-note">
+          <p><strong>What is happening.</strong> DARWIN builds a deterministic queueing model from the inspected
+            services, routes, data stores and integrations, then compares deployment-level variants.</p>
+          <p><strong>Why it matters.</strong> The recommendation is an uncalibrated candidate for real deployment
+            validation, not a measured winner. No repository code is executed.</p>
+        </div> : <div className="project-stage-note">
+          <p><strong>What is happening.</strong> DARWIN compares the pinned source with one scoped candidate on
+            identical workloads.</p>
+          <p><strong>Why it matters.</strong> A result that is fast but changes behaviour is not an improvement.</p>
+        </div>}
 
         {!canRun && <div className="project-inspection-only">
           <span className="project-inspection-icon"><Icon name="shield"/></span>
           <div>
-            <h3>No runnable optimization adapter for this source.</h3>
-            <p>{inspection?.warnings?.[0] ?? 'This repository can be inspected, but DARWIN has no audited adapter for it and will not run the unrelated checkout demo as a substitute.'}</p>
+            <h3>No runnable adapter or screening path for this source.</h3>
+            <p>{screening?.reason ?? inspection?.warnings?.[0]
+              ?? 'This repository can be inspected, but DARWIN has no audited adapter or backend model for it and will not run the unrelated checkout demo as a substitute.'}</p>
             <Action variant="secondary" icon="arrow" onClick={reset}>Choose another project</Action>
           </div>
         </div>}
 
-        {canRun && adapter && <>
+        {screeningReady && screening && <>
+          <div className="project-candidate">
+            <div className="project-candidate-side original">
+              <span className="section-kicker">Detected baseline</span>
+              <strong>{project.display_type}</strong>
+              <p>{project.backend?.detected
+                ? `${project.backend.services.length} service(s), ${project.backend.route_count} route(s), `
+                  + `${project.backend.datastores.length} data store(s) and `
+                  + `${project.backend.external_services.length} external integration(s).`
+                : project.summary}</p>
+            </div>
+            <span className="project-candidate-arrow" aria-hidden="true">→</span>
+            <div className="project-candidate-side candidate">
+              <span className="section-kicker">Screening candidate</span>
+              <strong>Deployment-level evolution</strong>
+              <p>Vary only controls supported by the inspected source: {screening.controls.map(controlLabel).join(', ')}.
+                Application code, schemas and business logic stay unchanged.</p>
+            </div>
+          </div>
+
+          <details className="project-scope">
+            <summary>What the model varies <span className="status-chip">{screening.adapter_id ?? 'architecture-screening-v1'}</span></summary>
+            <p>{screening.mechanism}</p>
+            <p className="muted">{screening.scope_note}</p>
+            <h3>Controls supported by this source</h3>
+            <ul>{screening.controls.map(control => <li key={control}>{controlLabel(control)}</li>)}</ul>
+            <p className="project-footnote">{screening.execution_note}</p>
+          </details>
+
+          <div className="project-sim-banner" role="note">
+            <Icon name="shield"/>
+            <span><strong>SIMULATED</strong> This run does not execute repository code, install dependencies,
+              start containers or measure a runtime. Every number is a model output.</span>
+          </div>
+
+          <fieldset className="project-mode-fieldset">
+            <legend>Screening budget</legend>
+            <div className="project-mode-grid">
+              {(['quick', 'full'] as const).map(id => <label key={id} className={`project-mode${mode === id ? ' selected' : ''}`}>
+                <input type="radio" name="project-mode" value={id} checked={mode === id} onChange={() => chooseMode(id)}/>
+                <span>
+                  <strong>{id === 'quick' ? 'Quick screening' : 'Full screening'}</strong>
+                  <small>{id === 'quick'
+                    ? 'One deterministic seed and a bounded variant set.'
+                    : 'Three seeds, combined variants and seed-sensitivity reporting.'}</small>
+                  <code>{id === 'quick'
+                    ? `${catalog?.presets.quick.seeds.length ?? 1} seed · ${screening.controls.length} controls`
+                    : `${catalog?.presets.full.seeds.length ?? 3} seeds · ${screening.controls.length} controls`}</code>
+                </span>
+              </label>)}
+            </div>
+          </fieldset>
+
+          <dl className="project-workload">
+            <div><dt>Seeds</dt><dd>{preset?.seeds.join(', ') ?? '—'}</dd></div>
+            <div><dt>Controls</dt><dd>{screening.controls.length}</dd></div>
+            <div><dt>Workload</dt><dd>Synthetic request mix</dd></div>
+            <div><dt>Execution</dt><dd>None</dd></div>
+            <div><dt>Evidence</dt><dd>Modelled</dd></div>
+          </dl>
+
+          <div className="project-actions">
+            <Action variant="primary" icon="play" pending={starting} onClick={() => void startRun()}>
+              {starting ? 'Starting the model…' : `Run ${mode} screening`}
+            </Action>
+            <Action variant="quiet" onClick={reset}>Choose another project</Action>
+          </div>
+          {runError && <p className="notice" role="alert">{runError}</p>}
+        </>}
+
+        {!screeningReady && measuredReady && adapter && <>
           <div className="project-candidate">
             <div className="project-candidate-side original">
               <span className="section-kicker">Original</span>
-              <strong>Three independent report traversals</strong>
-              <p>Totals, category spending and payee totals each walk the same currency-scoped ledger.</p>
+              <strong>{adapter.adapter_id === 'sanchay-reporting-v1'
+                ? 'Three independent report traversals' : 'Detected implementation'}</strong>
+              <p>{adapter.adapter_id === 'sanchay-reporting-v1'
+                ? 'Totals, category spending and payee totals each walk the same currency-scoped ledger.'
+                : 'The pinned source at its recorded commit.'}</p>
             </div>
             <span className="project-candidate-arrow" aria-hidden="true">→</span>
             <div className="project-candidate-side candidate">
               <span className="section-kicker">Candidate</span>
-              <strong>Shared one-pass aggregation</strong>
+              <strong>{adapter.adapter_id === 'sanchay-reporting-v1'
+                ? 'Shared one-pass aggregation' : 'Scoped adapter change'}</strong>
               <p>{adapter.change_summary}</p>
             </div>
           </div>
@@ -400,8 +518,8 @@ export function ProjectEvaluation() {
             <h3>Correctness rules</h3>
             <ul>{adapter.correctness_rules.map(rule => <li key={rule}>{rule}</li>)}</ul>
             <p className="project-footnote">
-              The candidate is placed in an isolated overlay. It is re-exported through the real reporting module and called
-              from the real Reports tab call site. The original repository is never edited.
+              The candidate is placed in an isolated overlay. The original repository is never edited,
+              committed or pushed.
             </p>
           </details>
 
@@ -414,7 +532,7 @@ export function ProjectEvaluation() {
                   <strong>{id === 'quick' ? 'Quick live comparison' : 'Full comparison'}</strong>
                   <small>{id === 'quick'
                     ? 'One seed, two ledgers, ten paired repetitions.'
-                    : 'Three seeds, three ledgers, ten paired repetitions plus the reporting test overlay.'}</small>
+                    : 'Three seeds, three ledgers, ten paired repetitions plus the optional source tests.'}</small>
                   <code>{catalog?.presets[id] ? `${catalog.presets[id].sizes.map(size => formatRows(size)).join(' / ')} rows` : ''}</code>
                 </span>
               </label>)}
@@ -423,8 +541,8 @@ export function ProjectEvaluation() {
               <input type="checkbox" checked={includeTests} disabled={mode === 'quick'}
                 onChange={event => setIncludeTests(event.target.checked)}/>
               <span>{mode === 'quick'
-                ? 'Quick mode skips Sanchay’s existing source tests.'
-                : 'Run Sanchay’s existing reporting tests against the candidate overlay.'}</span>
+                ? 'Quick mode skips the adapter’s optional source tests.'
+                : 'Run the adapter’s optional source tests against the candidate overlay.'}</span>
             </label>
           </fieldset>
 
@@ -443,7 +561,7 @@ export function ProjectEvaluation() {
             <Action variant="quiet" onClick={reset}>Choose another project</Action>
           </div>
           {!inspection?.readiness.node_available && <p className="notice" role="alert">
-            Node.js was not found. The live comparison needs Node 22.18 or newer to execute the real TypeScript source.
+            Node.js was not found. The live comparison needs Node 22.18 or newer to execute the real source.
           </p>}
           {runError && <p className="notice" role="alert">{runError}</p>}
         </>}
@@ -453,17 +571,27 @@ export function ProjectEvaluation() {
     {step === 3 && evaluation && <section className="project-panel project-run" aria-labelledby="project-stage-title">
       <div className="section-title">
         <div className="panel-heading">
-          <span className="section-kicker">Step 3 · Test the change</span>
-          <h2 id="project-stage-title" tabIndex={-1}>{isRunning(evaluation) ? 'Running on this computer.' : 'This run has ended.'}</h2>
+          <span className="section-kicker">Step 3 · {isScreening ? 'Simulate the backend' : 'Test the change'}</span>
+          <h2 id="project-stage-title" tabIndex={-1}>{isRunning(evaluation)
+            ? (isScreening ? 'Modelling on this computer.' : 'Running on this computer.')
+            : 'This run has ended.'}</h2>
         </div>
         <span className={`status-chip ${tone(evaluation.verdict?.status ?? evaluation.status)}`}>
-          {isRunning(evaluation) ? 'Live run' : (evaluation.verdict?.label ?? evaluation.status)}
+          {isRunning(evaluation) ? (isScreening ? 'SIMULATED · modelling' : 'Live run')
+            : (evaluation.verdict?.label ?? evaluation.status)}
         </span>
       </div>
 
       <div className="project-stage-note">
-        <p><strong>What is happening.</strong> DARWIN is running the original and candidate report paths over the same ledgers.</p>
-        <p><strong>Why it matters.</strong> Numbers are not known until the correctness checks and paired timings finish.</p>
+        {isScreening ? <>
+          <p><strong>What is happening.</strong> DARWIN is evaluating deployment-level variants against the
+            architecture it read from source.</p>
+          <p><strong>Why it matters.</strong> No repository code is executed. The result is a model output,
+            not a runtime measurement.</p>
+        </> : <>
+          <p><strong>What is happening.</strong> DARWIN is running the original and candidate paths over the same workload.</p>
+          <p><strong>Why it matters.</strong> Numbers are not known until the correctness checks and paired timings finish.</p>
+        </>}
       </div>
 
       {isRunning(evaluation) && <>
@@ -481,7 +609,7 @@ export function ProjectEvaluation() {
         </div>
 
         <ol className="project-run-stages">
-          {runStages.map(stage => {
+          {activeStages.map(stage => {
             const state = stageState(evaluation.stage === 'queued' ? 'queued' : evaluation.stage, stage.id);
             return <li key={stage.id} className={state}>
               <span className="project-run-stage-mark">
@@ -509,15 +637,17 @@ export function ProjectEvaluation() {
           <Action variant="quiet" onClick={reset}>Choose another project</Action>
         </div>
         <p className="project-footnote">
-          Cancelling stops the local worker. A cancelled run never produces a winner or a performance claim.
+          {isScreening
+            ? 'Cancelling stops the local model. A cancelled screening never produces a recommendation.'
+            : 'Cancelling stops the local worker. A cancelled run never produces a winner or a performance claim.'}
         </p>
       </>}
 
       {!isRunning(evaluation) && evaluation.status !== 'completed' && <div className="project-run-ended">
         <span className={`status-chip ${tone(evaluation.verdict?.status ?? evaluation.status)}`}>{evaluation.status}</span>
-        <h3>No verified result was produced.</h3>
-        <p>{evaluation.error ?? evaluation.verdict?.reason ?? 'The evaluation stopped before a verdict.'}</p>
-        <p className="project-footnote">Nothing from this run is presented as an improvement.</p>
+        <h3>{isScreening ? 'No recommendation was produced.' : 'No verified result was produced.'}</h3>
+        <p>{evaluation.error ?? evaluation.verdict?.reason ?? 'The evaluation stopped before a result.'}</p>
+        <p className="project-footnote">Nothing from this run is presented as an improvement or a measured winner.</p>
         <div className="project-actions">
           <Action variant="primary" icon="refresh" onClick={rerun}>Try again</Action>
           <Action variant="quiet" onClick={reset}>Choose another project</Action>
@@ -525,9 +655,11 @@ export function ProjectEvaluation() {
       </div>}
 
       {!isRunning(evaluation) && evaluation.status === 'completed' && <div className="project-run-ended">
-        <span className="status-chip good">Evaluation complete</span>
-        <h3>Evidence recorded. Opening the verdict…</h3>
-        <Action variant="primary" icon="arrow" onClick={() => setStep(4)}>Read the verdict</Action>
+        <span className="status-chip good">{isScreening ? 'Screening complete' : 'Evaluation complete'}</span>
+        <h3>{isScreening ? 'Evidence recorded. Opening the recommendation…' : 'Evidence recorded. Opening the verdict…'}</h3>
+        <Action variant="primary" icon="arrow" onClick={() => setStep(4)}>
+          {isScreening ? 'Read the recommendation' : 'Read the verdict'}
+        </Action>
       </div>}
 
       {runError && <p className="notice" role="alert">{runError}</p>}
@@ -535,7 +667,7 @@ export function ProjectEvaluation() {
 
     {step === 4 && evaluation && (evaluation.verdict
       ? <ProjectVerdict evaluation={evaluation} onRerun={rerun} onChooseAnother={reset}
-          downloadsAvailable={!recordedShowcase}/>
+          downloadsAvailable={!recordedShowcase} recordedView={recordedShowcase}/>
       : <section className="project-panel">
         <h2 id="project-stage-title" tabIndex={-1}>No verdict</h2>
         <p className="project-lede">This evaluation has no recorded verdict.</p>

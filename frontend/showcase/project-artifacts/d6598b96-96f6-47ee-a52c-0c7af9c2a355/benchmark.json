@@ -1,0 +1,344 @@
+{
+  "schema_version": 1,
+  "ok": true,
+  "measurement_scope": "pure report aggregation functions; currency filtering and React rendering are outside the timed region",
+  "parity": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "seed7-size10000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size10000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size10000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-empty: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-single-expense: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-refund: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-transfers-and-goal: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-pending-failed: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-jpy-precision: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: real currency scoping selected the expected rows",
+        "passed": true,
+        "detail": "selected 2, expected 2"
+      },
+      {
+        "name": "edge-multicurrency-scope: baseline and candidate match",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: candidate is deterministic",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: ledger input is not mutated",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "edge-multicurrency-scope: baseline matches documented finance semantics",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size10000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      },
+      {
+        "name": "seed7-size50000: every measured repetition returned the same result",
+        "passed": true,
+        "detail": ""
+      }
+    ],
+    "total": 37,
+    "passed_count": 37
+  },
+  "environment": {
+    "node_version": "v26.13.1",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13450HX",
+    "total_memory_bytes": 25463480320,
+    "heap_limit_bytes": 637534208,
+    "forced_gc": false
+  },
+  "config": {
+    "sizes": [
+      10000,
+      50000
+    ],
+    "seeds": [
+      7
+    ],
+    "repetitions": 10,
+    "warmups": 2,
+    "payee_limit": 5
+  },
+  "summaries": [
+    {
+      "fixture_id": "seed7-size10000",
+      "seed": 7,
+      "size": 10000,
+      "currency": "EUR",
+      "baseline_median_ns": 1430400,
+      "candidate_median_ns": 642200,
+      "baseline_p95_ns": 2086400,
+      "candidate_p95_ns": 827200,
+      "baseline_min_ns": 1412100,
+      "baseline_max_ns": 2086400,
+      "candidate_min_ns": 612900,
+      "candidate_max_ns": 827200,
+      "change_pct": 55.103467561521256,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    },
+    {
+      "fixture_id": "seed7-size50000",
+      "seed": 7,
+      "size": 50000,
+      "currency": "EUR",
+      "baseline_median_ns": 9042400,
+      "candidate_median_ns": 3672600,
+      "baseline_p95_ns": 10269600,
+      "candidate_p95_ns": 4562000,
+      "baseline_min_ns": 7864000,
+      "baseline_max_ns": 10269600,
+      "candidate_min_ns": 3221700,
+      "candidate_max_ns": 4562000,
+      "change_pct": 59.3846766345218,
+      "paired_candidate_wins": 10,
+      "samples": 10
+    }
+  ],
+  "runs": [
+    {
+      "fixture_id": "seed7-size10000",
+      "seed": 7,
+      "size": 10000,
+      "currency": "EUR",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        1690700,
+        1839300,
+        1637200,
+        1586000,
+        1426000,
+        1425200,
+        1412100,
+        1430400,
+        1418000,
+        2086400
+      ],
+      "candidate_ns": [
+        827200,
+        712000,
+        699500,
+        799900,
+        647800,
+        636700,
+        623700,
+        632600,
+        612900,
+        642200
+      ],
+      "baseline_hash": "3bf1ec28bcf6524c",
+      "candidate_hash": "3bf1ec28bcf6524c"
+    },
+    {
+      "fixture_id": "seed7-size50000",
+      "seed": 7,
+      "size": 50000,
+      "currency": "EUR",
+      "orders": [
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first",
+        "baseline-first",
+        "candidate-first"
+      ],
+      "baseline_ns": [
+        9672800,
+        10269600,
+        9042400,
+        9934700,
+        9806800,
+        10207300,
+        9019200,
+        7864000,
+        8682200,
+        8084100
+      ],
+      "candidate_ns": [
+        4222400,
+        3926200,
+        4562000,
+        3672600,
+        3849200,
+        4135000,
+        3425400,
+        3630500,
+        3415300,
+        3221700
+      ],
+      "baseline_hash": "93df1cfa4efe58a2",
+      "candidate_hash": "93df1cfa4efe58a2"
+    }
+  ]
+}

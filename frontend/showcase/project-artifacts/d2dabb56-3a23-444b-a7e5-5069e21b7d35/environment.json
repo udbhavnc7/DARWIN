@@ -1,0 +1,28 @@
+{
+  "benchmark_environment": {
+    "node_version": "v26.13.1",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu_model": "13th Gen Intel(R) Core(TM) i5-13450HX",
+    "total_memory_bytes": 25463480320,
+    "heap_limit_bytes": 637534208,
+    "forced_gc": false
+  },
+  "harness": {
+    "command": [
+      "C:\\Program Files\\nodejs\\node.EXE",
+      "--no-warnings",
+      "--max-old-space-size=512",
+      "runner.mjs",
+      "config.json"
+    ],
+    "duration_s": 0.813,
+    "stdout_tail": "{\"ok\":true,\"parity\":true,\"checks\":\"37/37\",\"summaries\":[{\"fixture_id\":\"seed7-size10000\",\"seed\":7,\"size\":10000,\"currency\":\"EUR\",\"baseline_median_ns\":1358200,\"candidate_median_ns\":628000,\"baseline_p95_ns\":1992300,\"candidate_p95_ns\":761100,\"baseline_min_ns\":1302500,\"baseline_max_ns\":1992300,\"candidate_min_ns\":610100,\"candidate_max_ns\":761100,\"change_pct\":53.762332498895596,\"paired_candidate_wins\":10,\"samples\":10},{\"fixture_id\":\"seed7-size50000\",\"seed\":7,\"size\":50000,\"currency\":\"EUR\",\"baseline_median_ns\":7710900,\"candidate_median_ns\":3242700,\"baseline_p95_ns\":9646000,\"candidate_p95_ns\":3743500,\"baseline_min_ns\":7093600,\"baseline_max_ns\":9646000,\"candidate_min_ns\":3016800,\"candidate_max_ns\":3743500,\"change_pct\":57.94654320507334,\"paired_candidate_wins\":10,\"samples\":10}],\"node\":\"v26.13.1\"}",
+    "stderr_tail": ""
+  },
+  "source_tests": {
+    "status": "not_run",
+    "reason": "Quick mode does not run the repository test overlay."
+  },
+  "measurement_scope": "pure report aggregation functions; currency filtering and React rendering are outside the timed region"
+}

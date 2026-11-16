@@ -44,6 +44,10 @@ class EvaluationBudget:
     warmups: int
     wall_clock_s: int
     include_source_tests: bool = False
+    challenge: str = 'faster'
+    search_mode: str = 'compare'
+    warmup_s: int = 2
+    window_s: int = 6
 
     def as_dict(self) -> dict:
         return {
@@ -54,6 +58,10 @@ class EvaluationBudget:
             'warmups': self.warmups,
             'wall_clock_s': self.wall_clock_s,
             'include_source_tests': self.include_source_tests,
+            'challenge': self.challenge,
+            'search_mode': self.search_mode,
+            'warmup_s': self.warmup_s,
+            'window_s': self.window_s,
         }
 
 
