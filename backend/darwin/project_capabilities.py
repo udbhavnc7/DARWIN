@@ -201,29 +201,38 @@ def _sanchay_adapter(root: Path, pinned: bool) -> dict | None:
 def _compose_adapter(root: Path, repository_url: str, commit_sha: str, pinned: bool) -> dict | None:
     """Offer a catalogued containerized adapter only when its reviewed files match.
 
-    Detection is by source markers through the adapter itself; the catalog URL
-    merely identifies which reviewed adapter may apply. A mismatch returns None
-    so an unrelated Flask app is never silently treated as this sample.
+    The trusted catalog names the reviewed adapter for this repository; the
+    adapter itself must still recognise the pinned source markers. A mismatch
+    returns None, so a lookalike application is never silently treated as the
+    catalogued sample.
     """
-    from darwin.adapters.flask_redis import FlaskRedisAdapter
+    from darwin.adapters.registry import compose_adapter_by_id
 
     entry = catalog_entry(url=repository_url)
-    if not entry or entry['adapter']['adapter_id'] != 'flask-redis-compose-v1':
+    if not entry or entry.get('evaluation_type') != 'backend_architecture':
         return None
-    adapter = FlaskRedisAdapter()
+    adapter = compose_adapter_by_id(entry['adapter']['adapter_id'])
+    if adapter is None:
+        return None
     assessment = adapter.detect(root, commit_sha, pinned)
     if not assessment.supported:
         return None
     catalog = entry['adapter']
+    manifest = adapter.manifest
     return {
         'adapter_id': adapter.id,
         'adapter_version': adapter.version,
         'display_name': catalog['display_name'],
         'evaluation_type': adapter.evaluation_type,
         'summary': (
-            'Measure the original single-replica Flask + Redis topology against reviewed '
-            'replica and gunicorn-worker changes in an isolated Linux Docker stack.'
+            f'Measure the original {entry["name"]} topology against reviewed '
+            'replica and process changes in an isolated Linux Docker stack.'
         ),
+        'runtime': manifest.runtime,
+        'repository_name': entry['name'],
+        'source_root': manifest.source_subdir,
+        'source_files': list(manifest.source_files),
+        'needs_redis': manifest.needs_redis,
         'change_summary': catalog['change_summary'],
         'mechanism': catalog['mechanism'],
         'correctness_rules': list(catalog['correctness_rules']),
@@ -240,7 +249,8 @@ def _compose_adapter(root: Path, repository_url: str, commit_sha: str, pinned: b
         'evidence': assessment.evidence,
         'capabilities': adapter.capabilities(),
         'dimensions': adapter.capabilities().get('dimensions', []),
-        'challenges': ['faster', 'recover', 'resources'],
+        'challenges': (['faster', 'recover', 'resources']
+                       if manifest.allow_fault_restart else ['faster', 'resources']),
     }
 
 
@@ -271,11 +281,11 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     guesses: list[dict] = []
     languages: list[str] = []
 
-    if root_package:
+    if root_package or web_package:
         languages.append('JavaScript/TypeScript')
     if _exists(root, 'settings.gradle.kts') or _exists(root, 'build.gradle.kts'):
         languages.append('Kotlin/Java')
-    if web_package:
+    if web_package and 'react' in dependencies:
         languages.append('TypeScript/React')
 
     is_sanchay_shape = bool(
@@ -284,13 +294,9 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     )
     is_client_app = bool(web_package and 'react' in dependencies)
     is_node_server = bool(server_frameworks and server_entry)
-    flask_redis_files = (_exists(root, 'flask-redis/app.py')
-                         and _exists(root, 'flask-redis/requirements.txt'))
-    flask_redis_text = _read(root / 'flask-redis/app.py') if flask_redis_files else ''
-    is_flask_redis_shape = bool(
-        flask_redis_files and 'from flask import Flask' in flask_redis_text
-        and 'Redis(host=' in flask_redis_text and 'This webpage has been viewed' in flask_redis_text
-    )
+    # Any catalogued backend target is resolved the same way: the trusted catalog
+    # names the reviewed adapter, and that adapter must recognise the source.
+    compose_adapter = _compose_adapter(root, repository_url, commit_sha, pinned)
 
     if is_sanchay_shape:
         project_type = 'react_webview_local_app'
@@ -302,16 +308,16 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
             'A client-side personal-finance dashboard. The visible React application reads and '
             'writes browser-local data; there is no deployed server API or server database.'
         )
-    elif is_flask_redis_shape:
+    elif compose_adapter:
         project_type = 'containerized_backend'
-        display_type = 'Flask + Redis · containerized backend'
+        display_type = f'{compose_adapter["repository_name"]} · containerized backend'
         application_host = 'Linux containers (Docker)'
-        persistence = 'Redis (shared viewed-count)'
+        persistence = 'Redis (shared state)' if compose_adapter.get('needs_redis') else 'None'
         is_server_backend = True
         summary = (
-            'A public Flask + Redis sample. One Flask process serves a hit counter stored in Redis. '
-            'DARWIN deploys a reviewed isolated stack from app.py and requirements.txt; the '
-            'repository Compose file and Dockerfile are never executed.'
+            f'A public {compose_adapter["repository_name"]} sample. DARWIN deploys a reviewed '
+            'isolated stack from the allowlisted source files; the repository Compose file, '
+            'Dockerfile and gateway config are never executed.'
         )
     elif is_client_app and not is_node_server:
         project_type = 'client_web_app'
@@ -373,18 +379,24 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
                 'confidence': 'low',
             })
 
-    if is_flask_redis_shape:
-        facts.append(_fact('Web application', 'Flask (app.py)', ['flask-redis/app.py']))
-        facts.append(_fact('Server runtime', 'gunicorn (DARWIN-owned image)', ['flask-redis/requirements.txt']))
-        facts.append(_fact('Gateway', 'nginx (DARWIN-generated config)', ['flask-redis/app.py']))
-        facts.append(_fact('Shared state', 'Redis viewed-count', ['flask-redis/app.py']))
+    if compose_adapter:
+        source_files = list(compose_adapter.get('source_files') or [])
+        runtime = compose_adapter.get('runtime') or 'reviewed'
+        facts.append(_fact('Web application', f'{compose_adapter["repository_name"]} service', source_files))
+        facts.append(_fact('Server runtime', f'{runtime} (DARWIN-owned image)', source_files))
+        facts.append(_fact('Gateway', 'nginx (DARWIN-generated config)', source_files))
+        facts.append(_fact(
+            'Shared state',
+            'Redis shared state' if compose_adapter.get('needs_redis') else 'No shared datastore',
+            source_files,
+        ))
         not_supported.extend([
             {'capability': 'Repository Compose / Dockerfile',
              'reason': 'The sample’s own Compose file and Dockerfile are not executed; DARWIN writes its own stack.'},
             {'capability': 'SQL database or queue faults',
-             'reason': 'This sample has no SQL database or queue; only service restart is measured.'},
+             'reason': 'This sample has no SQL database or queue; only the reviewed fault probe is measured.'},
             {'capability': 'Framework conversion',
-             'reason': 'The reviewed boundary is deployable topology, not rewriting Flask in another stack.'},
+             'reason': 'The reviewed boundary is deployable topology, not rewriting the service in another stack.'},
             {'capability': 'Production traffic forecasting',
              'reason': 'The load generator and service share one host; absolute throughput is lab-only.'},
         ])
@@ -403,8 +415,6 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
 
     adapter = _sanchay_adapter(root, pinned) if is_sanchay_shape else None
     supported = [adapter] if adapter else []
-    compose_adapter = (_compose_adapter(root, repository_url, commit_sha, pinned)
-                       if is_flask_redis_shape else None)
     if compose_adapter:
         supported.append(compose_adapter)
 
@@ -442,7 +452,7 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
     screening = generic.get('screening') or {'available': False, 'controls': [],
                                               'reason': 'Architecture screening was not analysed.'}
 
-    if is_sanchay_shape or is_flask_redis_shape:
+    if is_sanchay_shape or compose_adapter:
         project = {
             'type': project_type,
             'display_type': display_type,
@@ -489,11 +499,11 @@ def inspect_source(root: str | Path, repository_url: str, owner: str, repo: str,
         'node_version': _node_version(),
         'source_paths_present': (
             bool(reporting_exists and persistence_exists) if is_sanchay_shape
-            else True if is_flask_redis_shape
+            else True if compose_adapter
             else bool(generic_backend.get('services'))
         ),
         'adapter_approved': any(item.get('execution_allowed') for item in supported),
-        'container_runner_available': _container_runner_available() if is_flask_redis_shape else None,
+        'container_runner_available': _container_runner_available() if compose_adapter else None,
         'source_tests_available': _exists(root, 'web/node_modules/vitest/package.json')
         if is_sanchay_shape else bool((generic_backend.get('tests') or {}).get('file_count')),
     }

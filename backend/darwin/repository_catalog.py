@@ -19,6 +19,11 @@ FLASK_REDIS_ADAPTER_VERSION = '1.0.0'
 FLASK_REDIS_REPOSITORY = 'https://github.com/docker/awesome-compose'
 FLASK_REDIS_COMMIT = '30f4b7f6a6c3b0c0ecf4d4efb0de203c48d11562'
 
+NODE_REDIS_ADAPTER_ID = 'node-redis-compose-v1'
+NODE_REDIS_ADAPTER_VERSION = '1.0.0'
+NODE_REDIS_REPOSITORY = 'https://github.com/dockersamples/nginx-node-redis'
+NODE_REDIS_COMMIT = '2cd75d3b61385ab4cd490af9d0facc5d8595bca7'
+
 CATALOG = [
     {
         'id': 'sanchay',
@@ -131,6 +136,63 @@ CATALOG = [
             ],
         },
     },
+    {
+        'id': 'nginx-node-redis',
+        'name': 'Nginx + Node + Redis counter',
+        'subtitle': 'Second backend · dockersamples',
+        'repository_url': NODE_REDIS_REPOSITORY,
+        'default_ref': 'main',
+        'pinned_commit': NODE_REDIS_COMMIT,
+        'trusted': True,
+        'sparse_paths': ['web'],
+        'summary': (
+            'Docker’s public Nginx + Node.js + Redis counter sample. The same reviewed '
+            'HTTP+Compose adapter base is reused for a different repository with its own '
+            'runtime and port; only the typed manifest differs. The repository compose.yml, '
+            'Dockerfile and nginx config are not executed.'
+        ),
+        'evaluation_type': 'backend_architecture',
+        'license': 'Apache-2.0',
+        'adapter': {
+            'adapter_id': NODE_REDIS_ADAPTER_ID,
+            'adapter_version': NODE_REDIS_ADAPTER_VERSION,
+            'display_name': 'Architecture: replicas for a single-process Node service',
+            'change_summary': (
+                'Baseline is one Node.js replica behind nginx. The candidate adds a second '
+                'identical replica; Redis stays shared. This app is single-process, so no '
+                'worker-count candidate is claimed.'
+            ),
+            'mechanism': (
+                'DARWIN copies web/server.js, package.json and package-lock.json into a '
+                'DARWIN-owned node:22-alpine image, runs it as an unprivileged user, generates '
+                'nginx + Compose, drives seeded HTTP GET /, and verifies the Redis visit counter '
+                'through the gateway. A restart challenge measures gateway recovery.'
+            ),
+            'correctness_rules': [
+                'GET / returns the reviewed visit-counter sentence.',
+                'The visit count strictly increases through the gateway (shared Redis).',
+                'A restarted web replica becomes healthy again on loopback.',
+            ],
+            'scope_note': (
+                'This evaluates deployable process topology for one public sample. It does not '
+                'add Express cluster mode, convert frameworks, or run the repository images.'
+            ),
+            'modes': [
+                {
+                    'id': 'quick',
+                    'label': 'Quick measured comparison',
+                    'description': 'Baseline plus the challenge’s primary candidate, bounded HTTP window.',
+                    'estimated_seconds': 180,
+                },
+                {
+                    'id': 'full',
+                    'label': 'Bounded architecture search',
+                    'description': 'Both reviewed candidates, fault restart, Pareto of p95 / errors / replicas.',
+                    'estimated_seconds': 360,
+                },
+            ],
+        },
+    },
 ]
 
 SANCHAY = CATALOG[0]
@@ -181,7 +243,9 @@ def adapter_catalog() -> dict:
             'inspection': 'Public HTTPS GitHub repositories may be inspected after explicit consent.',
             'execution': 'Only catalogued repositories at the pinned commit may run an audited adapter.',
             'recorded_label': 'Saved results are always labelled recorded, never live.',
-            'minimum_improvement_pct': 5.0,
+            'minimum_improvement_pct': 8.0,
+            'regression_limit_pct': 5.0,
+            'policy_note': 'Backend architecture gates: at least 8% better on the challenge metric, no metric worse than 5%. Client-pipeline adapters state their own thresholds in the verdict.',
             'backend_isolation': 'Linux Docker engine required. Repository Compose files are never executed.',
         },
         'challenges': [

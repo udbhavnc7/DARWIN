@@ -72,11 +72,23 @@ def _dockerfile(manifest: BackendManifest) -> str:
             'ENTRYPOINT ["sh", "-c", "exec uvicorn app:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-1}"]',
             '',
         ])
+    if manifest.runtime == 'node-express':
+        return '\n'.join([
+            'FROM node:22-alpine',
+            'WORKDIR /app',
+            'COPY package.json package-lock.json ./',
+            'RUN npm ci --omit=dev --ignore-scripts',
+            'COPY server.js ./',
+            'USER 65534:65534',
+            f'EXPOSE {manifest.app_port}',
+            'ENTRYPOINT ["node", "server.js"]',
+            '',
+        ])
     raise IsolationError(f'Unsupported reviewed runtime {manifest.runtime!r}', 'unsupported_runtime')
 
 
-def _nginx_conf(replicas: int) -> str:
-    servers = '\n'.join(f'        server web-{index}:8000 max_fails=1 fail_timeout=2s;'
+def _nginx_conf(replicas: int, app_port: int = 8000) -> str:
+    servers = '\n'.join(f'        server web-{index}:{app_port} max_fails=1 fail_timeout=2s;'
                         for index in range(1, replicas + 1))
     return f'''
 worker_processes 1;
@@ -255,7 +267,8 @@ class IsolatedBackend:
             shutil.rmtree(build, ignore_errors=True)
         copied = copy_allowlisted_source(source_root, build, self.manifest.source_files)
         (build / 'Dockerfile').write_text(_dockerfile(self.manifest), encoding='utf-8')
-        (self.work_dir / 'nginx.conf').write_text(_nginx_conf(self.candidate.replicas), encoding='utf-8')
+        (self.work_dir / 'nginx.conf').write_text(
+            _nginx_conf(self.candidate.replicas, self.manifest.app_port), encoding='utf-8')
         config = generate_compose(self.manifest, self.candidate, self.image)
         assert_safe_compose(config)
         self.compose_path.write_text(yaml.safe_dump(config, sort_keys=False), encoding='utf-8')
@@ -490,7 +503,7 @@ class IsolatedBackend:
 
     def verify_counter_monotonic(self, check, probes: int = 5) -> dict:
         import re
-        pattern = re.compile(r'(\d+)')
+        pattern = re.compile(self.manifest.counter_pattern)
         values = []
         with httpx.Client(base_url=self.url, timeout=self.manifest.workload.timeout_s, trust_env=False) as client:
             for _ in range(probes):

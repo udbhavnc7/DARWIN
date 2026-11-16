@@ -23,8 +23,11 @@ from darwin.isolated_backend import (
 from darwin.main import app
 from darwin.performance import metrics
 from darwin.project_capabilities import inspect_source
-from darwin.repository_catalog import FLASK_REDIS_COMMIT
-from darwin.repository_evaluations import _change_text
+from darwin.repository_catalog import (
+    FLASK_REDIS_COMMIT, NODE_REDIS_COMMIT, NODE_REDIS_REPOSITORY,
+)
+from darwin.repository_evaluations import _change_text, default_adapters
+from darwin.repository_import import RepositoryImporter
 
 APP = """from flask import Flask
 from redis import Redis
@@ -41,6 +44,36 @@ def flask_tree(root: Path) -> Path:
     (root / 'flask-redis').mkdir(parents=True)
     (root / 'flask-redis/app.py').write_text(APP, encoding='utf-8')
     (root / 'flask-redis/requirements.txt').write_text('flask\nredis\n', encoding='utf-8')
+    return root
+
+
+NODE_APP = """const express = require('express');
+const redis = require('redis');
+const app = express();
+const redisClient = redis.createClient({host: 'redis', port: 6379});
+
+app.get('/', function (req, res) {
+  redisClient.get('numVisits', function (err, numVisits) {
+    res.send('Number of visits is: ' + (parseInt(numVisits) || 0));
+  });
+});
+
+app.listen(5000, function () {
+  console.log('Web application is listening on port 5000');
+});
+"""
+
+
+def node_tree(root: Path) -> Path:
+    (root / 'web').mkdir(parents=True, exist_ok=True)
+    (root / 'web/server.js').write_text(NODE_APP, encoding='utf-8')
+    (root / 'web/package.json').write_text(json.dumps({
+        'name': 'web', 'version': '1.0.0',
+        'dependencies': {'express': '^4.17.2', 'redis': '3.1.2'},
+    }), encoding='utf-8')
+    (root / 'web/package-lock.json').write_text(json.dumps({
+        'name': 'web', 'lockfileVersion': 3, 'packages': {},
+    }), encoding='utf-8')
     return root
 
 
@@ -213,6 +246,29 @@ def test_change_document_has_apply_and_rollback():
     assert '## Rollback' in text
     assert 'Two replicas' in text
     assert 'lab-only' in text
+    assert 'Recommended topology' not in text
+    assert 'operator choice' in text
+
+
+def test_change_document_retains_the_baseline_without_a_winner():
+    record = {
+        'source': {'url': 'https://github.com/dockersamples/nginx-node-redis',
+                   'commit_sha': NODE_REDIS_COMMIT},
+        'adapter_id': 'node-redis-compose-v1', 'adapter_version': '1.0.0',
+        'evaluation_id': 'e2', 'mode': 'quick', 'evidence_kind': 'live',
+        'workload': {'challenge': 'faster'},
+    }
+    verdict = {
+        'status': 'BASELINE_RETAINED', 'label': 'Baseline retained',
+        'reason': 'No candidate cleared the gates.',
+        'baseline_id': 'baseline-1x1', 'winner_id': 'baseline-1x1',
+        'comparison': [{'candidate_id': 'baseline-1x1', 'label': 'Original',
+                        'replicas': 1, 'workers': 1}],
+    }
+    text = _change_text(record, verdict)
+    assert 'Keep the baseline topology' in text
+    assert 'Recommended topology' not in text
+    assert 'deployment change is proposed' in text
 
 
 def test_manifest_candidates_expose_only_declared_dimensions():
@@ -473,3 +529,65 @@ def test_record_without_registered_evidence_fails_closed(api):
     change = client.get(f'/api/project-evaluations/{ident}/change')
     assert 'Unverified change' not in change.text
     assert 'No deployable change is exported' in change.text
+
+
+class StubGit:
+    def resolve(self, url, ref):
+        return NODE_REDIS_COMMIT
+
+
+def test_second_repository_is_reviewed_through_the_same_interface(api, monkeypatch):
+    """A different repository reuses the adapter base, not the Flask manifest."""
+    client, engine, root = api
+    monkeypatch.setattr('darwin.adapters.http_compose.runner_available',
+                        lambda: (True, 'Linux Docker engine with cgroup v2'))
+    engine.adapters = default_adapters()
+    tree = node_tree(root / 'node-source')
+    engine.importer = RepositoryImporter(
+        cache_root=root / 'cache', git=StubGit(),
+        source_override={NODE_REDIS_REPOSITORY: tree}, resolve_override=NODE_REDIS_COMMIT,
+    )
+
+    inspected = client.post('/api/repositories/inspect', json={
+        'url': NODE_REDIS_REPOSITORY, 'ref': 'main', 'consent': True})
+    assert inspected.status_code == 200
+    record = inspected.json()
+    assert record['execution_allowed'] is True
+    assert [item['adapter_id'] for item in record['supported_evaluations']] == [
+        'node-redis-compose-v1']
+
+    preview = client.get(
+        f"/api/repositories/inspections/{record['inspection_id']}/candidates").json()
+    assert preview['adapter_id'] == 'node-redis-compose-v1'
+    assert {item['candidate_id'] for item in preview['candidates']} == {
+        'baseline-1x1', 'replicas-2x1'}
+    assert preview['eligible'] is True
+
+
+def test_incompatible_repository_is_unsupported_through_the_api(api, monkeypatch):
+    client, engine, root = api
+    monkeypatch.setattr('darwin.adapters.http_compose.runner_available',
+                        lambda: (False, 'A local Linux Docker engine is not running.'))
+    engine.adapters = default_adapters()
+    tree = root / 'docs-only'
+    tree.mkdir()
+    (tree / 'README.md').write_text('# Notes only\n', encoding='utf-8')
+    engine.importer = RepositoryImporter(
+        cache_root=root / 'cache', git=StubGit(),
+        source_override={'https://github.com/example/notes-only': tree},
+        resolve_override='a' * 40,
+    )
+
+    inspected = client.post('/api/repositories/inspect', json={
+        'url': 'https://github.com/example/notes-only', 'ref': 'main', 'consent': True})
+    assert inspected.status_code == 200
+    record = inspected.json()
+    assert record['execution_allowed'] is False
+    assert record['supported_evaluations'] == []
+    assert record['evaluation_status'] == 'UNSUPPORTED_PROJECT'
+
+    refused = client.post('/api/project-evaluations', json={
+        'inspection_id': record['inspection_id'], 'mode': 'quick'})
+    assert refused.status_code == 409
+    assert 'No approved executable adapter' in refused.json()['detail']
+    assert engine.list_evaluations() == []

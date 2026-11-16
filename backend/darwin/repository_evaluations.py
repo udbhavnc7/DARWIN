@@ -126,16 +126,45 @@ def _change_text(record: dict, verdict: dict) -> str:
         '',
         '## Apply',
         '',
-        f'- Baseline topology: {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s).',
-        f'- Recommended topology: {winner.get("replicas")} replica(s) × {winner.get("workers")} worker(s).',
-        '- Deploy that many replicas of the same reviewed image behind the gateway and keep the '
-        'shared Redis service. Do not copy the repository Compose file or Dockerfile; DARWIN '
-        'generated and tested its own stack.',
+    ]
+    status = verdict.get('status')
+    if status == 'VERIFIED_IMPROVEMENT':
+        lines += [
+            f'- Baseline topology: {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s).',
+            f'- Recommended topology: {winner.get("replicas")} replica(s) × {winner.get("workers")} worker(s).',
+            '- Deploy that many replicas of the same reviewed image behind the gateway and keep the '
+            'shared Redis service. Do not copy the repository Compose file or Dockerfile; DARWIN '
+            'generated and tested its own stack.',
+        ]
+    elif status == 'TRADEOFF_REQUIRES_CHOICE':
+        lines += [
+            f'- Baseline topology: {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s).',
+            f'- Candidate topology: {winner.get("replicas")} replica(s) × {winner.get("workers")} worker(s) '
+            f'({winner.get("label") or winner.get("candidate_id")}).',
+            '- This is an operator choice, not an automatic recommendation. Adopt the candidate only '
+            'if its measured regressions are acceptable for this deployment.',
+        ]
+    elif status == 'BASELINE_RETAINED':
+        lines += [
+            f'- Keep the baseline topology: {baseline.get("replicas")} replica(s) × '
+            f'{baseline.get("workers")} worker(s).',
+            '- No candidate cleared the gates, so no deployment change is proposed.',
+        ]
+    else:
+        lines += ['- No deployment change is authorised for this verdict.']
+    lines += [
         '',
         '## Rollback',
         '',
-        f'- Restore {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s). '
-        'No data migration is required because both topologies share the same Redis state.',
+    ]
+    if status in ('VERIFIED_IMPROVEMENT', 'TRADEOFF_REQUIRES_CHOICE', 'BASELINE_RETAINED'):
+        lines += [
+            f'- Restore {baseline.get("replicas")} replica(s) × {baseline.get("workers")} worker(s). '
+            'No data migration is required because both topologies share the same Redis state.',
+        ]
+    else:
+        lines += ['- Nothing was applied, so no rollback is required.']
+    lines += [
         '',
         '## Limits',
         '',
@@ -246,13 +275,9 @@ class RepositoryStore:
 
 
 def default_adapters():
-    from darwin.adapters.flask_redis import FlaskRedisAdapter
-    from darwin.adapters.sanchay_reporting import SanchayReportingAdapter
+    from darwin.adapters.registry import adapters_by_id
 
-    installed = {}
-    for adapter in (SanchayReportingAdapter(), FlaskRedisAdapter()):
-        installed[adapter.id] = adapter
-    return installed
+    return adapters_by_id()
 
 
 class RepositoryEngine:
