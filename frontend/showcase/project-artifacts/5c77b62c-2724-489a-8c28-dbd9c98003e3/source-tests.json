@@ -1,0 +1,4 @@
+{
+  "status": "not_run",
+  "reason": "This adapter verifies HTTP oracles in isolation; it does not install repository test runners."
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "5c77b62c-2724-489a-8c28-dbd9c98003e3",
+  "inspection_id": "842c194d-b318-4549-b035-6e50804412f7",
+  "source_commit": "2cd75d3b61385ab4cd490af9d0facc5d8595bca7",
+  "adapter_id": "node-redis-compose-v1",
+  "adapter_version": "1.0.0",
+  "evidence_kind": "live",
+  "created_at": "2026-11-16T15:53:40.118751+00:00",
+  "files": {
+    "benchmark.json": "794865e3e67777c9738956804a134218de94e863cf478fc2d93edd59549b3828",
+    "candidate.diff": "252cfc9bfa1a84aa5f7267e3bfbc6869b26ac575bdfcae501e75c21db4f5b28f",
+    "change.md": "8919dda8f366337fcc1ad707b31ead0102f4fe3dfb6af3e2ced46e6d9cf7a609",
+    "environment.json": "cbb41a0f3a2aaf94c3e254a630346417948b7257977632101b64fd6f1a541889",
+    "parity.json": "cded99fd4266646d6101ca1d0629fd93447e8e505ff82804f2e1f5e23dc5c419",
+    "replay.md": "b652358e3423faaeed54c2f70549cb8db70351833536478b9789f55bbb640746",
+    "source-tests.json": "57bcebffc9c76f0d74773b76368377d684eb9065eaa910009c459709661fac64",
+    "source.json": "fe3ccda76205567ddd34dbb8398de3d09a06809e5c1409b68997545e00465be8",
+    "verdict.json": "e1cd0b92256f6fb13e55ccab2cd6f6a9820273cc146792c1340d0a37d232f919",
+    "workload.json": "feba2f772813642d5b746ed17fc561c911340b692fb4ce4f1c65f478ff1f21cc"
+  }
+}

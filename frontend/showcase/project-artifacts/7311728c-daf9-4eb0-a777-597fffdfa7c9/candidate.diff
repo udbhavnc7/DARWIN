@@ -1,0 +1,4 @@
+--- a/darwin-owned-compose.yaml
++++ b/darwin-owned-compose.yaml
+@@ DARWIN generates this file; the repository Compose file is never used @@
++ replicas-2x1: replicas=2 workers=1

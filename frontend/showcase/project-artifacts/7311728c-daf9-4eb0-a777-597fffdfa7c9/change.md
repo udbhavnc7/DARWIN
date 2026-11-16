@@ -1,0 +1,34 @@
+# DARWIN architecture change
+
+- Source: https://github.com/dockersamples/nginx-node-redis at `2cd75d3b61385ab4cd490af9d0facc5d8595bca7`
+- Adapter: `node-redis-compose-v1` `1.0.0`
+- Verdict: **TRADEOFF_REQUIRES_CHOICE** — Tradeoff — choose
+- Evidence: live isolated Linux Docker runs, mode `quick`, challenge `faster`
+- Evaluation: `7311728c-daf9-4eb0-a777-597fffdfa7c9`
+
+## Measured comparison
+
+| Candidate | Replicas | Workers | p95 ms | req/s | CPU s | Peak MB | Recovery s |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Original: 1 replica | 1 | 1 | 3.530599999066908 | 6.0 | 0.2079 | 39.41 | None |
+| Two stateless replicas | 2 | 1 | 3.3851000007416587 | 6.0 | 0.2762 | 64.82 | None |
+
+## Decision
+
+Two stateless replicas was 4.1% better on p95_ms but regressed on CPU seconds per window +32.9%, peak memory +64.5%. DARWIN will not hide that cost behind a single winner score.
+
+## Apply
+
+- Baseline topology: 1 replica(s) × 1 worker(s).
+- Recommended topology: 2 replica(s) × 1 worker(s).
+- Deploy that many replicas of the same reviewed image behind the gateway and keep the shared Redis service. Do not copy the repository Compose file or Dockerfile; DARWIN generated and tested its own stack.
+
+## Rollback
+
+- Restore 1 replica(s) × 1 worker(s). No data migration is required because both topologies share the same Redis state.
+
+## Limits
+
+- Measured on one host with the load generator and the service sharing CPU. Absolute numbers are lab-only and do not establish production performance.
+- Only the reviewed workload path and oracles were exercised. HTTP availability alone is not business correctness; counter monotonicity was the oracle here.
+- Simulation results never authorise a change in this document.

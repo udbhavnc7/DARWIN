@@ -1,0 +1,796 @@
+{
+  "evidence_kind": "live",
+  "runs": [
+    {
+      "candidate_id": "baseline-1x1",
+      "label": "Original: 1 replica",
+      "description": "Single Node.js process behind nginx, shared Redis visit counter.",
+      "replicas": 1,
+      "workers": 1,
+      "topology": {
+        "candidate_id": "baseline-1x1",
+        "replicas": 1,
+        "workers": 1,
+        "nodes": [
+          {
+            "id": "gateway",
+            "label": "Nginx gateway",
+            "kind": "gateway"
+          },
+          {
+            "id": "web-1",
+            "label": "App replica 1 × 1 worker(s)",
+            "kind": "service"
+          },
+          {
+            "id": "redis",
+            "label": "Redis (shared counter)",
+            "kind": "cache"
+          }
+        ],
+        "edges": [
+          {
+            "source": "gateway",
+            "target": "web-1",
+            "label": "HTTP"
+          },
+          {
+            "source": "web-1",
+            "target": "redis",
+            "label": "counter"
+          }
+        ],
+        "summary": "1 replica(s), 1 worker(s) each, shared Redis"
+      },
+      "compose_sha256": "719c430a4a90c993b8fef21ad96b5aa3b676fddec5aed799030b76f411a48699",
+      "metrics": {
+        "schema_version": 1,
+        "p50_ms": 3.2358999997086357,
+        "p95_ms": 3.780900000492693,
+        "p99_ms": 17.242899999473593,
+        "requests_per_s": 6.0,
+        "error_rate": 0.0,
+        "cpu_seconds": 0.2159,
+        "memory_peak_mb": 39.852,
+        "recovery_s": null,
+        "sample_count": 36
+      },
+      "recovery_s": null,
+      "recovery_detail": null,
+      "ready_s": 0.039,
+      "resources": {
+        "measured": true,
+        "cpu_seconds": 0.2159,
+        "memory_peak_mb": 39.852,
+        "memory_basis": "cgroup_peak_sum",
+        "containers": 2,
+        "source": "docker-cgroup-v2"
+      },
+      "samples": [
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 17.242899999473593,
+          "finished_s": 0.026816199999302626
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.2358999997086357,
+          "finished_s": 0.1703680999999051
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.0793999994784826,
+          "finished_s": 0.3370648000000074
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.996700000949204,
+          "finished_s": 0.503628899999967
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.378299999894807,
+          "finished_s": 0.6707246999994823
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.0062999994697748,
+          "finished_s": 0.836727099998825
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.0324999988806667,
+          "finished_s": 1.0031476999993174
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.2766000001865905,
+          "finished_s": 1.1693307999994431
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.242500000851578,
+          "finished_s": 1.3372583000000304
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.2574000015301863,
+          "finished_s": 1.5034971000004589
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1048000000737375,
+          "finished_s": 1.6701494999997522
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.0121999989205506,
+          "finished_s": 1.8367837999994663
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.389499999684631,
+          "finished_s": 2.0038206999997783
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.780900000492693,
+          "finished_s": 2.170828899999833
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.0871999988448806,
+          "finished_s": 2.3366021999991062
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.3941000001505017,
+          "finished_s": 2.5038745000001654
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.160399999615038,
+          "finished_s": 2.6702930999999808
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.3631999995122897,
+          "finished_s": 2.837053499999456
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.712400000746129,
+          "finished_s": 3.0032570000003034
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1691999993199715,
+          "finished_s": 3.170069499999954
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.297499999462161,
+          "finished_s": 3.3369960999989416
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.9263000014907448,
+          "finished_s": 3.503011200000401
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.222299999833922,
+          "finished_s": 3.670266299999639
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.4471999988454627,
+          "finished_s": 3.8374198999990767
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.4418999985064147,
+          "finished_s": 4.00392809999903
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.3082999998441665,
+          "finished_s": 4.1707716999990225
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.2855000008567004,
+          "finished_s": 4.33691859999999
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.080299999055569,
+          "finished_s": 4.503705999999511
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.3903999992617173,
+          "finished_s": 4.670482899999115
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1928000007610535,
+          "finished_s": 4.837176600000021
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.5559999996621627,
+          "finished_s": 5.004230900000039
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.425200000492623,
+          "finished_s": 5.170502099999794
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1059000011737226,
+          "finished_s": 5.336745700000392
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.090199999860488,
+          "finished_s": 5.503160399999615
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.777099998842459,
+          "finished_s": 5.671151099999406
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.286600000137696,
+          "finished_s": 5.837198699999135
+        }
+      ],
+      "repetitions": [
+        {
+          "repetition": 1,
+          "metrics": {
+            "schema_version": 1,
+            "p50_ms": 3.2358999997086357,
+            "p95_ms": 3.780900000492693,
+            "p99_ms": 17.242899999473593,
+            "requests_per_s": 6.0,
+            "error_rate": 0.0,
+            "cpu_seconds": 0.2159,
+            "memory_peak_mb": 39.852,
+            "recovery_s": null,
+            "sample_count": 36
+          },
+          "recovery_s": null,
+          "ready_s": 0.039
+        }
+      ],
+      "cleanup_status": "completed",
+      "baseline": true
+    },
+    {
+      "candidate_id": "replicas-2x1",
+      "label": "Two stateless replicas",
+      "description": "Second identical Node.js process behind nginx; Redis remains shared.",
+      "replicas": 2,
+      "workers": 1,
+      "topology": {
+        "candidate_id": "replicas-2x1",
+        "replicas": 2,
+        "workers": 1,
+        "nodes": [
+          {
+            "id": "gateway",
+            "label": "Nginx gateway",
+            "kind": "gateway"
+          },
+          {
+            "id": "web-1",
+            "label": "App replica 1 × 1 worker(s)",
+            "kind": "service"
+          },
+          {
+            "id": "web-2",
+            "label": "App replica 2 × 1 worker(s)",
+            "kind": "service"
+          },
+          {
+            "id": "redis",
+            "label": "Redis (shared counter)",
+            "kind": "cache"
+          }
+        ],
+        "edges": [
+          {
+            "source": "gateway",
+            "target": "web-1",
+            "label": "HTTP"
+          },
+          {
+            "source": "gateway",
+            "target": "web-2",
+            "label": "HTTP"
+          },
+          {
+            "source": "web-1",
+            "target": "redis",
+            "label": "counter"
+          },
+          {
+            "source": "web-2",
+            "target": "redis",
+            "label": "counter"
+          }
+        ],
+        "summary": "2 replica(s), 1 worker(s) each, shared Redis"
+      },
+      "compose_sha256": "d56263fec7f4560fda18f7ea7000b4ede1c3a7dfd5319cc244bfaec5aa230bd6",
+      "metrics": {
+        "schema_version": 1,
+        "p50_ms": 3.213399999367539,
+        "p95_ms": 3.819000001385575,
+        "p99_ms": 3.991400000813883,
+        "requests_per_s": 6.0,
+        "error_rate": 0.0,
+        "cpu_seconds": 0.3008,
+        "memory_peak_mb": 64.719,
+        "recovery_s": null,
+        "sample_count": 36
+      },
+      "recovery_s": null,
+      "recovery_detail": null,
+      "ready_s": 0.031,
+      "resources": {
+        "measured": true,
+        "cpu_seconds": 0.3008,
+        "memory_peak_mb": 64.719,
+        "memory_basis": "cgroup_peak_sum",
+        "containers": 3,
+        "source": "docker-cgroup-v2"
+      },
+      "samples": [
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.213399999367539,
+          "finished_s": 0.012343299998974544
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.2395999987784307,
+          "finished_s": 0.17045369999868853
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1400000007124618,
+          "finished_s": 0.336656800000128
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.2811999990371987,
+          "finished_s": 0.5035271999986435
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1912999984342605,
+          "finished_s": 0.670299099998374
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.853500000128406,
+          "finished_s": 0.8364819999987958
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.182599999490776,
+          "finished_s": 1.0034676999985095
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.039799999896786,
+          "finished_s": 1.1699265999995987
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.321700000014971,
+          "finished_s": 1.337305600000036
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.069300000788644,
+          "finished_s": 1.5036228999997547
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.4108999989257427,
+          "finished_s": 1.6704431999987719
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1181999984255526,
+          "finished_s": 1.8368397999984154
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.840900000592228,
+          "finished_s": 2.003203599999324
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.524599998854683,
+          "finished_s": 2.1709474999988743
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.755200001047342,
+          "finished_s": 2.3365137000000686
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.163900000799913,
+          "finished_s": 2.5036314999997558
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.419200000280398,
+          "finished_s": 2.670734299999822
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.818200000547222,
+          "finished_s": 2.836398299999928
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.991400000813883,
+          "finished_s": 3.0047431999992114
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.0878999987180578,
+          "finished_s": 3.170284099998753
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.9477999996743165,
+          "finished_s": 3.336838199998965
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.177899998263456,
+          "finished_s": 3.5035070999983873
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.1677999995736172,
+          "finished_s": 3.670237399999678
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.131599998596357,
+          "finished_s": 3.836940399998639
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.819000001385575,
+          "finished_s": 4.004567500000121
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.3813999998528743,
+          "finished_s": 4.170540399998572
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.610300000218558,
+          "finished_s": 4.337377399999241
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.7879999999859137,
+          "finished_s": 4.504504099999394
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.6942000006092712,
+          "finished_s": 4.671061999999438
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 2.9785000006086193,
+          "finished_s": 4.836560899999313
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.5635000003821915,
+          "finished_s": 5.003928299998734
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.584099998988677,
+          "finished_s": 5.170861699998568
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.4367999996902654,
+          "finished_s": 5.337254599999142
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.4849999992729863,
+          "finished_s": 5.5040126999992935
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.2143999997060746,
+          "finished_s": 5.670411399998557
+        },
+        {
+          "seed": 7,
+          "ok": true,
+          "status": 200,
+          "error": null,
+          "latency_ms": 3.4967999999935273,
+          "finished_s": 5.83692499999961
+        }
+      ],
+      "repetitions": [
+        {
+          "repetition": 1,
+          "metrics": {
+            "schema_version": 1,
+            "p50_ms": 3.213399999367539,
+            "p95_ms": 3.819000001385575,
+            "p99_ms": 3.991400000813883,
+            "requests_per_s": 6.0,
+            "error_rate": 0.0,
+            "cpu_seconds": 0.3008,
+            "memory_peak_mb": 64.719,
+            "recovery_s": null,
+            "sample_count": 36
+          },
+          "recovery_s": null,
+          "ready_s": 0.031
+        }
+      ],
+      "cleanup_status": "completed",
+      "baseline": false
+    }
+  ],
+  "pareto": [
+    {
+      "candidate_id": "baseline-1x1",
+      "objectives": [
+        3.780900000492693,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "complete": true,
+  "skipped": [],
+  "repetitions_requested": 1,
+  "wall_clock_s": 300,
+  "environment": {
+    "isolation": "linux-docker",
+    "platform": "nt",
+    "repository_compose_used": false,
+    "load_window_s": 6,
+    "load_rate_per_s": 6
+  },
+  "note": "Each run deployed a DARWIN-owned isolated Compose stack on loopback. The repository Compose file and Dockerfile were not used. Latency, throughput and recovery were measured live; simulation never wins."
+}

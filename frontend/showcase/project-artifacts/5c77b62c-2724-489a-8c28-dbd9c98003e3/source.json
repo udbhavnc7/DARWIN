@@ -1,0 +1,32 @@
+{
+  "source": {
+    "url": "https://github.com/dockersamples/nginx-node-redis",
+    "owner": "dockersamples",
+    "repo": "nginx-node-redis",
+    "requested_ref": "main",
+    "commit_sha": "2cd75d3b61385ab4cd490af9d0facc5d8595bca7",
+    "short_sha": "2cd75d3b6138",
+    "trusted": true,
+    "cache_key": "dockersamples__nginx-node-redis__2cd75d3b6138",
+    "file_count": 10,
+    "size_bytes": 32509,
+    "metadata": {
+      "size": 86,
+      "default_branch": "main",
+      "language": "JavaScript",
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "pushed_at": "2025-09-04T19:51:00Z"
+    }
+  },
+  "adapter": {
+    "adapter_id": "node-redis-compose-v1",
+    "adapter_version": "1.0.0"
+  },
+  "inspection_id": "842c194d-b318-4549-b035-6e50804412f7"
+}
