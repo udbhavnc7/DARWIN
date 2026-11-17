@@ -9,7 +9,7 @@ export function ThemePicker({theme, onChange, onReplay}: {
   const trigger = useRef<HTMLButtonElement>(null);
 
   return <>
-    <button ref={trigger} className="theme-trigger" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>
+    <button ref={trigger} className="theme-trigger" aria-haspopup="dialog" aria-label={`Theme: ${themes[theme].name}`} onClick={() => dialog.current?.showModal()}>
       <span className="theme-swatch current-swatch" aria-hidden="true"/><strong>{themes[theme].name}</strong>
       <Icon name="chevron" className="theme-chevron"/>
     </button>

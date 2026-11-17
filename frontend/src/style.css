@@ -221,7 +221,7 @@ p { line-height: 1.62; }
   border-radius: 2px; color: var(--muted); font-size: 12.5px; font-weight: 600; text-decoration: none; transition: background .16s, color .16s;
 }
 .section-nav a:hover { color: var(--text); background: var(--raised); }
-.nav-index { width: 18px; flex: none; color: var(--muted); font: 9.5px var(--mono); letter-spacing: .02em; opacity: .8; }
+.nav-index { width: 18px; flex: none; color: var(--muted); font: 9.5px var(--mono); letter-spacing: .02em; }
 .section-nav a .ui-icon { width: 15px; height: 15px; }
 .section-nav a[aria-current] { color: var(--text); border-color: var(--line); background: var(--raised); box-shadow: inset 2px 0 0 var(--accent); }
 .section-nav a[aria-current] .nav-index, .section-nav a[aria-current] .ui-icon { color: var(--accent); }
@@ -471,6 +471,7 @@ select {
   background-size: 4px 4px; background-repeat: no-repeat;
 }
 select:hover:not(:disabled), input:hover:not(:disabled) { border-color: var(--accent); }
+::placeholder { color: var(--muted); opacity: 1; }
 button, .action-link {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px;
   padding: 8px 13px; border: 1px solid var(--control-line); border-radius: 2px;
@@ -700,7 +701,7 @@ body:has(.tour[open]) { overflow: hidden; }
   .builder-grid, .experiment-grid, .search-grid { grid-template-columns: minmax(215px, 1fr) minmax(0, 1.9fr); }
 }
 @media (max-width: 970px) {
-  .search-grid { grid-template-columns: 1fr; }
+  .search-grid { grid-template-columns: minmax(0, 1fr); }
   .search-setup { position: static; }
   .search-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .search-controls > :first-child { grid-column: auto; }
@@ -870,12 +871,13 @@ body:has(.tour[open]) { overflow: hidden; }
 .verdict-panel { margin-top: 18px; padding: 18px; border: 1px solid color-mix(in srgb, var(--bad) 30%, var(--line)); border-radius: 2px; background: var(--field); }
 .verdict-header h3 { margin: 2px 0 6px; font-family: var(--display); font-size: 20px; }
 .verdict-header p { margin: 0; font-size: 12.5px; line-height: 1.5; }
-.verdict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 15px; }
+.verdict-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 15px; }
+.verdict-grid > * { min-width: 0; }
 .verdict-grid h4 { margin: 0 0 7px; font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
 .verdict-reasons, .verdict-candidates { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
-.verdict-reasons li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 9px; border-radius: 2px; background: var(--bad-bg); color: var(--bad); font-size: 11.5px; }
+.verdict-reasons li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 9px; border-radius: 2px; background: var(--bad-bg); color: var(--bad); font-size: 11.5px; min-width: 0; }
 .verdict-reasons strong { font-family: var(--mono); font-size: 10px; }
-.verdict-candidates li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 11.5px; }
+.verdict-candidates li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 11.5px; min-width: 0; }
 .verdict-candidates li > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .verdict-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; padding-top: 13px; border-top: 1px solid var(--line); }
 .verdict-panel > .muted { margin: 10px 0 0; font-size: 11.5px; }
@@ -887,7 +889,7 @@ body:has(.tour[open]) { overflow: hidden; }
   .readiness-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
-  .readiness-checks, .verdict-grid { grid-template-columns: 1fr; }
+  .readiness-checks, .verdict-grid { grid-template-columns: minmax(0, 1fr); }
   .readiness-footer { align-items: flex-start; flex-direction: column; }
   .verdict-actions .action, .verdict-actions .action-link { width: 100%; justify-content: center; }
 }
