@@ -17,4 +17,5 @@ where = ["backend"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["integration: needs a disposable PostgreSQL database and Redis"]
 

@@ -1,6 +1,6 @@
 # DARWIN — Project Context
 
-> **Snapshot:** 14 November 2026
+> **Snapshot:** 17 November 2026
 > **Repository:** [github.com/udbhavnc7/DARWIN](https://github.com/udbhavnc7/DARWIN) (public, MIT)
 > **Short version:** the ten-phase MVP is functionally complete. DARWIN is roughly **82% of the way to a production-ready release**; the remainder is multi-host validation, per-user security, deeper packaging, and refreshed demo assets — not missing core features.
 
@@ -119,7 +119,7 @@ Every run stores its configuration, source snapshot, seeds, manifests, logs, fau
 | MVP phases | **10 / 10 complete** |
 | Core user workflows | **All working locally** |
 | Production readiness | **~82% (judgment, not a computed metric)** |
-| Tests | **108 passing, 14 skipped** locally; **14 shop integration tests pass** against a dedicated `*_test` database, and CI runs them with PostgreSQL and Redis services |
+| Tests | **216 passing, nothing skipped** locally; the **14 shop integration tests** reuse the demo cluster or start disposable PostgreSQL/Redis containers, and CI runs them with PostgreSQL and Redis services |
 | Frontend production build | **Passing**, checked by CI on every push |
 | Docker acceptance | **Re-verified on 2026-11-14** on Docker Desktop Engine 29.9.3 (Linux, cgroup v2), including recovery windows and cleanup |
 | Exhibition path | **Verified on both runtimes:** native smoke, benchmark, and fault scenarios, plus Docker smoke, benchmark, faults, and search |
@@ -192,7 +192,7 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 
 | Check | Result |
 | --- | --- |
-| Backend suite | 108 passed, 14 skipped; shop integrations 14 passed with `darwin_shop_test` |
+| Backend suite | 216 passed, nothing skipped; the 14 shop integrations auto-provisioned a disposable `darwin_shop_test` database and Redis on `127.0.0.1:16380` |
 | Frontend build | Passed, including `tsc --noEmit`; CI workflow committed |
 | Preflight | Ready; required checks green, Docker and bundled Toxiproxy detected |
 | Judge scenarios | Quick smoke completed in 18 s; unsafe payment rejected all 3 repetitions |
@@ -224,7 +224,6 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 
 | Gap | Why it matters |
 | --- | --- |
-| 14 integration tests skip by default locally | CI runs them with PostgreSQL and Redis, but a bare local checkout still skips them unless `DARWIN_TEST_DATABASE_URL` is set |
 | Docker search is intentionally small | Two generations and six measured attempts found two feasible candidates; a larger budget would cover more of the 36 genomes |
 | Native fault adapter is Windows-only | Linux users must use Docker for measured/fault runs |
 | Packaging stops at the launcher | No installer, containerized control plane, or service manager |
@@ -296,15 +295,19 @@ A fresh checkout has the code and the written results, but not the historical ru
 ## 10. How to verify this status yourself
 
 ```powershell
-# Fast suite: expect 108 passed, 14 skipped in a clean local environment
+# Full suite: expect 216 passed. Integration tests find the demo cluster or start
+# disposable Docker containers on demand, then clean them up.
 .\.venv\Scripts\python.exe -m pytest -q
+
+# Fast unit-only suite: no PostgreSQL or Redis required
+.\.venv\Scripts\python.exe -m pytest -q -m "not integration"
 
 # Start, inspect, and stop the whole local stack
 .\.venv\Scripts\python.exe scripts/demo.py start
 .\.venv\Scripts\python.exe scripts/demo.py status
 .\.venv\Scripts\python.exe scripts/demo.py stop
 
-# Shop integration against a dedicated disposable database (name must end in _test)
+# Optional: force the shop integration suite onto a specific disposable database
 $env:DARWIN_TEST_DATABASE_URL = 'postgresql://darwin:darwin_demo@127.0.0.1:55432/darwin_shop_test'
 .\.venv\Scripts\python.exe -m pytest -q tests/test_shop.py
 

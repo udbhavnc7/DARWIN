@@ -492,10 +492,16 @@ Interactive schema: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). Ex
 ## Testing
 
 ```powershell
-# Fast suite (PostgreSQL/Redis integrations skip when those services are not configured)
+# Fast suite: unit tests only, no PostgreSQL or Redis needed
+.\.venv\Scripts\python.exe -m pytest -q -m "not integration"
+
+# Full suite. The shop integration tests find or provision their own resources:
+# they reuse the demo cluster from scripts/run_shop.py (creating darwin_shop_test
+# when missing), or start short-lived Docker containers for PostgreSQL and Redis
+# when no local service answers. Nothing is left running afterwards.
 .\.venv\Scripts\python.exe -m pytest -q
 
-# Shop integration against a dedicated disposable database (name must end in _test)
+# Optional: force the integration tests onto a specific dedicated database
 $env:DARWIN_TEST_DATABASE_URL = 'postgresql://darwin:darwin_demo@127.0.0.1:55432/darwin_shop_test'
 .\.venv\Scripts\python.exe -m pytest -q tests/test_shop.py
 
@@ -515,11 +521,11 @@ npm --prefix frontend run build
 
 CI runs the backend suite (including PostgreSQL and Redis integrations) and the dashboard build on every push and pull request. Docker acceptance stays a manual workflow because it needs a Linux cgroup v2 engine and takes tens of minutes.
 
-Latest local run (2026-11-16):
+Latest local run (2026-11-17):
 
-- **158 passed, 14 skipped.** Added full test suites for repository import, Sanchay reporting adapter, verdict policy, project capabilities, and project evaluation API. The 14 skipped tests are optional PostgreSQL/Redis integration tests.
+- **216 passed, nothing skipped.** The 14 shop integration tests now provision a disposable `darwin_shop_test` database and a Redis listener on `127.0.0.1:16380` automatically, so a bare checkout exercises them instead of skipping. `pytest -m "not integration"` still runs the fast unit-only suite.
 - **Real Project Mode verified**: recorded full run `141c9b56` passed 68/68 correctness checks and 29/29 Vitest tests, with a 28.5% latency improvement and 100% paired wins at 50,000 rows. Live full run `e3057b59` passed 68/68 checks with a 22.4% improvement and 97% paired wins; source tests were skipped because the fetched cache has no installed Vitest runtime, and the verdict shows that reason. See [Validation Report](docs/REAL_PROJECT_MODE_VALIDATION.md).
-- **14 shop integration tests passed** against the dedicated `darwin_shop_test` database, including replay, concurrency, ledger, and reset.
+- **14 shop integration tests passed** against an auto-provisioned `darwin_shop_test` database and Redis on `127.0.0.1:16380`, including replay, concurrency, ledger, and reset; the disposable containers were removed afterwards.
 - **Frontend production build passed**, including `tsc --noEmit`.
 - **Quick checkout smoke completed in 18 s** with three measured attempts and verified cleanup; the unsafe-payment scenario rejected all three repetitions.
 - **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including recovery windows and cleanup. Fresh run: smoke 114 s, paired benchmark 328 s (median p95 102.75 ms baseline vs 77.65 ms candidate), safe faults 3/3 with every recovery window observed, unsafe fixture 3/3 rejected for I-01, and search completed two generations and six attempts with two feasible Pareto candidates.

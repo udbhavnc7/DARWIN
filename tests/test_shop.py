@@ -6,7 +6,6 @@ import subprocess
 import sys
 import time
 import json
-import shutil
 from contextlib import contextmanager
 import redis
 
@@ -19,12 +18,12 @@ from fastapi.testclient import TestClient
 from darwin.shop import services
 from darwin.shop.db import connection, initialize, invariant_report, snapshot
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope='module')
-def shop_services():
-    dsn = os.environ.get('DARWIN_TEST_DATABASE_URL')
-    if not dsn:
-        pytest.skip('Set DARWIN_TEST_DATABASE_URL to a dedicated PostgreSQL *_test database')
+def shop_services(test_database_url):
+    dsn = test_database_url
     parsed = psycopg.conninfo.conninfo_to_dict(dsn)
     if not parsed.get('dbname', '').endswith('_test'):
         pytest.fail('Refusing to reset a database without the _test suffix')
@@ -206,31 +205,16 @@ def running_process(command, ready_url, env=None):
 
 
 @pytest.fixture
-def live_redis():
-    executable = shutil.which('redis-server')
-    if not executable:
-        pytest.skip('redis-server on PATH required for real-cache tests')
-    process = subprocess.Popen([executable, '--bind', '127.0.0.1', '--port', '16380', '--save', '', '--appendonly', 'no'],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                               creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
-    cache = redis.Redis(host='127.0.0.1', port=16380, decode_responses=True, socket_timeout=0.5)
+def live_redis(redis_server):
+    cache = redis.Redis(host='127.0.0.1', port=redis_server, decode_responses=True, socket_timeout=0.5)
     try:
-        for _ in range(40):
-            if process.poll() is not None:
-                pytest.fail('Test Redis process exited')
-            try:
-                if cache.ping():
-                    break
-            except redis.RedisError:
-                pass
-            time.sleep(0.1)
-        else:
-            pytest.fail('Redis did not start')
+        if not cache.ping():
+            pytest.fail('Test Redis did not answer on 127.0.0.1:16380')
+        # A reused local server may still hold the previous run's catalog entry.
+        cache.delete('darwin:catalog:integration')
         yield cache
     finally:
         cache.close()
-        process.terminate()
-        process.wait(timeout=10)
 
 
 @pytest.mark.parametrize('ttl', [10, 30])
