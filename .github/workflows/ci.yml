@@ -45,6 +45,26 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
 
+  windows-native:
+    name: Backend tests (Windows native)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.lock.txt
+          pip install -e .
+      - name: Run tests
+        # No PostgreSQL or Docker on this runner: the shop integration fixtures
+        # report that and skip, while the Windows-only native paths run here.
+        run: python -m pytest -q
+
   frontend:
     name: Dashboard build
     runs-on: ubuntu-latest
