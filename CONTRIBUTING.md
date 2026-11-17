@@ -57,6 +57,9 @@ POSIX shells use `.venv/bin/python` in place of `.\.venv\Scripts\python.exe`.
 
 # Type-check and production build
 npm --prefix frontend run build
+
+# Palette contrast in every theme (pure stdlib, also runs in CI)
+.\.venv\Scripts\python.exe scripts/check_contrast.py
 ```
 
 Both suites must pass. The full suite is the one CI runs on Linux with
@@ -94,6 +97,9 @@ Windows. Docker acceptance remains a manual workflow:
 - Keep user-facing claims tied to something reproducible: a command, a stored
   run, or a linked report.
 - Run the full suite and the frontend build before pushing.
+- Change a user-facing surface? Re-run `npm --prefix frontend run audit:a11y`
+  (setup in [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)) and keep both the
+  palette and the keyboard path clean.
 
 ## Commits and pull requests
 

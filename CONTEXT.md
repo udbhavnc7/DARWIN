@@ -138,7 +138,7 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 | Faults and invariants | Done | 95% | Three fault families, five checkers, reproducible unsafe fixture |
 | Simulator | Done, limited accuracy | 85% | SimPy model calibrated to 27.0% mean p95 error across nine holdouts; some misses are large |
 | Search | Done, validation broader | 90% | NSGA-II, random, hill climbing, lineage, Pareto ranking; multi-seed campaign retained with every rejection |
-| Dashboard | Done | 95% | Five workspaces, machine-readiness panel, judge scenario presets, saved-run fallback, no-feasible verdict, evidence inspection, reruns, tour, themes, responsive down to 360 px; formal accessibility audit pending |
+| Dashboard | Done | 95% | Five workspaces, machine-readiness panel, judge scenario presets, saved-run fallback, no-feasible verdict, evidence inspection, reruns, tour, themes, responsive down to 320 px, WCAG 2.1 A/AA audit passing |
 | Evidence and replay | Done | 90% | SQLite history, artifact digests, source snapshots, export bundle, replay instructions |
 | Docker path | Done | 85% | Full acceptance passed; the fresh search found two feasible candidates on its Pareto front |
 | Native path | Done on Windows | 80% | Windows resource jobs and private PostgreSQL clusters; not cross-platform |
@@ -204,7 +204,8 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 | Calibration intro | Lifecycle check passed: shows on first load, auto-dismisses, remembers the session, replays from the palette register, and skips without console errors. Rendered on desktop and 390 px mobile in light and dark themes, plus reduced motion |
 | Search comparison | Single seed: NSGA-II + simulation best at 273.9 ms median p95. Three-seed campaign: 11 / 12 searches completed; NSGA-II + simulation median-of-best 357.2 ms, random 407.6 ms, hill climbing 394.6 ms, NSGA-II without simulation 445.1 ms (2 / 3 completed); one seed-202 arm interrupted by a fault-measurement connection timeout |
 | Simulator calibration | 27.0% mean absolute p95 error across nine held-out repetitions |
-| Responsive layout | Verified at 1440, 900, 430, 390, and 360 px |
+| Responsive layout | Verified at 1440, 900, 430, 390, 360, and 320 px |
+| Accessibility | axe-core found no WCAG 2.1 A/AA violations across 144 page/theme/viewport states; all 23 palette colour pairs per theme meet AA; 9 of 9 keyboard checks pass. See [ACCESSIBILITY](docs/ACCESSIBILITY.md) |
 | Showcase deploy | Live at [udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/); all five screens checked on desktop and mobile in all six themes, with no `/api` or `/shop` requests leaving the static bundle |
 | Fresh-clone quickstart | Cloned from GitHub and followed the README: dependencies installed, Toxiproxy verified, `demo.py start` brought up shop, API, and dashboard |
 
@@ -235,7 +236,7 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 | Gap | Why it matters |
 | --- | --- |
 | Phase records keep their historical numbers | `docs/PHASE_10.md` and earlier phase notes preserve what was true at that capture; current results live in README, CONTEXT, and DOCKER_ACCEPTANCE |
-| No formal accessibility audit | Keyboard and focus behavior are implemented, but no WCAG review has been recorded |
+| Accessibility stops at automated rules and keyboard checks | axe-core and a scripted keyboard path pass, but no screen-reader or user session has been recorded. See [ACCESSIBILITY](docs/ACCESSIBILITY.md) |
 | Cloud/Kubernetes adapters | Explicitly out of MVP scope |
 | Optional LLM explanations | Explicitly out of MVP scope |
 

@@ -508,6 +508,14 @@ $env:DARWIN_TEST_DATABASE_URL = 'postgresql://darwin:darwin_demo@127.0.0.1:55432
 # Type-check and production build
 npm --prefix frontend run build
 
+# Palette contrast: every theme token pair against WCAG 2.1 AA
+.\.venv\Scripts\python.exe scripts/check_contrast.py
+
+# Full accessibility audit: axe-core over every page, theme, and viewport,
+# plus the keyboard path (needs the one-off Playwright/axe install in
+# docs/ACCESSIBILITY.md)
+npm --prefix frontend run audit:a11y
+
 # Full Docker acceptance: smoke, paired benchmarks, faults, unsafe fixture, search
 .\.venv\Scripts\python.exe scripts/validate_docker.py --output artifacts/docker-acceptance
 
@@ -530,6 +538,7 @@ Latest local run (2026-11-17):
 - **Quick checkout smoke completed in 18 s** with three measured attempts and verified cleanup; the unsafe-payment scenario rejected all three repetitions.
 - **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including recovery windows and cleanup. Fresh run: smoke 114 s, paired benchmark 328 s (median p95 102.75 ms baseline vs 77.65 ms candidate), safe faults 3/3 with every recovery window observed, unsafe fixture 3/3 rejected for I-01, and search completed two generations and six attempts with two feasible Pareto candidates.
 - **Product tour checks passed 10/10**: deep link, focus, step navigation, dots, link routing, and close behavior.
+- **Accessibility audit passed**: axe-core reports no WCAG 2.1 A/AA violations across 144 page/theme/viewport states, no horizontal overflow at 320 CSS px, all 23 palette colour pairs per theme meet AA, and 9 of 9 scripted keyboard checks pass. See [Accessibility](docs/ACCESSIBILITY.md).
 
 Build shape: the entry bundle is split into app code (173 kB), React (209 kB), and the graph renderer (198 kB) so each stays cacheable across deploys. The calibration intro and its Three.js scene load as a separate 534 kB chunk only when the intro is shown, so they do not block the dashboard.
 
@@ -592,6 +601,7 @@ pull request should name the command or stored run that produced it.
 | [Contracts](docs/CONTRACTS.md) | Schema, lifecycle, budgets, comparability, and gate semantics |
 | [Phases 1–10](docs/) | Acceptance records and implementation detail for each phase |
 | [Exhibition runbook](docs/EXHIBITION.md) | Machine baseline, readiness checks, scenario durations, demo script, validation record, and limits |
+| [Accessibility](docs/ACCESSIBILITY.md) | Audit method, results per theme and viewport, fixes made, and what remains unverified |
 | [Docker acceptance](docs/DOCKER_ACCEPTANCE.md) | Container runtime requirements, measurements, and cleanup verification |
 
 For a guided walkthrough of the codebase, start with `backend/darwin/contracts.py`, then `experiments.py`, `fault_suite.py`, `search.py`, and finally `frontend/src/main.tsx`.
