@@ -272,6 +272,8 @@ flowchart TD
 | `docs/` | Scope, architecture, contract semantics, phase acceptance records |
 | `scripts/` | Validation, evidence export, shop runner, Toxiproxy setup, demo rendering |
 
+For a page-by-page explanation of the dashboard, real-world mapping, and presentation Q&A, see [Page guide and questionnaire](docs/PAGE_GUIDE_AND_QUESTIONNAIRE.md).
+
 ---
 
 ## 9. Where the evidence lives

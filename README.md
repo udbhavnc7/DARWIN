@@ -600,6 +600,7 @@ pull request should name the command or stored run that produced it.
 | [Architecture](docs/ARCHITECTURE.md) | System design, shop behavior, invariants, and scope boundary |
 | [Contracts](docs/CONTRACTS.md) | Schema, lifecycle, budgets, comparability, and gate semantics |
 | [Phases 1–10](docs/) | Acceptance records and implementation detail for each phase |
+| [Page guide and questionnaire](docs/PAGE_GUIDE_AND_QUESTIONNAIRE.md) | How each dashboard page works, real-world mapping, demo lines, and presentation Q&A with honest limits |
 | [Exhibition runbook](docs/EXHIBITION.md) | Machine baseline, readiness checks, scenario durations, demo script, validation record, and limits |
 | [Accessibility](docs/ACCESSIBILITY.md) | Audit method, results per theme and viewport, fixes made, and what remains unverified |
 | [Docker acceptance](docs/DOCKER_ACCEPTANCE.md) | Container runtime requirements, measurements, and cleanup verification |
