@@ -147,7 +147,7 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 | Packaging and distribution | Partial | 65% | One-command start/stop launcher with readiness checks; no installer, service manager, or containerized control plane |
 | Documentation | Strong | 92% | README, contracts, phase records, and an exhibition runbook; phase notes are annotated where later work closed their gaps |
 | Demo assets | Partial | 80% | Recorded feasible/rejected search fallback is current; the older walkthrough video still predates the interface |
-| CI and release automation | Partial | 55% | GitHub Actions runs the backend suite and dashboard build; Docker acceptance is a manual workflow; no automated release publishing |
+| CI and release automation | Partial | 55% | GitHub Actions runs the backend suite on Linux and Windows and builds the dashboard; Docker acceptance is a manual workflow; no automated release publishing |
 
 **Why 82% and not 100%:** the MVP is feature-complete for the defined scope, but a production release also needs per-user authentication and isolation, quotas, multi-host validation, cross-platform native support, a packaged control plane, and refreshed demo assets. Those are real work, not polish.
 
@@ -193,7 +193,7 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 | Check | Result |
 | --- | --- |
 | Backend suite | 216 passed, nothing skipped; the 14 shop integrations auto-provisioned a disposable `darwin_shop_test` database and Redis on `127.0.0.1:16380` |
-| Frontend build | Passed, including `tsc --noEmit`; CI workflow committed |
+| Frontend build | Passed, including `tsc --noEmit`; app code, React, and the graph renderer ship as separate cacheable chunks, and the Three.js intro loads lazily |
 | Preflight | Ready; required checks green, Docker and bundled Toxiproxy detected |
 | Judge scenarios | Quick smoke completed in 18 s; unsafe payment rejected all 3 repetitions |
 | Shop proof | Repeated request returned one order, one capture, one payment effect; reset cleared the ledger |
@@ -229,16 +229,13 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 | Packaging stops at the launcher | No installer, containerized control plane, or service manager |
 | Recorded walkthrough video is outdated | It shows an earlier interface; the in-app tour and saved-search fallback are current |
 | One host, one environment | No multi-host or cross-platform performance validation |
-| CI does not exercise Windows native paths | The Linux CI suite skips Windows-only measured runs; those remain a local acceptance step |
 
 ### Priority 2 — cleanup and polish
 
 | Gap | Why it matters |
 | --- | --- |
 | Phase records keep their historical numbers | `docs/PHASE_10.md` and earlier phase notes preserve what was true at that capture; current results live in README, CONTEXT, and DOCKER_ACCEPTANCE |
-| 528 kB Three.js chunk | Vite warns above 500 kB; the scene is lazy-loaded, so the dashboard still loads |
 | No formal accessibility audit | Keyboard and focus behavior are implemented, but no WCAG review has been recorded |
-| No contributor guide or code of conduct | Fine for a solo project; needed for outside contributors |
 | Cloud/Kubernetes adapters | Explicitly out of MVP scope |
 | Optional LLM explanations | Explicitly out of MVP scope |
 
@@ -374,7 +371,7 @@ To exercise the UI:
 
 ## 13. Notes for future contributors and AI assistants
 
-- Read this file and the [README](README.md) before changing behavior.
+- Read this file, the [README](README.md), and [CONTRIBUTING.md](CONTRIBUTING.md) before changing behavior.
 - **Never present simulated output as measured evidence.** The separation is a core product guarantee.
 - **Never let performance outrank a failed invariant.** I-01 through I-05 are hard gates.
 - Preserve negative results. An empty Pareto front or an unimplemented baseline is still evidence.

@@ -519,7 +519,7 @@ npm --prefix frontend run build
   --output artifacts/validation/search-multiseed.json
 ```
 
-CI runs the backend suite (including PostgreSQL and Redis integrations) and the dashboard build on every push and pull request. Docker acceptance stays a manual workflow because it needs a Linux cgroup v2 engine and takes tens of minutes.
+CI runs the backend suite (including PostgreSQL and Redis integrations) on Linux, the same suite natively on Windows, and the dashboard build on every push and pull request. Docker acceptance stays a manual workflow because it needs a Linux cgroup v2 engine and takes tens of minutes.
 
 Latest local run (2026-11-17):
 
@@ -531,7 +531,7 @@ Latest local run (2026-11-17):
 - **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including recovery windows and cleanup. Fresh run: smoke 114 s, paired benchmark 328 s (median p95 102.75 ms baseline vs 77.65 ms candidate), safe faults 3/3 with every recovery window observed, unsafe fixture 3/3 rejected for I-01, and search completed two generations and six attempts with two feasible Pareto candidates.
 - **Product tour checks passed 10/10**: deep link, focus, step navigation, dots, link routing, and close behavior.
 
-Known build note: the Three.js overview scene produces a separate 528 kB chunk and Vite warns about the 500 kB threshold. It is lazy-loaded, so it does not block the dashboard.
+Build shape: the entry bundle is split into app code (173 kB), React (209 kB), and the graph renderer (198 kB) so each stays cacheable across deploys. The calibration intro and its Three.js scene load as a separate 534 kB chunk only when the intro is shown, so they do not block the dashboard.
 
 ---
 
@@ -551,7 +551,7 @@ What is done:
 - React dashboard with evidence inspection, reruns, search history, responsive layout, and a guided tour
 - Exhibition layer: machine preflight, four judge-ready scenarios, explicit no-feasible verdict, labelled saved-run fallback, and demo-shop ledger/reset
 - One-command start/stop/status launcher with readiness blockers and process ownership
-- GitHub Actions CI for the Linux backend suite (PostgreSQL and Redis services) and the dashboard build
+- GitHub Actions CI for the Linux backend suite (PostgreSQL and Redis services), the native Windows suite, and the dashboard build
 - Optional shared-token guard for `/api` routes and experiment event WebSockets
 - Saved evidence bundles with digest verification and replay instructions
 
@@ -560,7 +560,7 @@ What remains to reach a production-ready v1:
 - **Per-user security and isolation.** `DARWIN_API_TOKEN` blocks anonymous HTTP and WebSocket access, but there are no individual accounts, quotas, audit attribution, or project isolation. The demo shop proxy is a separate service and is not behind that token.
 - **Release automation.** GitHub Actions runs the backend suite and dashboard build; Docker acceptance is a manual workflow, and there is no automated release publishing.
 - **Docker search depth.** The fresh accepted search measured six attempts over two generations and found two feasible candidates; a larger budget would cover more of the 36 genomes but is not required for the demo.
-- **Cross-platform native adapter.** Native fault experiments are Windows-specific; Docker is the route on Linux, and CI does not exercise Windows measured runs.
+- **Cross-platform native adapter.** Native fault experiments are Windows-specific; Docker is the route on Linux. CI now runs the backend suite natively on Windows, but not a full measured acceptance campaign.
 - **Multi-host validation.** The multi-seed campaign varies schedules on one machine; it does not vary hardware or establish cross-host performance claims.
 - **Packaging.** The launcher removes manual three-terminal setup, but there is no installer, service manager, or containerized control plane.
 - **Demo assets.** The saved-search fallback is current, but the older walkthrough video predates the interface and should be re-recorded.
@@ -570,10 +570,22 @@ The project deliberately keeps negative and inconclusive results. They are part 
 
 ---
 
+## Contributing
+
+Pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup,
+the verification commands, the change checklist, and the commit and review
+conventions. Participation is governed by the
+[Code of Conduct](CODE_OF_CONDUCT.md). Keep results honest: every claim in a
+pull request should name the command or stored run that produced it.
+
+---
+
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
+| [Contributing](CONTRIBUTING.md) | Setup, verification, change checklist, and pull request conventions |
+| [Code of conduct](CODE_OF_CONDUCT.md) | Community standards and enforcement |
 | [Project context](CONTEXT.md) | Completion map, exact scope, verified evidence, gaps, and glossary |
 | [Roadmap](ROADMAP.md) | Scope, ten phases, working rules, and extensions |
 | [Architecture](docs/ARCHITECTURE.md) | System design, shop behavior, invariants, and scope boundary |
