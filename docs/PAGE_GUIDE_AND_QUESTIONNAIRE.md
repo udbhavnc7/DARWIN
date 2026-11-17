@@ -553,7 +553,7 @@ It is the page that turns DARWIN from a demo into an evaluation instrument.
 If you have ten minutes, tell it as one continuous investigation.
 
 **Minute 1 — Frame the problem.**
-"Architecture decisions are usually argued, not tested. And when they are tested, performance wins often hide correctness regressions. DARWIN is an architecture experimentation laboratory: understand the backend, generate alternatives, run them under traffic, introduce failures, verify business correctness, then search the trade-offs. A fast configuration that double-charges is a rejected candidate with evidence."
+Open `#overview`. Point at the illustrative decision board: Basic is cheap, Cached is the balance, Distributed is fastest and still rejected for failing the duplicate-payment rule. Then say: "Architecture decisions are usually argued, not tested. And when they are tested, performance wins often hide correctness regressions. DARWIN is an architecture experimentation laboratory: understand the backend, generate alternatives, run them under traffic, introduce failures, verify business correctness, then search the trade-offs. A fast configuration that double-charges is a rejected candidate with evidence."
 
 **Minute 2 — Alternatives.**
 Open `#configuration`. Change replicas from 1 to 2, enable the cache, switch notifications to queued. Show the topology and the resource cost. Point at the line: "Correctness gate unchecked." Say: "This is a hypothesis, not evidence."
