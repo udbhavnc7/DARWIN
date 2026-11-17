@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
 import {Shop} from './Shop';
@@ -7,7 +7,6 @@ import {Experiments} from './Experiments';
 import {Search} from './Search';
 import {Status} from './Status';
 import {BrandMark} from './Brand';
-import {Splash} from './Splash';
 import {Tour} from './Demo';
 import {ThemePicker} from './ThemePicker';
 import {Readiness, type Preflight} from './Preflight';
@@ -16,6 +15,10 @@ import {Action, Icon} from './Action';
 import {applyTheme, onThemeStorage, readTheme, saveTheme, themes, type ThemeId} from './themes';
 import {baseline, readDraft, saveDraft, type Genome} from './genome';
 import {installShowcase, isLive, manifest, probeLive, setLive, setupUrl, showcase} from './showcase';
+
+// The calibration intro owns the three.js scene. Keep the renderer out of the
+// initial bundle so the workspace paints before it is fetched.
+const Splash = lazy(() => import('./Splash').then(module => ({default: module.Splash})));
 
 type Project = {execution_modes: string[]; baseline: Genome};
 type Runtime = 'native' | 'docker';
@@ -306,7 +309,9 @@ function App() {
       </main>
     </div>
     <Tour open={tourOpen && !intro} onClose={() => setTourOpen(false)}/>
-    {intro && <Splash theme={theme} onDone={dismissIntro}/>}
+    {intro && <Suspense fallback={<div className="splash" aria-hidden="true"/>}>
+      <Splash theme={theme} onDone={dismissIntro}/>
+    </Suspense>}
   </>;
 }
 
