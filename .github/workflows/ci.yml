@@ -80,6 +80,9 @@ jobs:
         run: npm --prefix frontend ci
       - name: Type-check and build
         run: npm --prefix frontend run build
+      - name: Check palette contrast
+        # Pure-stdlib check of the theme tokens in frontend/src/style.css.
+        run: python scripts/check_contrast.py
 
   docker-acceptance:
     name: Docker acceptance (manual)
