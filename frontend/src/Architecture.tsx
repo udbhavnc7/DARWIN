@@ -86,11 +86,11 @@ export function Architecture({genome, onEdit, workload, connected, active, onUse
   }
 
   return <section aria-label="Architecture builder" className="page-content">
-    <p className="page-intro">Choose how the checkout backend is assembled, then simulate or run the configuration.</p>
+    <p className="page-intro"><strong>Step 2 · Generate alternatives.</strong> Shape a deployable candidate — replicas, cache, notifications and retries — then simulate it or send it to a measured experiment. Comparisons stay fair because the same checkout stack and workload are used for every candidate.</p>
     <div className="builder-grid">
       <div className="panel builder-controls">
         <div className="section-title panel-heading">
-          <div><p className="section-kicker">Architecture settings</p><h2>Configuration</h2></div>
+          <div><p className="section-kicker">Alternative settings</p><h2>Configuration</h2></div>
           <Action variant="quiet" icon="refresh" disabled={simulating || exporting || isBaseline(genome)} onClick={() => edit(baseline)}>Reset to baseline</Action>
         </div>
         <fieldset disabled={simulating || exporting}>

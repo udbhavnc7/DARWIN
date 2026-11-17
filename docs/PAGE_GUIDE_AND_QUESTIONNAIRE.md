@@ -1,6 +1,6 @@
 # DARWIN page guide and presentation questionnaire
 
-This document explains the five working pages of the DARWIN dashboard — **Real project**, **Architecture**, **Experiments**, **Search**, and **Demo shop** — how each one actually works, the real-world problem each one addresses, and the questions an audience is likely to ask, with answers you can defend.
+This document explains the six pages of the DARWIN dashboard — **The lab**, **Guided evaluation**, **Alternatives**, **Test & break**, **Evolve**, and **Demo shop** — how each one actually works, the real-world problem each one addresses, and the questions an audience is likely to ask, with answers you can defend.
 
 Every behaviour described here is taken from the page components in `frontend/src/` and the backend modules in `backend/darwin/`. Where the system is limited, the limit is stated instead of hidden. That matters: the credibility of the demo depends on never presenting a simulated number as a measurement.
 
@@ -8,17 +8,20 @@ Every behaviour described here is taken from the page components in `frontend/sr
 
 ## 1. The thirty-second version
 
-DARWIN is a local architecture lab. You describe a system as a small set of deployment controls, run that system in an isolated sandbox, measure it, break it on purpose, and only then decide whether a change is better.
+DARWIN is a local architecture experimentation laboratory. You describe a system as a small set of deployment controls, run that system in an isolated sandbox under traffic, break it on purpose, verify the business rules, and only then decide whether a change is better.
 
-The five pages are five stages of one argument:
+The six pages are six stages of one argument:
 
 | Page | Route | Question it answers | Output |
 |---|---|---|---|
-| **Real project** | `#project` | "Can DARWIN understand *this* repository, and what would it change?" | Inspection plus a measured verdict or a clearly labelled simulated screening |
-| **Architecture** | `#configuration` | "What is the system made of, and what does this configuration cost?" | Genome, topology, compose file, uncalibrated performance estimate |
-| **Experiments** | `#experiments` | "Does it actually work, and how fast is it really?" | Repeated measurements, fault traces, invariant results, artifacts |
-| **Search** | `#search` | "Which configuration should we try next, under a budget?" | Pareto front of measured, gate-passing candidates or an explicit rejection |
+| **The lab** | `#overview` | "What decision is this, and what is the method?" | The six-step story, the illustrative decision, scope, and readiness |
+| **Guided evaluation** | `#project` | "Can DARWIN understand *this* repository, and what would it change?" | Inspection plus a measured verdict or a clearly labelled simulated screening |
+| **Alternatives** | `#configuration` | "What is the system made of, and what does this configuration cost?" | Genome, topology, compose file, uncalibrated performance estimate |
+| **Test & break** | `#experiments` | "Does it actually work under traffic and failure, and how fast is it really?" | Repeated measurements, fault traces, invariant results, artifacts |
+| **Evolve** | `#search` | "Which configuration should we try next, under a budget?" | Pareto front of measured, gate-passing candidates or an explicit rejection |
 | **Demo shop** | `#shop` | "Why should anyone trust the measurement?" | A live checkout whose ledger proves idempotency and invariants |
+
+The six-step method maps to them: understand (**The lab**, **Guided evaluation**), generate (**Alternatives**), run under traffic and break (**Test & break**), verify correctness (**Test & break**, **Demo shop**), and search the trade-offs (**Evolve**).
 
 The spine that connects them is:
 
@@ -31,7 +34,7 @@ Genome → Experiment → Gate → Evidence
 - **Gate** = correctness and invariant checks that can veto a fast result.
 - **Evidence** = hashed artifacts, traces, and verdicts that survive after the demo.
 
-A page is never allowed to skip a stage. The Architecture page says "correctness gate unchecked". The Search page refuses to rank candidates that did not pass the gate. The Real project page distinguishes **SIMULATED** from **measured** in the verdict itself.
+A page is never allowed to skip a stage. The Alternatives page says "correctness gate unchecked". The Evolve page refuses to rank candidates that did not pass the gate. The Guided evaluation page distinguishes **SIMULATED** from **measured** in the verdict itself.
 
 ---
 
@@ -90,7 +93,7 @@ Two things are worth saying out loud when presenting:
 
 ---
 
-## 4. Architecture page (`#configuration`)
+## 4. Alternatives page (`#configuration`)
 
 ### 4.1 What you see
 
@@ -123,7 +126,7 @@ That status is usually `uncalibrated`. The UI says so. A calibrated variant exis
 
 ### 4.3 The decision it supports
 
-The Architecture page supports **design-space reasoning before spending measurement budget**:
+The Alternatives page supports **design-space reasoning before spending measurement budget**:
 
 - Which controls actually change the topology?
 - What does each choice cost in CPU and memory?
@@ -157,7 +160,7 @@ The honest framing: this page is a **model**, and models are for choosing what t
 
 ---
 
-## 5. Experiments page (`#experiments`)
+## 5. Test & break page (`#experiments`)
 
 ### 5.1 What you see
 
@@ -227,7 +230,7 @@ The five invariants are:
 
 ### 5.3 The decision it supports
 
-The Experiments page answers: **"Is this change safe enough to consider, and what did it actually cost?"**
+The Test & break page answers: **"Is this change safe enough to consider, and what did it actually cost?"**
 
 It supports three distinct decisions:
 
@@ -261,7 +264,7 @@ The page's real-world lesson is blunt: **a faster system that loses an order is 
 
 ---
 
-## 6. Search page (`#search`)
+## 6. Evolve page (`#search`)
 
 ### 6.1 What you see
 
@@ -362,7 +365,7 @@ When the page resends the **same** request with the same key, the API must retur
 
 The ledger is not a frontend invention. It reads persisted rows: `orders`, `captures`, `payment_effects`, `outbox`, and `deliveries`. The invariant checker reads the same tables.
 
-Why this matters for the rest of the demo: the shop is the **physical evidence** behind the gate. When the Experiments page says a candidate passed, it means these tables reconciled. When the unsafe-retry scenario says `I-01` failed, it means this ledger shows more than one payment effect for one key.
+Why this matters for the rest of the demo: the shop is the **physical evidence** behind the gate. When the Test & break page says a candidate passed, it means these tables reconciled. When the unsafe-retry scenario says `I-01` failed, it means this ledger shows more than one payment effect for one key.
 
 ### 7.3 The decision it supports
 
@@ -395,7 +398,7 @@ This is the least glamorous page and the most important one. Most production inc
 
 ---
 
-## 8. Real project page (`#project`)
+## 8. Guided evaluation page (`#project`)
 
 ### 8.1 What you see
 
@@ -506,11 +509,11 @@ The recorded validation evidence for the Sanchay adapter is:
 - recorded full run `141c9b56`: **68/68 correctness checks**, **29/29 Vitest tests**, **28.5% latency improvement**, **100% paired wins** at 50,000 rows;
 - live full run `e3057b59`: **68/68 checks**, **22.4% improvement**, **97% paired wins**; source tests were skipped because the fetched cache had no installed Vitest runtime, and the verdict shows that reason.
 
-Those numbers belong to the Real project page, not to the demo shop. Do not mix them.
+Those numbers belong to the Guided evaluation page, not to the demo shop. Do not mix them.
 
 ### 8.3 The decision it supports
 
-The Real project page supports the **due-diligence decision**:
+The Guided evaluation page supports the **due-diligence decision**:
 
 - "What is this repository, really?"
 - "What would DARWIN change, and why?"
@@ -550,21 +553,21 @@ It is the page that turns DARWIN from a demo into an evaluation instrument.
 If you have ten minutes, tell it as one continuous investigation.
 
 **Minute 1 — Frame the problem.**
-"Architecture decisions are usually argued, not tested. And when they are tested, performance wins often hide correctness regressions. DARWIN makes the claim testable and lets correctness veto it."
+"Architecture decisions are usually argued, not tested. And when they are tested, performance wins often hide correctness regressions. DARWIN is an architecture experimentation laboratory: understand the backend, generate alternatives, run them under traffic, introduce failures, verify business correctness, then search the trade-offs. A fast configuration that double-charges is a rejected candidate with evidence."
 
-**Minute 2 — Architecture.**
+**Minute 2 — Alternatives.**
 Open `#configuration`. Change replicas from 1 to 2, enable the cache, switch notifications to queued. Show the topology and the resource cost. Point at the line: "Correctness gate unchecked." Say: "This is a hypothesis, not evidence."
 
-**Minute 3 — Experiments.**
+**Minute 3 — Test & break.**
 Open `#experiments`. Run or show the normal comparison. Show the repeated runs and the spread. Then show the unsafe-payment scenario failing with `I-01`. Say: "This is the gate doing its job. The fast number never becomes a recommendation."
 
-**Minute 4 — Search.**
+**Minute 4 — Evolve.**
 Open `#search`. Show the Pareto front. Point out that only measured, gate-passing candidates are on it. Show the no-feasible panel if you have one recorded. Say: "If nothing passes, the search says so."
 
 **Minute 5 — Demo shop.**
 Open `#shop`. Place an order, resend the same request, show the ledger staying at 1/1/1. Say: "This is the ground truth the gate is protecting."
 
-**Minutes 6–7 — Real project.**
+**Minutes 6–7 — Guided evaluation.**
 Open `#project`. Walk the five steps. Show the facts with evidence files, the separate guesses, and the hotspots. Then show a measured verdict and a simulated screening side by side. Say: "Measured and modelled are different evidence tiers, and the UI never blurs them."
 
 **Minute 8 — Evidence.**
@@ -645,7 +648,7 @@ Pick one service with a clear invariant and a clear performance complaint. Defin
 
 **Q6. What kind of architecture are you going to evolve?**
 
-In the demo, the evolvable architecture is a checkout stack with four controls: replicas, catalog cache TTL, notification mode, and retry policy. That yields 36 legal genomes. In Real project mode, the evolvable controls depend on what the source actually supports: replicas, cache TTL, background offload, retry policy, database pool, read replicas, and rate limiting. DARWIN does not claim to evolve an arbitrary microservice graph. It evolves a **bounded, source-backed change space**.
+In the demo, the evolvable architecture is a checkout stack with four controls: replicas, catalog cache TTL, notification mode, and retry policy. That yields 36 legal genomes. In Guided evaluation mode, the evolvable controls depend on what the source actually supports: replicas, cache TTL, background offload, retry policy, database pool, read replicas, and rate limiting. DARWIN does not claim to evolve an arbitrary microservice graph. It evolves a **bounded, source-backed change space**.
 
 **Q7. Why only four controls in the demo? Is that too simple?**
 
@@ -725,7 +728,7 @@ A Windows host for native benchmark and fault modes, with whole logical CPUs ava
 
 **Q24. How long does a run take?**
 
-It depends on the mode and scenario. The scenario catalog shows recorded durations when available and falls back to estimates. Quick smoke is on the order of tens of seconds; normal and flash-sale comparisons are on the order of minutes; a full Real project run is longer. The UI shows the source of the duration (`recorded` or `estimate`) rather than hiding it.
+It depends on the mode and scenario. The scenario catalog shows recorded durations when available and falls back to estimates. Quick smoke is on the order of tens of seconds; normal and flash-sale comparisons are on the order of minutes; a full Guided evaluation run is longer. The UI shows the source of the duration (`recorded` or `estimate`) rather than hiding it.
 
 **Q25. What happens if a run is interrupted?**
 
@@ -737,7 +740,7 @@ Experiments are bounded by `concurrent_deployments = 1`. The repository worker r
 
 **Q27. How does it handle secrets and untrusted code?**
 
-The demo shop is synthetic and has no real payment credentials. Real project inspection pins a commit and requires consent. Measured adapters run only allowlisted source files in a DARWIN-owned overlay; the repository's Compose file, Dockerfile, and gateway config are not executed. Unsupported repositories are inspection-only. This is a security boundary, not a sandbox for arbitrary hostile code, and it should be described that way.
+The demo shop is synthetic and has no real payment credentials. Guided evaluation inspection pins a commit and requires consent. Measured adapters run only allowlisted source files in a DARWIN-owned overlay; the repository's Compose file, Dockerfile, and gateway config are not executed. Unsupported repositories are inspection-only. This is a security boundary, not a sandbox for arbitrary hostile code, and it should be described that way.
 
 **Q28. What about data privacy?**
 
@@ -790,7 +793,7 @@ DORA measures delivery performance across an organization. DARWIN measures a spe
 
 **Q37. How is this different from an AI coding assistant?**
 
-An AI coding assistant proposes code. DARWIN measures a deployment configuration and can reject it. The value is not generation; it is falsification. In Real project mode, DARWIN can also produce a specific source-backed change, but the measured adapter and the verdict are what make it credible.
+An AI coding assistant proposes code. DARWIN measures a deployment configuration and can reject it. The value is not generation; it is falsification. In Guided evaluation mode, DARWIN can also produce a specific source-backed change, but the measured adapter and the verdict are what make it credible.
 
 **Q38. Why not just use a cloud cost calculator?**
 
@@ -816,13 +819,13 @@ Start with one service and one invariant. Run a baseline and one candidate. Revi
 
 **Q43. How do you prevent the demo from becoming a science fair?**
 
-Tie every page to a decision the audience recognizes. Architecture: what does this cost? Experiments: does it still work? Search: which trade-off do we accept? Shop: would this double-charge a customer? Real project: what would we change, and is it measured? If a page cannot answer a decision question, cut it from the presentation.
+Tie every page to a decision the audience recognizes. The lab: which architecture should carry the next 10,000 users? Alternatives: what is this configuration made of and what does it cost? Test & break: does it still work under traffic and failure? Evolve: which trade-off do we accept? Demo shop: would this double-charge a customer? Guided evaluation: what would we change, and is it measured? If a page cannot answer a decision question, cut it from the presentation.
 
 ### H. Tough and cynical questions
 
 **Q44. Isn't this just a toy shop?**
 
-The shop is deliberately small, but the method is not. The interesting part is the contract around it: genome identity, repeated measurement, fault injection, invariants, hashed evidence, and a verdict policy. A toy shop is the right size to make the method inspectable. The Real project page is where the method meets an actual repository, with a measured adapter and a simulated screening branch.
+The shop is deliberately small, but the method is not. The interesting part is the contract around it: genome identity, repeated measurement, fault injection, invariants, hashed evidence, and a verdict policy. A toy shop is the right size to make the method inspectable. The Guided evaluation page is where the method meets an actual repository, with a measured adapter and a simulated screening branch.
 
 **Q45. The simulated screening sounds like guesswork. Why include it?**
 
@@ -895,10 +898,11 @@ Use this table as a guardrail before any presentation.
 
 **Page in one line each:**
 
-- **Real project** — inspect a repository, separate facts from guesses, then measure a trusted adapter or screen the architecture. Never blur `SIMULATED` and measured.
-- **Architecture** — choose four controls, see the topology and resource cost, get an uncalibrated estimate. Correctness is not checked here.
-- **Experiments** — deploy the stack, repeat the measurement, inject faults, check the invariants. A fast failure is still a failure.
-- **Search** — spend a bounded budget to find the measured Pareto front. If nothing passes, say so.
+- **The lab** — state the decision and the six-step method, then separate what runs today from the product direction. The illustrative A/B/C costs are hypothetical, not measurements.
+- **Guided evaluation** — inspect a repository, separate facts from guesses, then measure a trusted adapter or screen the architecture. Never blur `SIMULATED` and measured.
+- **Alternatives** — choose four controls, see the topology and resource cost, get an uncalibrated estimate. Correctness is not checked here.
+- **Test & break** — deploy the stack, repeat the measurement, inject faults, check the invariants. A fast failure is still a failure.
+- **Evolve** — spend a bounded budget to find the measured Pareto front. If nothing passes, say so.
 - **Demo shop** — resend the same checkout and watch the ledger stay at 1 order, 1 capture, 1 payment effect. This is the ground truth.
 
 **The three sentences to repeat:**

@@ -4,7 +4,9 @@
 
 **Better backends. Built on evidence.**
 
-A local-first architecture lab that designs, deploys, breaks, verifies, and ranks real checkout backends.
+An architecture experimentation laboratory that designs, deploys, breaks, verifies, and ranks real checkout backends — and measures the trade-off instead of guessing it.
+
+DARWIN sits alongside AWS, Kubernetes, Redis, Locust, Prometheus and chaos tools. It does not replace them. It coordinates one decision: which architecture should carry the next 10,000 users, and what evidence supports that choice.
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Node](https://img.shields.io/badge/Node-20.19%2B-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
@@ -49,7 +51,9 @@ A local-first architecture lab that designs, deploys, breaks, verifies, and rank
 
 Most architecture tools stop at a diagram. You move boxes around, look at an estimated score, and hope the production system behaves the same way.
 
-DARWIN closes that loop:
+Every growing backend eventually reaches the same judgment call: one server and one database were enough at 100 customers; at 10,000, pages slow down, writes time out, and payments fail. Adding capacity hides the question. It does not answer which architecture is right.
+
+DARWIN treats that as an experiment, not an opinion:
 
 - Every candidate is a **real, deployable checkout backend**, not a model of one.
 - Every result comes from **measured or replayed runs** with saved seeds, artifacts, and hashes.
@@ -57,7 +61,11 @@ DARWIN closes that loop:
 - Search results are **reproducible**: candidate lineage, fault traces, and replay commands are stored with the evidence.
 - Simulation is only a **screening tool**. Simulated numbers are labeled and can never be presented as winners.
 
-The result is a lab where a backend decision can be argued with data instead of intuition.
+The method is six steps: **understand the backend → generate alternatives → run experiments under simulated traffic → introduce failures → verify business correctness → search the trade-offs**. The guided evaluation compresses them into Connect → Understand → Challenge → Evolve → Prove. The result is a lab where a backend decision can be argued with data instead of intuition.
+
+The decision rule is easy to state and hard to fake. In the illustrative example on the app's home page — hypothetical numbers, not a DARWIN result — three configurations cost ₹10,000, ₹20,000 and ₹35,000 a month. The ₹35,000 one is fastest, but it fails the duplicate-payment rule, so it is rejected. The ₹20,000 configuration is the measured balance. A fast configuration that breaks the business is not a winner.
+
+> The right-hand side of the lab's "what is today vs what is next" table is the roadmap, not shipped functionality. Today the lab runs the controlled checkout backend and two pinned public backends. General-purpose repository optimization is the direction, not a claim.
 
 ---
 
@@ -197,27 +205,28 @@ The React dashboard is the primary interface to the lab. It opens with a short, 
 
 ![Bench calibration intro](docs/images/splash.png)
 
-A five-step product tour explains the whole system, from the design-measure-verify-evolve loop to the correctness gate and measured search. Open it from the sidebar, from **How DARWIN works** on the overview, or directly with [`?tour=1`](http://127.0.0.1:5173/?tour=1).
+A six-step product tour explains the whole system, from the growth problem and the six-step method to the correctness gate and measured search. Open it from the sidebar, from **What is DARWIN?** on the overview, or directly with [`?tour=1`](http://127.0.0.1:5173/?tour=1).
 
 ![Product tour](docs/images/tour.png)
 
 | Workspace | What you do there |
 | --- | --- |
-| **Overview** | See the workflow, baseline stack, and a machine-readiness panel that separates required tools from optional ones |
-| **Architecture** | Shape the checkout topology, preview the service graph, simulate, or export Compose |
-| **Experiments** | Run smoke checks, benchmarks, fault verification, request validation, or a judge-ready scenario with its observed duration |
-| **Search** | Run NSGA-II, random, or hill-climbing searches; inspect lineage, measured gates, and the Pareto plot; open a saved feasible or rejected run offline |
+| **The lab** | Read the product direction: the growth problem, the six-step method, the illustrative decision, how the lab differs from AWS/Kubernetes/load tests, and what runs today versus what is roadmap |
+| **Guided evaluation** | Connect a pinned public backend, understand it, choose a challenge, evolve it, and prove the verdict with evidence |
+| **Alternatives** | Shape the checkout topology, preview the service graph, simulate, or export Compose |
+| **Test & break** | Run smoke checks, benchmarks, fault verification, request validation, or a judge-ready scenario with its observed duration |
+| **Evolve** | Run NSGA-II, random, or hill-climbing searches; inspect lineage, measured gates, and the Pareto plot; open a saved feasible or rejected run offline |
 | **Demo shop** | Place a simulated checkout and resend the same request to see idempotency, payment effects, and ledger counters |
 
-![Architecture builder](docs/images/architecture.png)
+![Alternatives builder](docs/images/architecture.png)
 
-The Experiments workspace includes four judge-ready presets — quick smoke, normal comparison, flash-sale comparison, and an unsafe payment fixture — each showing whether its duration is live or recorded and which execution environments are actually available.
+The Test & break workspace includes four judge-ready presets — quick smoke, normal comparison, flash-sale comparison, and an unsafe payment fixture — each showing whether its duration is live or recorded and which execution environments are actually available.
 
 ![Judge-ready scenario presets](docs/images/scenarios.png)
 
-The search workspace separates **proposed**, **simulated**, and **measured** evidence. Rejected candidates expose their violated invariant, the trace, and the original artifact downloads. When no measured candidate passes every gate, the workspace shows a "No candidate passed all gates" verdict with the rejection reasons and safe next choices; it never promotes a rejected candidate. A saved-run fallback is labelled **Recorded run** and cannot be mistaken for a live execution.
+The Evolve workspace separates **proposed**, **simulated**, and **measured** evidence. Rejected candidates expose their violated invariant, the trace, and the original artifact downloads. When no measured candidate passes every gate, the workspace shows a "No candidate passed all gates" verdict with the rejection reasons and safe next choices; it never promotes a rejected candidate. A saved-run fallback is labelled **Recorded run** and cannot be mistaken for a live execution.
 
-![Search results](docs/images/search.png)
+![Evolve results](docs/images/search.png)
 
 ![No-feasible-candidate verdict with retained gate reasons](docs/images/rejection.png)
 
@@ -342,10 +351,10 @@ Docker measurements require a local Linux engine with cgroup v2 CPU quotas, swap
 ### First five minutes
 
 1. Open the product tour.
-2. On **Overview**, confirm **Machine readiness**. Required tools must be green; optional ones (for example Docker or Toxiproxy) are named with a remedy and their runs stay disabled.
-3. In **Architecture**, change replicas, cache, notifications, and retries; watch the topology update.
-4. In **Experiments**, start **Quick checkout smoke** (~30 s) or a larger comparison. Each preset records its own duration source.
-5. In **Search**, inspect a completed run, its lineage, and the measured Pareto plot, or open the recorded feasible and rejected examples. The rejected example shows the no-feasible verdict without a live run.
+2. On **The lab**, confirm **Machine readiness**. Required tools must be green; optional ones (for example Docker or Toxiproxy) are named with a remedy and their runs stay disabled.
+3. In **Alternatives**, change replicas, cache, notifications, and retries; watch the topology update.
+4. In **Test & break**, start **Quick checkout smoke** (~30 s) or a larger comparison. Each preset records its own duration source.
+5. In **Evolve**, inspect a completed run, its lineage, and the measured Pareto plot, or open the recorded feasible and rejected examples. The rejected example shows the no-feasible verdict without a live run.
 6. In **Demo shop**, place an order, then resend it. The receipt is identical, stock is unchanged, and the ledger stays at one order, one capture, and one payment effect.
 
 For a timed presentation checklist and the captured baseline, use the [exhibition runbook](docs/EXHIBITION.md).

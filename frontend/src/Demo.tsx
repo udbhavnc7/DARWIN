@@ -10,57 +10,87 @@ type Step = {
   visual: ReactNode;
 };
 
-const pipeline = [
-  ['configuration', 'Design', 'Pick supported controls'],
-  ['experiments', 'Measure', 'Run load, time every request'],
-  ['shield', 'Verify', 'Check five business invariants'],
-  ['search', 'Evolve', 'Keep the best feasible tradeoff'],
-] as const;
-
-function PipelineVisual() {
-  return <div className="tour-pipeline">
-    {pipeline.map(([icon, title, detail]) => <div className="tour-step" key={title}>
-      <span className="tour-step-icon"><Icon name={icon}/></span>
-      <span><strong>{title}</strong><small>{detail}</small></span>
-    </div>)}
-    <div className="tour-evidence"><Icon name="book"/>
-      <span><strong>Evidence record</strong><small>Seeds · artifacts · hashes · replay commands</small></span>
+function GrowthVisual() {
+  return <div className="tour-growth">
+    <div className="tour-growth-bars" role="img" aria-label="Growth from 100 customers on one server to 10,000 customers">
+      <div><span>100</span><i className="low"/><small>one server</small></div>
+      <div><span>10,000</span><i className="high"/><small>2,000 at once</small></div>
+    </div>
+    <div className="tour-test-group"><span className="tour-test-label">What starts to fail</span>
+      <div className="tour-chips"><span className="tour-chip fault">Slow pages</span><span className="tour-chip fault">Timeouts</span><span className="tour-chip fault">Database overload</span><span className="tour-chip fault">Failed payments</span></div>
+    </div>
+    <div className="tour-evidence"><Icon name="settings"/>
+      <span><strong>More capacity is not a decision.</strong><small>One cache, one queue or no change — it depends on the workload.</small></span>
     </div>
   </div>;
 }
 
-function StackVisual() {
+function ToolsVisual() {
+  return <div className="tour-tools">
+    <span className="tour-test-label">Existing tools provide the pieces</span>
+    <div className="tour-tool-grid">
+      <span className="tour-tool">AWS<small>infrastructure</small></span>
+      <span className="tour-tool">Kubernetes<small>instance scaling</small></span>
+      <span className="tour-tool">Redis<small>caching</small></span>
+      <span className="tour-tool">Locust<small>load tests</small></span>
+      <span className="tour-tool">Prometheus<small>metrics</small></span>
+      <span className="tour-tool">Chaos<small>failures</small></span>
+    </div>
+    <span className="tour-connector"/>
+    <div className="tour-gate"><Icon name="configuration"/>
+      <span><strong>DARWIN coordinates one decision</strong><small>alternatives → traffic → failures → correctness → search</small></span>
+    </div>
+    <div className="tour-outcomes">
+      <span className="tour-outcome good"><Icon name="check"/>Measured recommendation</span>
+      <span className="tour-outcome bad"><Icon name="close"/>Correctness failure rejected</span>
+    </div>
+  </div>;
+}
+
+function MapVisual() {
   return <div className="tour-stack">
-    <span className="tour-node">Gateway</span>
+    <span className="tour-node">Public repo · pinned commit</span>
     <span className="tour-connector"/>
-    <span className="tour-node accent">Checkout API 1</span>
+    <span className="tour-node accent">Backend API</span>
     <span className="tour-connector"/>
-    <div className="tour-stack-row"><span className="tour-node">Inventory</span><span className="tour-node">Mock payment</span></div>
-    <span className="tour-connector"/>
-    <div className="tour-stack-row"><span className="tour-node">PostgreSQL</span><span className="tour-node muted-node">Redis · optional</span></div>
+    <div className="tour-stack-row"><span className="tour-node">Database</span><span className="tour-node muted-node">Cache · optional</span><span className="tour-node muted-node">Worker · optional</span></div>
+    <div className="tour-controls">
+      <span className="tour-control"><b>Proven</b> from source</span>
+      <span className="tour-control"><b>Guesses</b> stay labelled</span>
+      <span className="tour-control"><b>Unsupported</b> stays unsupported</span>
+    </div>
+  </div>;
+}
+
+function AlternativesVisual() {
+  return <div className="tour-alternatives">
+    <div className="tour-alt"><span>A</span><strong>Basic</strong><small>1 API · no cache</small></div>
+    <div className="tour-alt best"><span>B</span><strong>Cached</strong><small>2 APIs · Redis</small></div>
+    <div className="tour-alt fail"><span>C</span><strong>Distributed</strong><small>services · queues</small></div>
     <div className="tour-controls">
       <span className="tour-control"><b>1–3</b> replicas</span>
       <span className="tour-control"><b>0 / 10 / 30 s</b> cache</span>
       <span className="tour-control"><b>Sync / queued</b> alerts</span>
-      <span className="tour-control"><b>Idempotent</b> retries</span>
+      <span className="tour-control"><b>None / idempotent</b> retries</span>
+    </div>
+    <div className="tour-test-group"><span className="tour-test-label">Simulated traffic</span>
+      <div className="tour-chips"><span className="tour-chip">100 users</span><span className="tour-chip">1,000 users</span><span className="tour-chip">5,000 users</span></div>
     </div>
   </div>;
 }
 
 function GateVisual() {
   return <div className="tour-gates">
-    <div className="tour-test-group"><span className="tour-test-label">Workloads</span>
-      <div className="tour-chips"><span className="tour-chip">Normal traffic</span><span className="tour-chip">Flash sale</span><span className="tour-chip">Checkout heavy</span></div>
-    </div>
-    <div className="tour-test-group"><span className="tour-test-label">Faults</span>
-      <div className="tour-chips"><span className="tour-chip fault">DB delay</span><span className="tour-chip fault">Service outage</span><span className="tour-chip fault">Duplicate delivery</span></div>
+    <div className="tour-test-group"><span className="tour-test-label">Faults injected</span>
+      <div className="tour-chips"><span className="tour-chip fault">DB delay</span><span className="tour-chip fault">Service outage</span><span className="tour-chip fault">Payment timeout</span><span className="tour-chip fault">Duplicate delivery</span></div>
     </div>
     <div className="tour-gate"><Icon name="shield"/>
-      <span><strong>Correctness gate</strong><small>5 invariants · 3 isolated repetitions</small></span>
+      <span><strong>Correctness gates run first</strong><small>5 business invariants · no double charge · no overselling</small></span>
     </div>
+    <div className="tour-candidate"><span>C · Distributed</span><b>Fastest</b><s>Fails duplicate-payment</s><strong>Rejected</strong></div>
     <div className="tour-outcomes">
       <span className="tour-outcome good"><Icon name="check"/>Feasible → ranked</span>
-      <span className="tour-outcome bad"><Icon name="close"/>Rejected → evidence</span>
+      <span className="tour-outcome bad"><Icon name="close"/>Broken → rejected</span>
     </div>
   </div>;
 }
@@ -87,52 +117,62 @@ function ChartVisual() {
       {points.map(point => <circle key={`${point.x}-${point.y}`} className={point.on ? 'on' : undefined} cx={point.x} cy={point.y} r="6"/>)}
     </svg>
     <div className="tour-legend"><span><i className="on"/>Pareto front</span><span><i/>Measured feasible</span></div>
+    <div className="tour-evidence"><Icon name="book"/>
+      <span><strong>Evidence-backed recommendation</strong><small>Seeds · artifacts · hashes · replay command</small></span>
+    </div>
   </>;
-}
-
-const starts = [
-  {page: 'configuration', icon: 'configuration', title: 'Architecture', detail: 'Shape replicas, cache, notifications, retries.'},
-  {page: 'experiments', icon: 'experiments', title: 'Experiments', detail: 'Measure performance or inject failures.'},
-  {page: 'search', icon: 'search', title: 'Search', detail: 'Compare candidates with measured evidence.'},
-  {page: 'shop', icon: 'shop', title: 'Demo shop', detail: 'Place a checkout and resend the same request.'},
-] as const;
-
-function StartVisual() {
-  return <div className="tour-start">{starts.map(item => <a className="tour-start-link" href={`#${item.page}`} key={item.page}>
-    <Icon name={item.icon}/>
-    <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-    <Icon name="arrow"/>
-  </a>)}</div>;
 }
 
 const steps: Step[] = [
   {
-    kicker: 'The big picture',
-    title: 'A lab for backend decisions.',
-    lede: 'DARWIN builds working versions of a checkout backend, runs them under realistic traffic and injected failures, then keeps the best configuration that still obeys the business rules.',
+    kicker: 'The decision',
+    title: 'One server works. Then the traffic arrives.',
+    lede: 'At 100 customers, one backend and one database are enough. At 10,000, requests time out, the database saturates and payments fail. Scaling adds capacity; it does not tell you which architecture is right.',
     points: [
-      {icon: 'check', text: 'Every candidate is deployed and measured, not just drawn.'},
-      {icon: 'check', text: 'Correctness gates override raw speed.'},
-      {icon: 'check', text: 'Every result is reproducible from saved evidence.'},
+      {icon: 'check', text: 'Vertical scaling makes one machine bigger; it eventually reaches a limit.'},
+      {icon: 'check', text: 'Horizontal scaling adds servers, but the database, queue and cost still need decisions.'},
+      {icon: 'check', text: 'AWS, Kubernetes, Redis and load tests provide the pieces — not the answer.'},
     ],
-    visual: <PipelineVisual/>,
+    visual: <GrowthVisual/>,
   },
   {
-    kicker: 'The system under test',
-    title: 'One backend. Four controls.',
-    lede: 'All candidates share the same checkout stack. Only four supported controls change between them, so comparisons stay fair.',
+    kicker: 'Positioning',
+    title: 'A lab, not a replacement for your stack.',
+    lede: 'DARWIN sits alongside AWS, Kubernetes, Redis, Locust and Prometheus. It coordinates them into one experiment: generate alternatives, run traffic, inject failures, verify business rules, then search.',
     points: [
-      {icon: 'check', text: 'API replicas: one, two, or three behind the gateway.'},
-      {icon: 'check', text: 'Catalog cache: off, 10 seconds, or 30 seconds with Redis.'},
-      {icon: 'check', text: 'Notifications: sent during checkout or queued to a worker.'},
-      {icon: 'check', text: 'Retries: none, or idempotent-only in the safe path.'},
+      {icon: 'check', text: 'It does not replace infrastructure, caching, monitoring or load generation.'},
+      {icon: 'check', text: 'It did not invent load testing, fault injection or architecture optimization.'},
+      {icon: 'check', text: 'The differentiator is the combined workflow with correctness gates and NSGA-II search.'},
     ],
-    visual: <StackVisual/>,
+    visual: <ToolsVisual/>,
   },
   {
-    kicker: 'How it decides',
-    title: 'Performance never outranks correctness.',
-    lede: 'Each candidate faces three workloads and three fault classes. Five business invariants run against recorded state before any timing is allowed to count.',
+    kicker: 'Step 1 · Understand',
+    title: 'Understand the backend before changing it.',
+    lede: 'Connect a pinned public repository, or use the controlled checkout lab. DARWIN maps the services, data stores, cache and workers, and separates proven facts from guesses.',
+    points: [
+      {icon: 'check', text: 'One exact commit is resolved before anything is downloaded.'},
+      {icon: 'check', text: 'The architecture map is source-backed, not a name match.'},
+      {icon: 'check', text: 'Unsupported features stay unsupported instead of being invented.'},
+    ],
+    visual: <MapVisual/>,
+  },
+  {
+    kicker: 'Steps 2–3 · Generate and test',
+    title: 'Build alternatives. Run them at 100, 1,000 and 5,000 users.',
+    lede: 'A candidate is a deployable configuration, not a diagram. The checkout lab varies replicas, cache TTL, notification delivery and retry policy. Each candidate is deployed and measured under simulated traffic.',
+    points: [
+      {icon: 'check', text: 'One, two or three API replicas behind the gateway.'},
+      {icon: 'check', text: 'Catalog cache off, 10 seconds or 30 seconds.'},
+      {icon: 'check', text: 'Notifications sent inline or queued to a worker.'},
+      {icon: 'check', text: 'Retries disabled, or idempotent only in the safe path.'},
+    ],
+    visual: <AlternativesVisual/>,
+  },
+  {
+    kicker: 'Steps 4–5 · Break and verify',
+    title: 'The fastest configuration can still lose.',
+    lede: 'DARWIN injects database delays, service outages, payment timeouts and duplicate requests. Five invariants run before performance counts. A configuration that double-charges a customer is rejected, however fast it is.',
     points: [
       {icon: 'shield', text: 'No duplicate payment for one request key.'},
       {icon: 'shield', text: 'No overselling; confirmed orders were paid.'},
@@ -141,22 +181,16 @@ const steps: Step[] = [
     visual: <GateVisual/>,
   },
   {
-    kicker: 'How it searches',
-    title: 'Propose. Screen. Prove.',
-    lede: 'NSGA-II, random search, and hill climbing propose configurations. A calibrated simulator screens them cheaply; only promoted candidates get real measured runs.',
+    kicker: 'Step 6 · Evolve',
+    title: 'Search the trade-offs. Keep the evidence.',
+    lede: 'NSGA-II, random search and hill climbing propose configurations. The simulator screens them cheaply; only promoted candidates are measured. Pareto ranking weighs latency, CPU time and recovery — after correctness gates remove failures.',
     points: [
-      {icon: 'experiments', text: 'Simulated results are labeled and never presented as winners.'},
-      {icon: 'search', text: 'Pareto ranking across latency, CPU time, and recovery.'},
-      {icon: 'book', text: 'Lineage and per-repetition evidence stay attached to each candidate.'},
+      {icon: 'experiments', text: 'Simulated results are labelled NOT_MEASURED and can never win.'},
+      {icon: 'search', text: 'Pareto ranking across latency, CPU time and recovery.'},
+      {icon: 'book', text: 'Lineage, seeds and per-run evidence stay attached to each candidate.'},
+      {icon: 'project', text: 'Today: a controlled checkout lab plus two public backends. General-purpose repository optimization is the roadmap, not shipped functionality.'},
     ],
     visual: <ChartVisual/>,
-  },
-  {
-    kicker: 'Where to start',
-    title: 'Start with one run.',
-    lede: 'Change a configuration, run a measured experiment, or inspect a saved search. The demo shop shows idempotency in action with a safe, simulated checkout.',
-    points: [],
-    visual: <StartVisual/>,
   },
 ];
 

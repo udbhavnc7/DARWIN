@@ -5,8 +5,8 @@ Every term gets two things: a simple definition, then an everyday example. Nothi
 ## The app
 
 **DARWIN**
-Means: A test lab for a small online shop. You build a version, run it for real, break it on purpose, and see if it stays correct and fast.
-Example: A car test track. You build a car, drive it, crash it into a wall, and check whether the doors still open.
+Means: An architecture experiment lab for a small online shop. You build a version, run it under traffic, break it on purpose, check it never charges twice, and only then compare speed, cost and recovery.
+Example: A racing test bench. You build an engine, run it under load, break it on purpose, and check it does not cheat the safety rules before you compare lap times.
 
 **Baseline**
 Means: The plain, working shop that every test is compared against.
@@ -16,13 +16,25 @@ Example: The original recipe before you start changing ingredients. It is not cl
 Means: A shop with changed settings that you are testing against the baseline.
 Example: The new recipe version you want to compare with the original.
 
-## Overview page
+## The lab (home page)
 
-**Overview**
-Means: The home screen. It says what the app does, what the starting shop looks like, and whether the test bench is ready.
-Example: The dashboard at the entrance of a lab: what we are testing, what the control group is, and whether the equipment is plugged in.
+**The lab**
+Means: The home screen. It states the decision, the six-step method, what is real today, and whether the test bench is ready.
+Example: The dashboard at the entrance of a lab: the question being settled, the method on the wall, the equipment that actually exists, and whether it is plugged in.
 
-## Experiments page
+**Illustrative decision**
+Means: A worked example of the product's judgement. Basic is cheap but slow, Cached is the balance, Distributed is fastest but fails the duplicate-payment rule, so it is rejected.
+Example: Three cars on a track. The fastest one fails the safety check and does not win. The cost figures shown (₹10,000 / ₹20,000 / ₹35,000) are hypothetical examples, not DARWIN results.
+
+**Six-step method**
+Means: Understand the backend → generate alternatives → run experiments under traffic → introduce failures → verify business correctness → search the trade-offs.
+Example: A recipe contest: read the recipe, write variants, cook them, burn one on purpose, taste-test for safety, then rank only the ones that are actually edible.
+
+**Why not just AWS, Kubernetes and load tests?**
+Means: Those tools supply servers, containers, traffic and numbers. DARWIN coordinates the decision: which architecture should carry the next 10,000 users, and which candidates must be rejected even if they are fast.
+Example: A workshop has a lathe, a welder and a paint booth. None of them decides which chair design to ship.
+
+## Test & break page
 
 **Quick checkout smoke**
 Means: A short test that starts the shop and checks it can take an order, then take the exact same order again without creating a second one.
@@ -60,9 +72,9 @@ Example: In a 12-second test the app used 2.4 seconds of CPU, like a worker who 
 Means: How long after a fault is removed until the shop is healthy again.
 Example: Unplug the database for two seconds, plug it back in, and the shop is normal three seconds later. Recovery is 3 s.
 
-## Search page
+## Evolve page
 
-**Search**
+**Evolve (search)**
 Means: The computer tries many shop settings, tests the promising ones for real, and keeps the best trade-offs.
 Example: Trying 36 recipes, tasting a few, and keeping the fastest and the cheapest. The untasted recipes are never called winners.
 
@@ -118,7 +130,7 @@ Example: One car is fast but thirsty; one is slow but cheap. Both are real choic
 Means: None of the tested settings passed all the rules.
 Example: Every applicant failed the background check. The honest answer is "nobody yet", not "pick the least bad".
 
-## Architecture page
+## Alternatives page
 
 **API replicas**
 Means: How many copies of the checkout counter are running.
@@ -156,4 +168,4 @@ Example: 20 notebooks. Order one with receipt K: 19 left, one charge. Resend K f
 
 ## The whole app in one sentence
 
-A fast shop that charges twice is worse than a slow shop that charges once.
+A fast shop that charges twice is worse than a slow shop that charges once — so DARWIN breaks each design, verifies the business rules, and only then ranks the survivors on speed, cost and recovery.

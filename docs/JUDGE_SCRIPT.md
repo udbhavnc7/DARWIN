@@ -30,8 +30,9 @@ DARWIN says so and stays read-only.
 
 ### 0:00–0:20 — Set the frame
 
-Open the app. Mention the two modes in one sentence: the original checkout lab
-is still there; today we are on **Real project → External backend**.
+Open the app. Mention the two modes in one sentence: the controlled checkout
+lab is the **The lab** home page and its experiment pages; today we are on
+**Guided evaluation → Connect a public backend**.
 
 Say: "The promise is not 'AI optimizes your repo'. The promise is: it measures
 a specific, deployable change and refuses to overclaim."

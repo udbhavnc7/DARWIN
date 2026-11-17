@@ -140,9 +140,9 @@ export function Shop() {
 
   return <section id="shop" className="page-content shop-demo" aria-label="Demo shop walkthrough">
     <div className="shop-intro">
-      <p className="page-intro">{recorded
+      <p className="page-intro"><strong>Step 5 · Verify correctness.</strong> {recorded
         ? 'DARWIN’s test shop sells sample products with simulated payments. On a local install you can place an order, then resend it to see how the backend handles a duplicate request.'
-        : 'Try a real checkout in DARWIN’s test shop with sample products and simulated payments. Then resend the order to see how the backend handles a duplicate request.'}</p>
+        : 'Try a real checkout in DARWIN’s test shop with sample products and simulated payments. Then resend the order to see whether the backend keeps the duplicate-payment rule intact.'}</p>
       <div className="shop-intro-actions">
         <Status value={catalogState === 'loading' ? 'running' : catalogState}
           label={catalogState === 'loading' ? 'Checking shop' : catalogState === 'connected' ? (recorded ? 'Recorded catalog' : 'Shop connected') : 'Catalog unavailable'}/>
@@ -222,7 +222,7 @@ export function Shop() {
     <details className="panel shop-explainer">
       <summary>How this connects to DARWIN’s architecture</summary>
       <p>The gateway sends your checkout to the Checkout API. The API reserves stock, verifies the simulated payment, and saves the order. Reusing the same request ID lets it return the existing order when a client retries. This behavior is called <strong>idempotency</strong>.</p>
-      <p>Use <a href="#configuration">Architecture</a> to see how these services fit together, or <a href="#experiments">Experiments</a> to test checkout and verify payment records in an isolated run.</p>
+      <p>Use <a href="#configuration">Alternatives</a> to see how these services fit together, or <a href="#experiments">Test &amp; break</a> to test checkout and verify payment records in an isolated run.</p>
     </details>
   </section>;
 }

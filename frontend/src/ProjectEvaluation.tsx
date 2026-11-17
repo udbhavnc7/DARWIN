@@ -318,12 +318,13 @@ export function ProjectEvaluation() {
     {step === 1 && <section className="project-panel project-choose" aria-labelledby="project-stage-title">
       <div className="project-intro">
         <div>
-          <span className="section-kicker">Real Project Mode · step 1</span>
-          <h2 id="project-stage-title" tabIndex={-1}>Choose any public project.</h2>
+          <span className="section-kicker">Guided evaluation · Connect</span>
+          <h2 id="project-stage-title" tabIndex={-1}>Connect a public backend.</h2>
           <p className="project-lede">
             DARWIN pins one exact commit, reads the source and builds a file-backed picture of the project
             and its backend. A catalogued measured adapter can run a real scoped comparison; every other
             repository can receive a simulated architecture screening. Arbitrary repository code is never executed.
+            This guided flow compresses the lab’s six steps into Connect → Understand → Challenge → Evolve → Prove.
           </p>
         </div>
         <span className={`status-chip ${recordedShowcase ? 'warn' : 'active'}`}>

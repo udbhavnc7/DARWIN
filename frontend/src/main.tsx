@@ -1,6 +1,7 @@
 import {lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
+import './story.css';
 import {Shop} from './Shop';
 import {Architecture} from './Architecture';
 import {Experiments} from './Experiments';
@@ -11,6 +12,7 @@ import {Tour} from './Demo';
 import {ThemePicker} from './ThemePicker';
 import {Readiness, type Preflight} from './Preflight';
 import {ProjectEvaluation} from './ProjectEvaluation';
+import {Story} from './Story';
 import {Action, Icon} from './Action';
 import {applyTheme, onThemeStorage, readTheme, saveTheme, themes, type ThemeId} from './themes';
 import {baseline, readDraft, saveDraft, type Genome} from './genome';
@@ -23,20 +25,19 @@ const Splash = lazy(() => import('./Splash').then(module => ({default: module.Sp
 type Project = {execution_modes: string[]; baseline: Genome};
 type Runtime = 'native' | 'docker';
 const pages = {
-  project: {label: 'Real project', title: 'Inspect a real project'},
-  overview: {label: 'Overview', title: 'Overview'},
-  configuration: {label: 'Architecture', title: 'Architecture builder'},
-  experiments: {label: 'Experiments', title: 'Experiments'},
-  search: {label: 'Search', title: 'Architecture search'},
+  overview: {label: 'The lab', title: 'Architecture, decided by evidence'},
+  project: {label: 'Guided evaluation', title: 'Connect a real backend'},
+  configuration: {label: 'Alternatives', title: 'Generate alternatives'},
+  experiments: {label: 'Test & break', title: 'Run and break experiments'},
+  search: {label: 'Evolve', title: 'Search for a better configuration'},
   shop: {label: 'Demo shop', title: 'Demo shop'},
 };
 type Page = keyof typeof pages;
-const pageOrder: Page[] = ['project', 'overview', 'configuration', 'experiments', 'search', 'shop'];
-const workflow = [
-  {page: 'configuration', title: 'Design your system', detail: 'Shape the services, caching, and retry behavior.', action: 'Open builder'},
-  {page: 'experiments', title: 'Put it to the test', detail: 'Measure performance. Inject faults. Verify recovery.', action: 'Run an experiment'},
-  {page: 'search', title: 'Find a better fit', detail: 'Compare candidates with measured evidence.', action: 'Explore search'},
-] as const;
+const pageOrder: Page[] = ['overview', 'project', 'configuration', 'experiments', 'search', 'shop'];
+const navGroups: {label: string; pages: Page[]}[] = [
+  {label: 'Start here', pages: ['overview', 'project']},
+  {label: 'Experiment lab', pages: ['configuration', 'experiments', 'search', 'shop']},
+];
 
 function currentPage(): Page {
   const hash = location.hash.slice(1);
@@ -177,16 +178,13 @@ function App() {
       <aside className="app-sidebar">
         <a className="brand" href="#overview"><BrandMark/><span>DARWIN<small>Architecture lab</small></span></a>
         <nav className="section-nav" aria-label="Workspace">
-          <span className="nav-group">Exhibition</span>
-          <a href="#project" aria-current={page === 'project' ? 'page' : undefined}>
-            <span className="nav-index" aria-hidden="true">01</span>
-            <Icon name="project"/><span>{pages.project.label}</span><span className="nav-current" aria-hidden="true">›</span>
-          </a>
-          <span className="nav-group">Advanced lab</span>
-          {pageOrder.slice(1).map((id, offset) => <a key={id} href={`#${id}`} aria-current={page === id ? 'page' : undefined}>
-            <span className="nav-index" aria-hidden="true">0{offset + 2}</span>
-            <Icon name={id}/><span>{pages[id].label}</span><span className="nav-current" aria-hidden="true">›</span>
-          </a>)}
+          {navGroups.map(group => <div className="nav-cluster" key={group.label}>
+            <span className="nav-group">{group.label}</span>
+            {group.pages.map(id => <a key={id} href={`#${id}`} aria-current={page === id ? 'page' : undefined}>
+              <span className="nav-index" aria-hidden="true">{String(pageOrder.indexOf(id) + 1).padStart(2, '0')}</span>
+              <Icon name={id}/><span>{pages[id].label}</span><span className="nav-current" aria-hidden="true">›</span>
+            </a>)}
+          </div>)}
         </nav>
         <p className="sidebar-readout" aria-hidden="true"><span>{live ? 'LIVE BENCH' : showcase ? 'RECORDED BENCH' : 'LOCAL BENCH'}</span><span>v0.1.0</span></p>
         <button type="button" className="sidebar-guide" aria-haspopup="dialog" onClick={() => setTourOpen(true)}>
@@ -252,45 +250,15 @@ function App() {
         {!connecting && !project && <p className="notice" role="alert">{live ? 'This computer’s bench is not answering. Start it with scripts/demo.py start, then refresh runtimes.' : showcase ? 'The recorded snapshot could not be loaded. Reload the page to try again.' : 'The API is offline. Start the backend and refresh runtimes to reconnect.'}</p>}
         <div hidden={page !== 'project'}><ProjectEvaluation/></div>
         <div hidden={page !== 'overview'}>
-          <section className="overview" aria-labelledby="overview-title">
-            <div className="hero-copy">
-              <span className="section-kicker hero-kicker"><span/>Real Project Mode · exhibition</span>
-              <h2 id="overview-title">Inspect any public repo.{' '}<br/><em>Screen its backend honestly.</em></h2>
-              <p>DARWIN pins one commit and maps the project and its backend from source. A catalogued adapter
-                can measure a scoped change; every other repository can receive a simulated architecture
-                screening that is clearly labelled SIMULATED and never presented as a measured winner.</p>
-              <div className="shop-actions">
-                <a className="primary action-link" href="#project">Inspect a GitHub project <Icon name="arrow"/></a>
-                <a className="hero-secondary" href="#configuration">Open the backend lab <Icon name="arrow"/></a>
-              </div>
-            </div>
-            <div className="hero-visual project-hero-visual">
-              <div className="project-hero-stack">
-                <span className="project-hero-label"><span/>File-backed architecture model</span>
-                <div className="project-hero-row"><span>Client UI</span><i>→</i><span>Express service</span></div>
-                <div className="project-hero-row"><span>Data store</span><i>→</i><span>External API</span></div>
-                <strong>SIMULATED screening · NOT MEASURED</strong>
-                <small>Sanchay remains an optional measured example</small>
-              </div>
-              <div className="visual-caption"><span className="visual-caption-line"/>Choose <span>→</span> Understand <span>→</span> Screen <span>→</span> Read</div>
-            </div>
-          </section>
-          <div className="workflow-heading"><div><span className="section-kicker">Advanced lab</span><h2>Explore the backend lab</h2></div><span className="muted">Existing workflows. Fully intact.</span></div>
-          <nav className="workflow" aria-label="Architecture workflow">
-            {workflow.map((step, index) => <a className="panel workflow-link" href={`#${step.page}`} key={step.page}>
-              <span className="workflow-top"><span className="workflow-icon"><Icon name={step.page}/></span><span className="workflow-number">0{index + 1}</span></span>
-              <span className="workflow-copy"><strong>{step.title}</strong><small>{step.detail}</small></span>
-              <span className="workflow-cta">{step.action}<Icon className="workflow-arrow" name="arrow"/></span>
-            </a>)}
-          </nav>
+          <Story baselineReplicas={project?.baseline.app_replicas ?? baseline.app_replicas}/>
           <div className="overview-cards">
             <article className="panel baseline-card">
-              <div className="section-title"><div className="panel-heading"><span className="section-kicker">The starting point</span><h2>A working checkout system</h2></div><span className="baseline-badge">Baseline</span></div>
+              <div className="section-title"><div className="panel-heading"><span className="section-kicker">The system under test</span><h2>A working checkout backend</h2></div><span className="baseline-badge">Baseline</span></div>
               <ol className="baseline-flow" aria-label="Request path">
-                <li><Icon name="configuration"/><strong>Gateway</strong><small>Route requests</small></li><li><Icon name="server"/><strong>Checkout API</strong><small>{project?.baseline.app_replicas ?? baseline.app_replicas} API replica</small></li><li><Icon name="database"/><strong>PostgreSQL</strong><small>Persist orders</small></li>
+                <li><Icon name="configuration"/><strong>Gateway</strong><small>Route requests</small></li><li><Icon name="server"/><strong>Checkout API</strong><small>{project?.baseline.app_replicas ?? baseline.app_replicas} API {(project?.baseline.app_replicas ?? baseline.app_replicas) === 1 ? 'replica' : 'replicas'}</small></li><li><Icon name="database"/><strong>PostgreSQL</strong><small>Persist orders</small></li>
               </ol>
-              <p className="muted">The API also calls inventory and mock payment services.</p>
-              <a href="#configuration">Open architecture builder <span aria-hidden="true">→</span></a>
+              <p className="muted">The API also calls inventory and mock payment services. The four supported controls are the only things that vary between candidates.</p>
+              <a href="#configuration">Generate an alternative <span aria-hidden="true">→</span></a>
             </article>
             <article className="panel runtime-card">
               <div className="section-title"><div className="panel-heading"><span className="section-kicker">{showcase && !live ? 'Where this evidence was measured' : 'Ready for your next run'}</span><h2>Execution environment</h2></div>{showcase && !live ? <Status value="showcase" label="Recorded"/> : <Status value={connecting ? 'running' : project ? 'connected' : 'offline'}/>}</div>

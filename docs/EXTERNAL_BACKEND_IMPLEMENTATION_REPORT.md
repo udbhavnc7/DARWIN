@@ -169,7 +169,7 @@ cd frontend && npm install && npm run dev
 ```
 
 Requires a running Linux Docker engine for measured external runs. Open the
-app at the Vite URL, go to **Real project**, pick **Flask + Redis sample**,
+app at the Vite URL, go to **Guided evaluation**, pick **Flask + Redis sample**,
 inspect, choose **Faster under traffic**, run **Quick measured comparison**,
 and read **Step 5 · Prove** plus **Advanced evidence**. The full script,
 including fallbacks and 15 challenging Q&As, is in

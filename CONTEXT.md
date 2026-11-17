@@ -157,13 +157,14 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 
 ### In the dashboard
 
-- **Overview** with the product tour and a machine-readiness panel (required vs optional tools, execution modes, remedies)
-- **Architecture** with live topology, simulation, Compose export, and hand-off to Experiments
-- **Experiments** for smoke checks, benchmarks, fault verification, request validation, and four judge-ready scenario presets with observed durations
-- **Search** for NSGA-II, random, and hill-climbing runs with lineage, gates, the Pareto plot, an explicit no-feasible verdict, and a saved feasible/rejected run fallback
+- **The lab** home page with the product narrative (the growth decision, the illustrative A/B/C board, the six-step method, why DARWIN sits alongside AWS/Kubernetes/load-test tools, what runs today vs the product direction), the product tour, and a machine-readiness panel (required vs optional tools, execution modes, remedies)
+- **Guided evaluation** to connect a real public backend and compress the six steps into Connect → Understand → Challenge → Evolve → Prove
+- **Alternatives** with live topology, simulation, Compose export, and hand-off to Test & break
+- **Test & break** for smoke checks, benchmarks, fault verification, request validation, and four judge-ready scenario presets with observed durations
+- **Evolve** for NSGA-II, random, and hill-climbing runs with lineage, gates, the Pareto plot, an explicit no-feasible verdict, and a saved feasible/rejected run fallback
 - **Demo shop** where the same request key can be replayed against the real local shop
 - Six lab themes — Green Texture (green + white default), Leather Red, Blueprint, Amethyst, Carbon Black, Midnight — persisted per browser
-- A five-step product tour at `?tour=1`, from the sidebar, or from the overview
+- A six-step product tour at `?tour=1`, from the sidebar, or from **The lab**
 - A three.js calibration intro on first load: the gate stack assembles over the test deck, four genome controls sit on the bench, and a measuring beam verifies I-01…I-05 before the workspace takes over. Skippable with Escape, replayed from **Lab appearance → Replay calibration** or `?splash=1`, and static under reduced motion
 
 ### Hosted showcase
@@ -329,9 +330,9 @@ To exercise the UI:
 
 1. Start the API, Vite dev server, and demo shop as described in the [README](README.md#quickstart).
 2. Open `http://127.0.0.1:5173/?tour=1`.
-3. Confirm the **Machine readiness** panel on Overview; optional tools should be explained, not failing.
-4. Run the **Quick checkout smoke** card from **Experiments**.
-5. In **Search**, open a completed run or the recorded feasible/rejected examples; inspect lineage, the Pareto plot, and the no-feasible verdict.
+3. Confirm the **Machine readiness** panel on **The lab**; optional tools should be explained, not failing.
+4. Run the **Quick checkout smoke** card from **Test & break**.
+5. In **Evolve**, open a completed run or the recorded feasible/rejected examples; inspect lineage, the Pareto plot, and the no-feasible verdict.
 6. Place and replay an order in **Demo shop**; confirm the ledger stays at 1 order / 1 capture / 1 payment effect. The full runbook is in [docs/EXHIBITION.md](docs/EXHIBITION.md).
 
 ---
