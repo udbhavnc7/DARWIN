@@ -204,23 +204,42 @@ class GitClient:
                     f'The retrieved commit {head[:12]} does not match the requested pinned commit {sha[:12]}.',
                     'commit_mismatch', 409,
                 )
-            if target.exists():
-                _safe_rmtree(target)
-            for attempt in range(5):
-                try:
-                    if target.exists():
-                        _safe_rmtree(target)
-                    temporary.rename(target)
-                    break
-                except OSError:
-                    if attempt == 4:
-                        shutil.copytree(temporary, target, dirs_exist_ok=True)
-                        _safe_rmtree(temporary)
-                    else:
-                        time.sleep(0.2)
+            _install_checkout(temporary, target)
         except BaseException:
             _safe_rmtree(temporary)
             raise
+
+
+def _install_checkout(source: Path, target: Path) -> None:
+    """Move a prepared checkout into its cache path.
+
+    Windows can refuse to delete or rename a directory for a few seconds after
+    another process (an editor, an indexer or a virus scanner) touched it. Retry
+    with a growing backoff, move the old copy aside instead of deleting it in
+    place, and raise a clean RepositoryError when the path stays locked.
+    """
+    last_error: OSError | None = None
+    for attempt in range(6):
+        trash = target.parent / f'.stale-{uuid4().hex}'
+        try:
+            if target.exists():
+                try:
+                    target.rename(trash)
+                except OSError:
+                    _safe_rmtree(target)
+            source.rename(target)
+            if trash.exists():
+                _safe_rmtree(trash)
+            return
+        except OSError as exc:
+            last_error = exc
+            _safe_rmtree(trash)
+            time.sleep(0.25 * (attempt + 1))
+    raise RepositoryError(
+        'The cached copy of this repository is locked by another program. '
+        'Close any editor, backup tool or scanner reading it, then inspect again.',
+        'checkout_locked', 409,
+    ) from last_error
 
 
 def _remove_readonly(func, path, _):

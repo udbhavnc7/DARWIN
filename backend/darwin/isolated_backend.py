@@ -319,7 +319,8 @@ class IsolatedBackend:
         while time.perf_counter() < deadline:
             check()
             try:
-                response = httpx.get(self.url + self.manifest.health.path, timeout=self.manifest.health.timeout_s)
+                response = httpx.get(self.url + self.manifest.health.path,
+                                     timeout=self.manifest.health.timeout_s, trust_env=False)
                 body = response.text
                 if response.status_code == self.manifest.health.status and (
                         not self.manifest.health.contains or self.manifest.health.contains in body):
