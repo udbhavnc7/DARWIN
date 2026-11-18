@@ -860,6 +860,7 @@ body:has(.tour[open]) { overflow: hidden; }
 .showcase-banner-live strong { color: var(--good); }
 .showcase-banner-live .showcase-banner-mark { color: var(--good); }
 .showcase-banner-error { flex-basis: 100%; margin: 0; padding: 7px 9px; border-radius: 2px; background: var(--surface); color: var(--bad); font-size: 12px; }
+.showcase-banner-note { flex-basis: 100%; margin: 0; padding: 7px 9px; border-radius: 2px; background: var(--surface); color: var(--muted); font-size: 12px; }
 .artifact-name, .artifact-name:hover { color: var(--muted); border-style: dashed; text-decoration: none; cursor: default; }
 @media (max-width: 700px) {
   .showcase-banner { flex-wrap: wrap; margin-top: -4px; }

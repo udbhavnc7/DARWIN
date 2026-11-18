@@ -59,7 +59,7 @@ Do **not** run a measured search for the first time on stage. The default six me
 ### Stage setup
 
 - Open the local dashboard in the presentation browser, not the hosted page, unless you specifically want to demonstrate the showcase.
-- If you must present from **https://udbhavnc7.github.io/DARWIN/**, start the bench first and press **Connect this computer**. Allow Chrome's local-network prompt immediately. Keep `scripts/demo.py` running for the whole session. **Disconnect** returns to recorded evidence.
+- If you must present from **https://udbhavnc7.github.io/DARWIN/**, you can present the recorded evidence with no setup at all — no install, Docker or running server is needed. For live runs, start the bench first and press **Connect this computer**. Allow Chrome's local-network prompt immediately. Keep `scripts/demo.py` running for the whole session. If the bench stops, the page returns to recorded evidence automatically; **Disconnect** does the same on demand.
 - Zoom to 110–125%. At 125% the sidebar, metrics, and tables stay readable on a projector.
 - Choose **Lab appearance** once: **Green Texture** is the safest projector palette; **Carbon Black** works in a dark room; avoid palettes that wash out on your projector.
 - Close chat and notification popups. Disable sleep. Plug in power.
@@ -491,7 +491,7 @@ Native smoke, benchmarks, and faults run on Windows. Docker is optional and pref
 
 | Symptom | What to do | What to say |
 | --- | --- | --- |
-| Hosted page says bench not found | Start `scripts/demo.py start`, allow the local-network prompt, press **Connect this computer** | "The hosted page drives the bench on this laptop over loopback; it just needs the stack running." |
+| Hosted page notes that no local bench answered | Nothing is broken: the page keeps working on recorded evidence. For live runs, start `scripts/demo.py start`, allow the local-network prompt, press **Try again** | "The hosted copy runs on recorded evidence; connecting the laptop's bench is optional for live runs." |
 | API offline banner | `scripts/demo.py status`, restart if needed, **Refresh runtimes** | "The control plane is not answering; the dashboard will reconnect." |
 | Docker options disabled | Use Native; do not switch runtimes mid-run | "Docker is optional on this machine; Native measurements are available." |
 | Scenario card disabled | Preflight says the runtime is unavailable | "The preset is disabled rather than failing halfway." |

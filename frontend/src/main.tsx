@@ -76,6 +76,13 @@ function App() {
   const live = isLive();
   const [liveProbe, setLiveProbe] = useState<'idle' | 'probing' | 'error'>('idle');
   const [liveError, setLiveError] = useState('');
+  const [liveFellBack] = useState(() => {
+    try {
+      const fellBack = sessionStorage.getItem('darwin-live-fell-back') === '1';
+      if (fellBack) sessionStorage.removeItem('darwin-live-fell-back');
+      return fellBack;
+    } catch { return false; }
+  });
   const title = useRef<HTMLHeadingElement>(null);
   const modes = project?.execution_modes ?? [];
   const dockerAvailable = modes.includes('docker_smoke');
@@ -136,10 +143,28 @@ function App() {
   async function connectBench() {
     setLiveProbe('probing'); setLiveError('');
     const problem = await probeLive();
-    if (problem) { setLiveError(problem); setLiveProbe('error'); return; }
+    if (problem) {
+      setLiveError('No local bench answered at 127.0.0.1:8000. This page keeps working on the recorded evidence, so nothing here is broken. To run live, start the bench with scripts/demo.py start and try again. If Chrome asks whether this site may access your local network, choose Allow.');
+      setLiveProbe('error');
+      return;
+    }
     setLive(true);
     location.reload();
   }
+
+  // A connected bench can stop later. Fall back to the recorded evidence instead of
+  // leaving every page pointed at a dead port.
+  useEffect(() => {
+    if (!showcase || !isLive()) return;
+    let cancelled = false;
+    void probeLive(6000).then(problem => {
+      if (cancelled || !problem) return;
+      setLive(false);
+      try { sessionStorage.setItem('darwin-live-fell-back', '1'); } catch { /* Storage can be disabled. */ }
+      location.reload();
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   function disconnectBench() {
     setLive(false);
@@ -216,18 +241,20 @@ function App() {
             </span>
           </> : <>
             <p><strong>Recorded evidence{capturedAt ? ` from ${new Date(capturedAt).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'})}` : ''}, not a live run.</strong>{' '}
-              Every result here was produced on a local DARWIN bench and saved with its own evidence label
-              (measured or simulated). To run experiments, searches or checkouts live, start the stack on this
-              computer with <code>\.venv\Scripts\python.exe scripts/demo.py start</code> and connect.</p>
+              This hosted copy is a complete walkthrough: no install, no Docker and no local server needed.
+              Every result was produced on a local DARWIN bench and kept with its evidence label
+              (measured or simulated). If you want to run experiments, searches or checkouts live on this
+              computer, start the bench with <code>\.venv\Scripts\python.exe scripts/demo.py start</code> and connect it.</p>
             <span className="showcase-banner-actions">
               <button type="button" className="action-link showcase-banner-link" aria-busy={liveProbe === 'probing'}
                 disabled={liveProbe === 'probing'} onClick={() => void connectBench()}>
-                {liveProbe === 'probing' ? 'Looking for your bench…' : 'Connect this computer'} <Icon name="arrow"/>
+                {liveProbe === 'probing' ? 'Looking for your bench…' : liveProbe === 'error' ? 'Try again' : 'Connect this computer'} <Icon name="arrow"/>
               </button>
-              <a className="action-link showcase-banner-link" href={setupUrl} target="_blank" rel="noreferrer">Set it up <Icon name="arrow"/></a>
+              <a className="action-link showcase-banner-link" href={setupUrl} target="_blank" rel="noreferrer">How to run it <Icon name="arrow"/></a>
             </span>
           </>}
-          {liveError && <p className="showcase-banner-error" role="alert">{liveError}</p>}
+          {liveFellBack && <p className="showcase-banner-note" role="status">The connected bench could not be reached, so this page switched back to the recorded evidence. Everything shown here still works; reconnect whenever the bench is running.</p>}
+          {liveError && <p className="showcase-banner-note" role="status">{liveError}</p>}
         </aside>}
         {page !== 'shop' && page !== 'overview' && page !== 'project' && <div className="context-bar" role="group" aria-label="Run settings">
           <div className="context-heading"><Icon name="settings"/><span>Run settings</span></div>

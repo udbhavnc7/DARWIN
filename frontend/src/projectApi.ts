@@ -383,6 +383,7 @@ export type Inspection = {
     node_version: string | null;
     source_paths_present: boolean;
     adapter_approved: boolean;
+    container_runner_available?: boolean | null;
     source_tests_available: boolean;
   };
   warnings: string[];

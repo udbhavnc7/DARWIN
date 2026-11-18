@@ -94,6 +94,7 @@ export function ProjectEvaluation() {
   const screening = inspection?.screening ?? evaluation?.inspection.screening ?? null;
   const adapter = inspection?.supported_evaluations[0] ?? null;
   const isBackendArch = Boolean(adapter && adapter.evaluation_type === 'backend_architecture');
+  const containerMissing = isBackendArch && inspection?.readiness.container_runner_available === false;
   const measuredReady = Boolean((inspection?.execution_allowed ?? true) && adapter);
   const screeningReady = Boolean(screening?.available) && !measuredReady;
   const canRun = Boolean(inspectionId && (screeningReady || measuredReady));
@@ -729,11 +730,15 @@ export function ProjectEvaluation() {
           </dl>
 
           <div className="project-actions">
-            <Action variant="primary" icon="play" pending={starting} onClick={() => void startRun()}>
+            <Action variant="primary" icon="play" pending={starting} disabled={containerMissing} onClick={() => void startRun()}>
               {starting ? 'Starting…' : isBackendArch ? `Run ${mode} live comparison` : `Run ${mode} comparison`}
             </Action>
             <Action variant="quiet" onClick={reset}>Choose another project</Action>
           </div>
+          {containerMissing && <p className="notice" role="alert">
+            This live comparison needs a working Linux Docker engine. You can still inspect the project and read its
+            recorded evidence; the native checkout lab does not require Docker.
+          </p>}
           {!isBackendArch && !inspection?.readiness.node_available && <p className="notice" role="alert">
             Node.js was not found. The live comparison needs Node 22.18 or newer to execute the real source.
           </p>}

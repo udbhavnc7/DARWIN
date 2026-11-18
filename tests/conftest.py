@@ -89,8 +89,11 @@ def _docker_ready():
     if not executable:
         return False
     try:
-        return subprocess.run([executable, 'info'], capture_output=True, timeout=20,
-                              creationflags=FLAGS).returncode == 0
+        # The test containers are Linux images. Windows containers engines report a
+        # working CLI but cannot run those images, so treat only Linux as ready.
+        completed = subprocess.run([executable, 'info', '--format', '{{.OSType}}'],
+                                   capture_output=True, text=True, timeout=20, creationflags=FLAGS)
+        return completed.returncode == 0 and completed.stdout.strip().lower() == 'linux'
     except (OSError, subprocess.SubprocessError):
         return False
 
@@ -150,8 +153,11 @@ def test_database_url():
         name = f'darwin-test-postgres-{uuid.uuid4().hex[:8]}'
         port = _free_port()
         dsn = f'postgresql://darwin:darwin_demo@127.0.0.1:{port}/darwin_shop_test'
-        _docker_run(['--name', name, '-e', 'POSTGRES_USER=darwin', '-e', 'POSTGRES_PASSWORD=darwin_demo',
-                     '-e', 'POSTGRES_DB=darwin_shop_test', '-p', f'127.0.0.1:{port}:5432', POSTGRES_IMAGE])
+        try:
+            _docker_run(['--name', name, '-e', 'POSTGRES_USER=darwin', '-e', 'POSTGRES_PASSWORD=darwin_demo',
+                         '-e', 'POSTGRES_DB=darwin_shop_test', '-p', f'127.0.0.1:{port}:5432', POSTGRES_IMAGE])
+        except subprocess.CalledProcessError as exc:
+            pytest.skip(f'Docker is present but could not start the PostgreSQL test container: {exc.stderr or exc}')
         try:
             if not _wait_until(dsn):
                 pytest.fail('The disposable PostgreSQL container did not become ready')
@@ -210,7 +216,10 @@ def redis_server():
 
     if _docker_ready():
         name = f'darwin-test-redis-{uuid.uuid4().hex[:8]}'
-        _docker_run(['--name', name, '-p', f'127.0.0.1:{REDIS_PORT}:6379', REDIS_IMAGE])
+        try:
+            _docker_run(['--name', name, '-p', f'127.0.0.1:{REDIS_PORT}:6379', REDIS_IMAGE])
+        except subprocess.CalledProcessError as exc:
+            pytest.skip(f'Docker is present but could not start the Redis test container: {exc.stderr or exc}')
         try:
             if not _wait_for_redis():
                 pytest.fail('The disposable Redis container did not become ready')
