@@ -1,11 +1,12 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Action, Icon} from './Action';
 import {ProjectVerdict} from './ProjectVerdict';
 import {RepositoryArchitecture} from './RepositoryArchitecture';
 import {isLive, showcase} from './showcase';
+import {useProjectWorkspace} from './ProjectContext';
 import {
   api, controlLabel, formatDate, formatDuration, formatRows, isRunning, isTerminal, stageLabel,
-  stageState, tone, type Catalog, type CandidatePreview, type Evaluation, type Inspection, type ProjectEvent,
+  stageState, tone, type Catalog, type Evaluation,
 } from './projectApi';
 
 const steps = [
@@ -60,6 +61,8 @@ function resultLabel(item: Evaluation): string {
 }
 
 export function ProjectEvaluation() {
+  const workspace = useProjectWorkspace();
+  const {inspection, evaluation, preview, events, setEvaluation, setError: setWorkspaceError, clear: clearWorkspace} = workspace;
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [catalogError, setCatalogError] = useState('');
   const [recent, setRecent] = useState<Evaluation[]>([]);
@@ -69,19 +72,14 @@ export function ProjectEvaluation() {
   const [consent, setConsent] = useState(false);
   const [inspecting, setInspecting] = useState(false);
   const [inspectionError, setInspectionError] = useState('');
-  const [inspection, setInspection] = useState<Inspection | null>(null);
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [preview, setPreview] = useState<CandidatePreview | null>(null);
   const [challenge, setChallenge] = useState('faster');
   const [mode, setMode] = useState<'quick' | 'full'>('quick');
   const [includeTests, setIncludeTests] = useState(false);
   const [starting, setStarting] = useState(false);
   const [runError, setRunError] = useState('');
   const [cancelling, setCancelling] = useState(false);
-  const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
-  const [events, setEvents] = useState<ProjectEvent[]>([]);
   const [now, setNow] = useState(Date.now());
-  const lastSequence = useRef(0);
 
   const recordedShowcase = showcase && !isLive();
   const inspectionId = inspection?.inspection_id ?? evaluation?.inspection_id ?? null;
@@ -135,46 +133,39 @@ export function ProjectEvaluation() {
   useEffect(() => { void loadCatalog(); void loadRecent(); }, []);
 
   useEffect(() => {
-    if (!evaluation || !isRunning(evaluation)) return;
-    lastSequence.current = 0;
-    setEvents([]);
-    let stopped = false;
-    const tick = window.setInterval(() => setNow(Date.now()), 1000);
-    const id = evaluation.evaluation_id;
+    if (inspection && step === 1 && !evaluation) setStep(2);
+  }, [inspection?.inspection_id]);
 
-    const poll = async () => {
-      try {
-        const [next, fresh] = await Promise.all([api.evaluation(id), api.events(id, lastSequence.current)]);
-        if (stopped) return;
-        setEvents(current => {
-          const seen = new Set(current.map(item => item.sequence));
-          return [...current, ...fresh.filter(item => !seen.has(item.sequence))]
-            .sort((a, b) => a.sequence - b.sequence);
-        });
-        lastSequence.current = Math.max(lastSequence.current, ...fresh.map(item => item.sequence), 0);
-        setEvaluation(next);
-        setRunError('');
-        if (next.status === 'completed' && next.verdict) {
-          setStep(5);
-          void loadRecent();
-          return;
-        }
-        if (isTerminal(next)) {
-          void loadRecent();
-          return;
-        }
-      } catch (reason) {
-        if (!stopped) setRunError(message(reason));
-      }
-      if (!stopped) window.setTimeout(poll, 700);
-    };
-    const timer = window.setTimeout(poll, 350);
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-      window.clearInterval(tick);
-    };
+  useEffect(() => {
+    if (!evaluation) return;
+    if (evaluation.status === 'completed' && evaluation.verdict) {
+      setStep(5);
+      void loadRecent();
+      return;
+    }
+    if (isTerminal(evaluation)) {
+      setStep(4);
+      void loadRecent();
+      return;
+    }
+    if (isRunning(evaluation)) setStep(4);
   }, [evaluation?.evaluation_id, evaluation?.status]);
+
+  useEffect(() => {
+    if (!evaluation || !isRunning(evaluation)) return;
+    const tick = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(tick);
+  }, [evaluation?.evaluation_id, evaluation?.status]);
+
+  useEffect(() => {
+    if (workspace.error) setRunError(workspace.error);
+  }, [workspace.error]);
+
+  useEffect(() => {
+    if (preview?.challenges?.length && !preview.challenges.includes(challenge)) {
+      setChallenge(preview.challenges[0]);
+    }
+  }, [preview?.challenges, challenge]);
 
   useEffect(() => {
     if (step > 1) {
@@ -182,31 +173,16 @@ export function ProjectEvaluation() {
     }
   }, [step]);
 
-  async function loadPreview(id: string) {
-    try {
-      const value = await api.candidates(id);
-      setPreview(value);
-      if (value.challenges?.length && !value.challenges.includes(challenge)) {
-        setChallenge(value.challenges[0]);
-      }
-    } catch {
-      setPreview(null);
-    }
-  }
-
   async function inspectProject() {
     if (!url.trim() || !consent) return;
     setInspecting(true);
     setInspectionError('');
+    setWorkspaceError('');
     try {
       const value = await api.inspect(url.trim(), ref.trim() || 'main', consent);
-      setInspection(value);
-      setEvaluation(null);
-      setPreview(null);
-      setEvents([]);
+      workspace.selectInspection(value);
       setRunError('');
       setStep(2);
-      void loadPreview(value.inspection_id);
     } catch (reason) {
       setInspectionError(message(reason));
     } finally {
@@ -223,13 +199,12 @@ export function ProjectEvaluation() {
     if (!inspectionId || !canRun) return;
     setStarting(true);
     setRunError('');
+    setWorkspaceError('');
     try {
       const value = await api.start(inspectionId, mode, includeTests,
         screeningReady ? 'architecture-screening-v1' : undefined,
         isBackendArch ? challenge : 'faster');
-      lastSequence.current = 0;
       setEvaluation(value);
-      setEvents([]);
       setStep(4);
       void loadRecent();
     } catch (reason) {
@@ -252,31 +227,14 @@ export function ProjectEvaluation() {
   }
 
   async function openEvaluation(item: Evaluation) {
-    setEvaluation(item);
-    setEvents([]);
-    setPreview(null);
     setRunError('');
-    lastSequence.current = 0;
-    try {
-      const record = await api.inspection(item.inspection_id);
-      setInspection(record);
-      void loadPreview(item.inspection_id);
-    } catch {
-      setInspection(null);
-    }
-    try {
-      const history = await api.events(item.evaluation_id);
-      setEvents(history);
-      lastSequence.current = Math.max(0, ...history.map(event => event.sequence));
-    } catch { /* A saved verdict can still be shown without its event log. */ }
+    setWorkspaceError('');
+    await workspace.selectEvaluation(item);
     setStep(item.status === 'completed' && item.verdict ? 5 : 4);
   }
 
   function reset() {
-    setInspection(null);
-    setEvaluation(null);
-    setPreview(null);
-    setEvents([]);
+    clearWorkspace();
     setRunError('');
     setInspectionError('');
     setStep(1);
@@ -286,13 +244,8 @@ export function ProjectEvaluation() {
 
   function rerun() {
     setRunError('');
-    if (!inspection && evaluation) {
-      void api.inspection(evaluation.inspection_id).then(record => {
-        setInspection(record);
-        void loadPreview(evaluation.inspection_id);
-      }).catch(() => {});
-    }
-    setStep(3);
+    setWorkspaceError('');
+    setStep(inspection ? 3 : 2);
   }
 
   const example = catalog?.examples[0];
