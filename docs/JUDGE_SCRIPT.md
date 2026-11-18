@@ -31,8 +31,8 @@ DARWIN says so and stays read-only.
 ### 0:00–0:20 — Set the frame
 
 Open the app. Mention the two modes in one sentence: the controlled checkout
-lab is the **The lab** home page and its experiment pages; today we are on
-**Guided evaluation → Connect a public backend**.
+lab is the **Overview** home page and its experiment pages; today we are on
+**Project Workspace → Connect a public backend**.
 
 Say: "The promise is not 'AI optimizes your repo'. The promise is: it measures
 a specific, deployable change and refuses to overclaim."
@@ -92,6 +92,11 @@ evidence** and show:
 
 Close with: "If the candidate wins but costs more, the verdict is a tradeoff.
 If it loses, the baseline stays. Both are successful outcomes."
+
+Then open **Solution** and point at the recorded decision card: the same
+verdict, the correctness count, the measured trade-off, the reviewable change
+with rollback notes, and the evidence files with their digests. The Solution
+stage is where the run becomes something a team can act on.
 
 ---
 
@@ -215,7 +220,7 @@ are reusable; the sandbox and operational layer are prototype-grade.
 | Correctness | Adapter-specific oracle (counter, report parity) | Per-repository business oracle and contract tests |
 | Evidence | Allowlisted files, SHA-256, local SQLite | Immutable object storage, signatures, audit trail, retention |
 | API | Local, optional bearer token | Authenticated multi-user service, RBAC, rate limits |
-| UI | Five-stage local exhibition flow | Team workspaces, comparisons over time, approvals |
+| UI | Six-stage local exhibition flow | Team workspaces, comparisons over time, approvals |
 | Cost model | No financial claims | Only with measured resource and price inputs, explicitly sourced |
 
 ---

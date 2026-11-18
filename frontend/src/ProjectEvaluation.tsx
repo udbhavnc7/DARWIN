@@ -319,13 +319,13 @@ export function ProjectEvaluation() {
     {step === 1 && <section className="project-panel project-choose" aria-labelledby="project-stage-title">
       <div className="project-intro">
         <div>
-          <span className="section-kicker">Guided evaluation · Connect</span>
+          <span className="section-kicker">Stage 02 · Project Workspace · Connect</span>
           <h2 id="project-stage-title" tabIndex={-1}>Connect a public backend.</h2>
           <p className="project-lede">
             DARWIN pins one exact commit, reads the source and builds a file-backed picture of the project
             and its backend. A catalogued measured adapter can run a real scoped comparison; every other
             repository can receive a simulated architecture screening. Arbitrary repository code is never executed.
-            This guided flow compresses the lab’s six steps into Connect → Understand → Challenge → Evolve → Prove.
+            This workspace carries one pinned project from Connect through Understand, Challenge, Evolve and Prove, then hands the outcome to the Solution stage.
           </p>
         </div>
         <span className={`status-chip ${recordedShowcase ? 'warn' : 'active'}`}>
@@ -439,7 +439,7 @@ export function ProjectEvaluation() {
       <section className="project-panel project-understand" aria-labelledby="project-stage-title">
         <div className="section-title">
           <div className="panel-heading">
-            <span className="section-kicker">Step 2 · Understand</span>
+            <span className="section-kicker">Stage 02 · Project Workspace · Understand</span>
             <h2 id="project-stage-title" tabIndex={-1}>
               {measuredReady ? 'Pinned source, reviewed change, and an isolation boundary.'
                 : screeningReady ? 'Read-only model, clearly labelled as simulated.'
@@ -511,8 +511,8 @@ export function ProjectEvaluation() {
         <div className="section-title">
           <div className="panel-heading">
             <span className="section-kicker">
-              {screeningReady || isBackendArch ? 'Step 3 · Challenge the architecture'
-                : 'Step 3 · Challenge the implementation'}
+              {screeningReady || isBackendArch ? 'Stages 03–04 · Challenge the architecture'
+                : 'Stages 03–04 · Challenge the implementation'}
             </span>
             <h2 id="project-stage-title" tabIndex={-1}>
               {screeningReady ? 'What should the backend get better at?'
@@ -750,7 +750,7 @@ export function ProjectEvaluation() {
     {step === 4 && evaluation && <section className="project-panel project-run" aria-labelledby="project-stage-title">
       <div className="section-title">
         <div className="panel-heading">
-          <span className="section-kicker">Step 4 · Evolve · {isScreening ? 'Simulate the backend' : 'Test the change'}</span>
+          <span className="section-kicker">Stage 05 · Evolution · {isScreening ? 'Simulate the backend' : 'Test the change'}</span>
           <h2 id="project-stage-title" tabIndex={-1}>{isRunning(evaluation)
             ? (isScreening ? 'Modelling on this computer.' : 'Running on this computer.')
             : 'This run has ended.'}</h2>

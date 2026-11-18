@@ -8,15 +8,16 @@ was checked, how, what it found, and what remains unverified.
 
 | Area | Result |
 | --- | --- |
-| WCAG 2.1 A/AA automated rules (axe-core 4.10.2) | 0 violations across 144 page/theme/viewport states |
+| WCAG 2.1 A/AA automated rules (axe-core 4.10.2) | 0 violations across 162 page/theme/viewport states |
 | Palette token contrast (`python scripts/check_contrast.py`) | 23 colour pairs per palette meet AA in all six themes |
 | Horizontal overflow at 320 CSS px (WCAG 1.4.10 reflow) | No page scrolls sideways in any theme or page |
 | Keyboard path | 9 of 9 scripted checks pass (skip link, focus order, focus rings, dialog focus, Escape) |
 
-"Page/theme/viewport state" means one rendered surface: the six workspace pages
-(Guided evaluation, The lab, Alternatives, Test & break, Evolve, Demo shop), the
-palette dialog, and the calibration intro, each in all six palettes at three
-viewport widths. That is 6 + 1 + 1 surfaces × 6 themes × 3 viewports = 144.
+"Page/theme/viewport state" means one rendered surface: the seven workspace pages
+(Overview, Project Workspace, Architecture, Experiments, Evolution, Solution,
+Demo shop), the palette dialog, and the calibration intro, each in all six
+palettes at three viewport widths. That is 7 + 1 + 1 surfaces × 6 themes × 3
+viewports = 162.
 
 ## Method
 
@@ -84,11 +85,21 @@ The first full run found three problems, all now fixed:
 | --- | --- | --- |
 | `color-contrast` on the sidebar page numbers (3.80–3.98:1, AA needs 4.5:1) | `frontend/src/style.css`, `.nav-index` | Dropped `opacity: .8`, so the index uses `--muted` (5.93:1) and the current page uses `--accent` |
 | `button-name` on the palette trigger below 560px, where the theme name is hidden | `frontend/src/ThemePicker.tsx` | Added `aria-label={\`Theme: ${name}\`}` so the icon-only button keeps its name |
-| The Evolve page scrolled sideways: a nowrap candidate summary forced its grid row to 462px | `frontend/src/style.css`, `.verdict-grid`, `.verdict-candidates li`, `.search-grid` | `minmax(0, 1fr)` columns plus `min-width: 0` on the grid items, so the summary ellipsizes instead of widening the page |
+| The Evolution page scrolled sideways: a nowrap candidate summary forced its grid row to 462px | `frontend/src/style.css`, `.verdict-grid`, `.verdict-candidates li`, `.search-grid` | `minmax(0, 1fr)` columns plus `min-width: 0` on the grid items, so the summary ellipsizes instead of widening the page |
 
 The project-evaluation form's placeholder text had no explicit colour, so it
 fell back to the browser default. Every `::placeholder` is now `--muted` at full
 opacity, which stays above 4.5:1 on the field background in all six palettes.
+
+Adding the Solution page raised the run to 162 states. That pass found four more
+problems, fixed before the page shipped:
+
+| Finding | Where | Fix |
+| --- | --- | --- |
+| `definition-list` on the Solution and project-verdict metric grids: a `<span class="metric-range">` sat beside the `<dd>` inside `<dl><div>` | `frontend/src/Solution.tsx`, `frontend/src/ProjectVerdict.tsx` | Moved the range inside the `<dd>`, matching the Experiments page |
+| `color-contrast` on the struck-through time of the failed option (2.62:1) | `frontend/src/story.css`, `.story-choice-fail .story-choice-stat` | Dropped `opacity: .65`; the line-through alone marks the rejected value |
+| `scrollable-region-focusable` on the two Overview tables at 390px and 320px | `frontend/src/Story.tsx` | Both scroll containers are now labelled `role="region"` with `tabIndex={0}` |
+| Project Workspace and Evolution scrolled sideways by 2–9px: `.header-tools` shrank while the fixed-width palette button could not | `frontend/src/style.css`, `.header-tools` | Added `flex: none` so the button keeps its width inside the header |
 
 ## What is not covered
 

@@ -12,6 +12,7 @@ import {Tour} from './Demo';
 import {ThemePicker} from './ThemePicker';
 import {Readiness, type Preflight} from './Preflight';
 import {ProjectEvaluation} from './ProjectEvaluation';
+import {Solution} from './Solution';
 import {Story} from './Story';
 import {Action, Icon} from './Action';
 import {applyTheme, onThemeStorage, readTheme, saveTheme, themes, type ThemeId} from './themes';
@@ -25,18 +26,20 @@ const Splash = lazy(() => import('./Splash').then(module => ({default: module.Sp
 type Project = {execution_modes: string[]; baseline: Genome};
 type Runtime = 'native' | 'docker';
 const pages = {
-  overview: {label: 'The lab', title: 'Architecture, decided by evidence'},
-  project: {label: 'Guided evaluation', title: 'Connect a real backend'},
-  configuration: {label: 'Alternatives', title: 'Generate alternatives'},
-  experiments: {label: 'Test & break', title: 'Run and break experiments'},
-  search: {label: 'Evolve', title: 'Search for a better configuration'},
-  shop: {label: 'Demo shop', title: 'Demo shop'},
+  overview: {label: 'Overview', title: 'Architecture, decided by evidence'},
+  project: {label: 'Project Workspace', title: 'One real backend, pinned and understood'},
+  configuration: {label: 'Architecture', title: 'What can actually change?'},
+  experiments: {label: 'Experiments', title: 'Does it survive traffic and failure?'},
+  search: {label: 'Evolution', title: 'Which trade-offs deserve the next test?'},
+  solution: {label: 'Solution', title: 'What should the team do next?'},
+  shop: {label: 'Demo shop', title: 'The checkout lab, end to end'},
 };
 type Page = keyof typeof pages;
-const pageOrder: Page[] = ['overview', 'project', 'configuration', 'experiments', 'search', 'shop'];
+const pageOrder: Page[] = ['overview', 'project', 'configuration', 'experiments', 'search', 'solution', 'shop'];
 const navGroups: {label: string; pages: Page[]}[] = [
   {label: 'Start here', pages: ['overview', 'project']},
-  {label: 'Experiment lab', pages: ['configuration', 'experiments', 'search', 'shop']},
+  {label: 'One project, end to end', pages: ['configuration', 'experiments', 'search', 'solution']},
+  {label: 'Example lab', pages: ['shop']},
 ];
 
 function currentPage(): Page {
@@ -256,7 +259,7 @@ function App() {
           {liveFellBack && <p className="showcase-banner-note" role="status">The connected bench could not be reached, so this page switched back to the recorded evidence. Everything shown here still works; reconnect whenever the bench is running.</p>}
           {liveError && <p className="showcase-banner-note" role="status">{liveError}</p>}
         </aside>}
-        {page !== 'shop' && page !== 'overview' && page !== 'project' && <div className="context-bar" role="group" aria-label="Run settings">
+        {page !== 'shop' && page !== 'overview' && page !== 'project' && page !== 'solution' && <div className="context-bar" role="group" aria-label="Run settings">
           <div className="context-heading"><Icon name="settings"/><span>Run settings</span></div>
           <div className="header-controls">
             <div><label htmlFor="runtime">Runtime</label>
@@ -285,13 +288,13 @@ function App() {
                 <li><Icon name="configuration"/><strong>Gateway</strong><small>Route requests</small></li><li><Icon name="server"/><strong>Checkout API</strong><small>{project?.baseline.app_replicas ?? baseline.app_replicas} API {(project?.baseline.app_replicas ?? baseline.app_replicas) === 1 ? 'replica' : 'replicas'}</small></li><li><Icon name="database"/><strong>PostgreSQL</strong><small>Persist orders</small></li>
               </ol>
               <p className="muted">The API also calls inventory and mock payment services. The four supported controls are the only things that vary between candidates.</p>
-              <a href="#configuration">Generate an alternative <span aria-hidden="true">→</span></a>
+              <a href="#configuration">Open the Architecture stage <span aria-hidden="true">→</span></a>
             </article>
             <article className="panel runtime-card">
               <div className="section-title"><div className="panel-heading"><span className="section-kicker">{showcase && !live ? 'Where this evidence was measured' : 'Ready for your next run'}</span><h2>Execution environment</h2></div>{showcase && !live ? <Status value="showcase" label="Recorded"/> : <Status value={connecting ? 'running' : project ? 'connected' : 'offline'}/>}</div>
               <dl><div><dt>Runtime</dt><dd>{project ? runtimeLabel : '—'}</dd></div>
                 <div><dt>Capabilities</dt><dd>{connecting ? 'Checking' : canMeasure ? 'Smoke, benchmarks, fault tests' : project ? 'Smoke checks' : 'Unavailable'}</dd></div></dl>
-              <a href="#search">Explore measured search <span aria-hidden="true">→</span></a>
+              <a href="#search">Explore the Evolution stage <span aria-hidden="true">→</span></a>
             </article>
           </div>
           <Readiness preflight={preflight} loading={preflightLoading} onRefresh={() => void loadPreflight(true)}/>
@@ -300,6 +303,7 @@ function App() {
         <div hidden={page !== 'experiments'}><Experiments workload={workload} canMeasure={canMeasure} runtime={runtime}
           canStart={modes.includes(`${runtime}_smoke`)} draft={draft}/></div>
         <div hidden={page !== 'search'}><Search workload={workload} runtime={runtime} canMeasure={canMeasure} onEditCandidate={editCandidate} onWorkloadChange={setWorkload}/></div>
+        <div hidden={page !== 'solution'}><Solution/></div>
         <div hidden={page !== 'shop'}><Shop/></div>
       </main>
     </div>

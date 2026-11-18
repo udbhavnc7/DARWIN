@@ -16,25 +16,31 @@ Example: The original recipe before you start changing ingredients. It is not cl
 Means: A shop with changed settings that you are testing against the baseline.
 Example: The new recipe version you want to compare with the original.
 
-## The lab (home page)
+## Overview (home page)
 
-**The lab**
-Means: The home screen. It states the decision, the six-step method, what is real today, and whether the test bench is ready.
+**Overview**
+Means: The home screen. It states the decision, the six stages, what is real today, and whether the test bench is ready.
 Example: The dashboard at the entrance of a lab: the question being settled, the method on the wall, the equipment that actually exists, and whether it is plugged in.
 
 **Illustrative decision**
 Means: A worked example of the product's judgement. Basic is cheap but slow, Cached is the balance, Distributed is fastest but fails the duplicate-payment rule, so it is rejected.
 Example: Three cars on a track. The fastest one fails the safety check and does not win. The cost figures shown (₹10,000 / ₹20,000 / ₹35,000) are hypothetical examples, not DARWIN results.
 
-**Six-step method**
-Means: Understand the backend → generate alternatives → run experiments under traffic → introduce failures → verify business correctness → search the trade-offs.
-Example: A recipe contest: read the recipe, write variants, cook them, burn one on purpose, taste-test for safety, then rank only the ones that are actually edible.
+**Six stages**
+Means: Overview → Project Workspace → Architecture → Experiments → Evolution → Solution.
+Example: A recipe contest: frame the question, read the recipe, write variants, cook them, burn one on purpose, taste-test for safety, then rank only the ones that are actually edible — and agree what to put on the menu.
 
 **Why not just AWS, Kubernetes and load tests?**
 Means: Those tools supply servers, containers, traffic and numbers. DARWIN coordinates the decision: which architecture should carry the next 10,000 users, and which candidates must be rejected even if they are fast.
 Example: A workshop has a lathe, a welder and a paint booth. None of them decides which chair design to ship.
 
-## Test & break page
+## Project Workspace page
+
+**Project Workspace**
+Means: Connect one public repository at an exact commit, read its services and data stores, choose a challenge, then measure a reviewed adapter or run a clearly labelled simulation.
+Example: A garage inspection before a rebuild: confirm the exact model and year, list what is really under the bonnet, and mark every guess as a guess.
+
+## Experiments page
 
 **Quick checkout smoke**
 Means: A short test that starts the shop and checks it can take an order, then take the exact same order again without creating a second one.
@@ -72,9 +78,9 @@ Example: In a 12-second test the app used 2.4 seconds of CPU, like a worker who 
 Means: How long after a fault is removed until the shop is healthy again.
 Example: Unplug the database for two seconds, plug it back in, and the shop is normal three seconds later. Recovery is 3 s.
 
-## Evolve page
+## Evolution page
 
-**Evolve (search)**
+**Evolution (search)**
 Means: The computer tries many shop settings, tests the promising ones for real, and keeps the best trade-offs.
 Example: Trying 36 recipes, tasting a few, and keeping the fastest and the cheapest. The untasted recipes are never called winners.
 
@@ -130,7 +136,7 @@ Example: One car is fast but thirsty; one is slow but cheap. Both are real choic
 Means: None of the tested settings passed all the rules.
 Example: Every applicant failed the background check. The honest answer is "nobody yet", not "pick the least bad".
 
-## Alternatives page
+## Architecture page
 
 **API replicas**
 Means: How many copies of the checkout counter are running.
@@ -159,6 +165,12 @@ Example: A locker number. The same settings get the same locker; change one thin
 **Simulated performance**
 Means: A quick computer estimate of speed before doing the real test.
 Example: A weather forecast. Useful for planning, but you still look outside.
+
+## Solution page
+
+**Solution**
+Means: The recorded verdict: what to keep or change, the measured trade-off, the correctness checks, the reviewable change and rollback notes, and the evidence bundle. A simulated recommendation is never shown as a measured winner.
+Example: The minutes of a design review: the decision, the evidence behind it, the change to apply, and the way back if it does not hold up.
 
 ## Demo shop
 

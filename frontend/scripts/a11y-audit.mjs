@@ -34,7 +34,7 @@ const opt = (name, fallback) => {
 
 const base = opt('base', 'http://127.0.0.1:4173/DARWIN/');
 const themes = opt('themes', 'texture,leather,carbon,blueprint,amethyst,midnight').split(',');
-const pages = opt('pages', 'overview,project,configuration,experiments,search,shop').split(',');
+const pages = opt('pages', 'overview,project,configuration,experiments,search,solution,shop').split(',');
 const viewports = [
   {name: 'desktop', width: 1440, height: 900},
   {name: 'narrow', width: 390, height: 844},
@@ -121,7 +121,7 @@ for (const viewport of viewports) {
   const context = await browser.newContext({viewport: {width: viewport.width, height: viewport.height}});
   const page = await context.newPage();
 
-  // The six workspace pages in every theme.
+  // The seven workspace pages in every theme.
   await page.goto(`${base}?nosplash=1`, {waitUntil: 'networkidle'});
   await page.addScriptTag({content: axeSource});
   for (const theme of themes) {

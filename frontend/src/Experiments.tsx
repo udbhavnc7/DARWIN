@@ -175,7 +175,7 @@ export function Experiments({workload,canMeasure,runtime,canStart,draft}:{worklo
   }
   const plannedAttempts=run ? run.candidates.length*(run.request.budget?.repetitions??3) : 0;
   return <section aria-label="Experiment workspace" className="page-content">
-    <p className="page-intro"><strong>Steps 3–4 · Run and break it.</strong> Measure a candidate under simulated traffic, then inject database delays, service outages and duplicate requests. Five business invariants run before timing is allowed to count, so a fast configuration that breaks checkout is rejected.</p>
+    <p className="page-intro"><strong>Stage 04 · Experiments.</strong> Measure a candidate under simulated traffic, then inject database delays, service outages and duplicate requests. Five business invariants run before timing is allowed to count, so a fast configuration that breaks checkout is rejected.</p>
     <div className="experiment-grid">
     <div className="panel experiment-controls">
     <div className="section-title panel-heading"><div><p className="section-kicker">Experiment setup</p><h2>New experiment</h2></div></div>

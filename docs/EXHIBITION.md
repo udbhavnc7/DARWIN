@@ -47,7 +47,7 @@ disk            ready  128.4 GB free
 memory          ready  24283 MiB
 ```
 
-The lab home page renders the same data as the **Machine readiness** panel. A missing optional tool is shown with a remedy; a missing required tool flips the panel to **Needs attention**.
+The Overview page renders the same data as the **Machine readiness** panel. A missing optional tool is shown with a remedy; a missing required tool flips the panel to **Needs attention**.
 
 ---
 
@@ -84,7 +84,7 @@ Live validation on 2026-11-14:
 
 ## 3. Saved-run fallback
 
-The Evolve page can show a recorded example when the API or a live run is unavailable. The bundle is a compact export of real completed searches; it is not a mock and is never promoted as a new result.
+The Evolution page can show a recorded example when the API or a live run is unavailable. The bundle is a compact export of real completed searches; it is not a mock and is never promoted as a new result.
 
 - Bundle: `frontend/public/recorded-example.json` (~70 KiB), generated 2026-11-13.
 - Feasible example: random search `fe3386fb…`, normal workload, 6 of 24 candidates measured feasible, 6 on the Pareto front.
@@ -138,12 +138,13 @@ The Shop page shows the same counters after a repeat and includes **Reset demo s
 
 ## 6. Presentation script (about 10 minutes)
 
-1. **The lab → Machine readiness.** Point out required checks, the six execution modes, and any optional tool that is disabled. Press **Run preflight again** if the shop was just started.
-2. **Test & break → Quick checkout smoke.** Choose the runtime that matches the story: native finishes in about 30 s here, Docker takes about 2–3 minutes because it deploys an isolated Compose project. Show the completed run, three repetitions, and gate status.
-3. **Evolve → Open recorded feasible run.** Show the Pareto plot, 6 of 24 measured feasible, and candidate evidence. Then **Open recorded rejection** to show the honest no-feasible verdict and its gate reasons.
-4. **Optional:** run **Normal baseline vs candidate**, **Flash sale comparison**, or **Payment timeout with unsafe retry** if time allows. Native comparisons take 1–3 minutes; Docker benchmark records took 5–7 minutes. Do not promise a specific ordering; report what the run produces.
-5. **Demo shop.** Reset, place an order, resend the same request. Show the identical receipt, unchanged stock, and ledger at 1 order / 1 capture / 1 payment effect.
-6. Close with the boundary: local trusted-operator tool, measured evidence separated from simulation, and negative results retained.
+1. **Overview → Machine readiness.** Point out required checks, the six execution modes, and any optional tool that is disabled. Press **Run preflight again** if the shop was just started.
+2. **Experiments → Quick checkout smoke.** Choose the runtime that matches the story: native finishes in about 30 s here, Docker takes about 2–3 minutes because it deploys an isolated Compose project. Show the completed run, three repetitions, and gate status.
+3. **Evolution → Open recorded feasible run.** Show the Pareto plot, 6 of 24 measured feasible, and candidate evidence. Then **Open recorded rejection** to show the honest no-feasible verdict and its gate reasons.
+4. **Solution.** Read the latest recorded decision: verdict, correctness count, measured trade-off and any regressed cost, then the reviewable change and rollback notes. Point out that a simulated screening stays labelled **SIMULATED · NOT MEASURED**.
+5. **Optional:** run **Normal baseline vs candidate**, **Flash sale comparison**, or **Payment timeout with unsafe retry** if time allows. Native comparisons take 1–3 minutes; Docker benchmark records took 5–7 minutes. Do not promise a specific ordering; report what the run produces.
+6. **Demo shop.** Reset, place an order, resend the same request. Show the identical receipt, unchanged stock, and ledger at 1 order / 1 capture / 1 payment effect.
+7. Close with the boundary: local trusted-operator tool, measured evidence separated from simulation, and negative results retained.
 
 If a live result differs from a recorded number, say so and investigate. Do not adjust thresholds or hide the run.
 
@@ -153,14 +154,14 @@ If a live result differs from a recorded number, say so and investigate. Do not 
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Fast test suite | `.venv\Scripts\python.exe -m pytest -q -rs` | **108 passed, 14 skipped** |
+| Full test suite | `.venv\Scripts\python.exe -m pytest -q` | **216 passed** |
 | Shop integration | `DARWIN_TEST_DATABASE_URL=…/darwin_shop_test pytest tests/test_shop.py` | **14 passed** |
 | Type-check + production build | `npm --prefix frontend run build` | **passed** (`tsc --noEmit` + Vite) |
 | Preflight API | `GET /api/preflight?refresh=true` | **ready: true**, required checks green |
 | Scenario API | `POST /api/exhibition/scenarios/quick_smoke` | completed, 3 attempts, cleanup completed |
 | Shop idempotency + ledger | repeat checkout with one key | 1 order / 1 capture / 1 effect |
 
-The 14 skips are PostgreSQL/Redis integration tests that require an explicit dedicated database. They are skipped, not passed. Run them against `darwin_shop_test` (or another disposable `*_test` database) as shown.
+The shop integrations reuse the demo cluster or provision a disposable `darwin_shop_test` database and Redis on demand, then clean them up. On a host without PostgreSQL or Docker they remain the only part of the suite that cannot run; the rest still passes.
 
 Build note: the lazy-loaded Three.js scene is a separate 528 kB chunk, so Vite warns about the 500 kB threshold. It does not affect initial dashboard load.
 

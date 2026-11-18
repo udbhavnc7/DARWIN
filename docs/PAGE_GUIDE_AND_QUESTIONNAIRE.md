@@ -1,6 +1,6 @@
 # DARWIN page guide and presentation questionnaire
 
-This document explains the six pages of the DARWIN dashboard — **The lab**, **Guided evaluation**, **Alternatives**, **Test & break**, **Evolve**, and **Demo shop** — how each one actually works, the real-world problem each one addresses, and the questions an audience is likely to ask, with answers you can defend.
+This document explains the seven pages of the DARWIN dashboard — **Overview**, **Project Workspace**, **Architecture**, **Experiments**, **Evolution**, **Solution**, and **Demo shop** — how each one actually works, the real-world problem each one addresses, and the questions an audience is likely to ask, with answers you can defend.
 
 Every behaviour described here is taken from the page components in `frontend/src/` and the backend modules in `backend/darwin/`. Where the system is limited, the limit is stated instead of hidden. That matters: the credibility of the demo depends on never presenting a simulated number as a measurement.
 
@@ -10,18 +10,19 @@ Every behaviour described here is taken from the page components in `frontend/sr
 
 DARWIN is a local architecture experimentation laboratory. You describe a system as a small set of deployment controls, run that system in an isolated sandbox under traffic, break it on purpose, verify the business rules, and only then decide whether a change is better.
 
-The six pages are six stages of one argument:
+Seven pages carry six stages of one argument; the demo shop is a separate example lab that reproduces the correctness rule in one request:
 
 | Page | Route | Question it answers | Output |
 |---|---|---|---|
-| **The lab** | `#overview` | "What decision is this, and what is the method?" | The six-step story, the illustrative decision, scope, and readiness |
-| **Guided evaluation** | `#project` | "Can DARWIN understand *this* repository, and what would it change?" | Inspection plus a measured verdict or a clearly labelled simulated screening |
-| **Alternatives** | `#configuration` | "What is the system made of, and what does this configuration cost?" | Genome, topology, compose file, uncalibrated performance estimate |
-| **Test & break** | `#experiments` | "Does it actually work under traffic and failure, and how fast is it really?" | Repeated measurements, fault traces, invariant results, artifacts |
-| **Evolve** | `#search` | "Which configuration should we try next, under a budget?" | Pareto front of measured, gate-passing candidates or an explicit rejection |
-| **Demo shop** | `#shop` | "Why should anyone trust the measurement?" | A live checkout whose ledger proves idempotency and invariants |
+| **Overview** | `#overview` | "What decision is this, and how will evidence settle it?" | The six-stage story, the illustrative decision, scope, and readiness |
+| **Project Workspace** | `#project` | "Can DARWIN understand *this* repository, and what would it change?" | Inspection plus a measured verdict or a clearly labelled simulated screening |
+| **Architecture** | `#configuration` | "What is the system made of, and what does this configuration cost?" | Genome, topology, compose file, uncalibrated performance estimate |
+| **Experiments** | `#experiments` | "Does it actually work under traffic and failure, and how fast is it really?" | Repeated measurements, fault traces, invariant results, artifacts |
+| **Evolution** | `#search` | "Which configuration should we try next, under a budget?" | Pareto front of measured, gate-passing candidates or an explicit rejection |
+| **Solution** | `#solution` | "Which configuration should the team keep, and how do we act on it?" | Verdict, correctness checks, measured trade-off, reviewable change, rollback notes, evidence bundle |
+| **Demo shop** (Example lab) | `#shop` | "Why should anyone trust the measurement?" | A live checkout whose ledger proves idempotency and invariants |
 
-The six-step method maps to them: understand (**The lab**, **Guided evaluation**), generate (**Alternatives**), run under traffic and break (**Test & break**), verify correctness (**Test & break**, **Demo shop**), and search the trade-offs (**Evolve**).
+The six stages map to the pages: Overview frames the decision; Project Workspace pins and understands the backend; Architecture shapes deployable candidates; Experiments runs traffic, faults and correctness gates; Evolution searches the trade-offs; Solution turns the surviving evidence into a decision. The demo shop is the smallest reproduction of the gate that protects all of it.
 
 The spine that connects them is:
 
@@ -34,7 +35,7 @@ Genome → Experiment → Gate → Evidence
 - **Gate** = correctness and invariant checks that can veto a fast result.
 - **Evidence** = hashed artifacts, traces, and verdicts that survive after the demo.
 
-A page is never allowed to skip a stage. The Alternatives page says "correctness gate unchecked". The Evolve page refuses to rank candidates that did not pass the gate. The Guided evaluation page distinguishes **SIMULATED** from **measured** in the verdict itself.
+A page is never allowed to skip a stage. The Architecture page says "correctness gate unchecked". The Evolution page refuses to rank candidates that did not pass the gate. The Project Workspace and Solution pages distinguish **SIMULATED** from **measured** in the verdict itself, and Solution never promotes a simulated recommendation to a measured winner.
 
 ---
 
@@ -63,9 +64,11 @@ That is the real-world value proposition. It is not "AI designs your architectur
 ```
 React dashboard (hash routes)
         │
+        ├── #overview      ──► /api/preflight (readiness only)
         ├── #configuration ──► /api/genomes/preview, /api/simulate, /api/genomes/compose
         ├── #experiments   ──► /api/experiments, /api/experiments/{id}/events, artifacts
         ├── #search        ──► /api/searches, /api/searches/{id}/events
+        ├── #solution      ──► /api/project-evaluations (recorded verdicts and evidence)
         ├── #shop          ──► /shop/catalog, /shop/checkout, /shop/ledger, /shop/reset
         └── #project       ──► /api/repositories/*, /api/project-evaluations/*
                                   │
@@ -93,314 +96,45 @@ Two things are worth saying out loud when presenting:
 
 ---
 
-## 4. Alternatives page (`#configuration`)
+## 4. Overview page (`#overview`)
 
 ### 4.1 What you see
 
-- Four controls: application replicas (`1/2/3`), catalog cache TTL (`0/10/30` seconds), notification mode (`sync` or `queued`), and retry policy (`none` or `idempotent_only`).
-- A live topology preview: gateway, API replicas, inventory, payment, database, and optionally Redis and a worker.
-- A "Simulated performance" card with p95 latency and requests per second.
-- A resource summary: CPU cores and memory the configuration will consume.
-- A caveat under the estimate: **"Correctness gate unchecked. Use a fault experiment to verify recovery."**
-- A compose download action.
+- The hero: **"Architecture, decided by evidence."** with the growth question — which configuration should carry the next 10,000 customers — and the two entry points, **Start in the Project Workspace** and **See the six stages**.
+- The illustrative **A / B / C** decision board: **A Basic** (cheap), **B Cached** (the balance), **C Distributed** (fastest, rejected for failing the duplicate-payment rule). The footnote states that the numbers are hypothetical and are not a DARWIN result.
+- **One project, from question to solution**: the six stages, each linking to the page that performs it — Overview → Project Workspace → Architecture → Experiments → Evolution → Solution.
+- **Why not just AWS, Kubernetes and load tests?** A comparison table of what each tool gives you and what it does not decide.
+- **Scope, honestly**: implemented versus roadmap, labelled explicitly.
+- The **Machine readiness** panel: required and optional tools, the execution modes they enable, and a remedy for anything missing.
+- The **product tour** entry and the **Lab appearance** register (themes and replay calibration).
 
 ### 4.2 How it works
 
-The four controls form a **genome**. The genome is validated by a strict contract (`backend/darwin/contracts.py`): numbers must be integers, values must come from the allowed sets, and unknown fields are rejected. With the current sets there are `3 × 3 × 2 × 2 = 36` possible genomes.
+The page is static narrative plus the preflight endpoint (`/api/preflight`). It does not start a run. The readiness panel is the only live dependency: when a required tool is missing, the affected run controls on other pages are disabled rather than failing halfway through an experiment.
 
-The genome is canonicalised as sorted JSON and hashed with SHA-256 (`backend/darwin/architecture.py`). That hash is used in three places:
-
-- as the cache namespace inside the running shop,
-- as the compose project name (`darwin-<first 12 hex characters>`),
-- as the identity of a candidate in experiments and search.
-
-This is what makes a result traceable: the same genome always produces the same hash, and the hash appears in the evidence.
-
-The preview endpoint renders the topology from the genome. The topology is not a drawing invented by the frontend; it is derived from the same compose specification that would be deployed. Adding a second replica adds a real `api-2` service and a real gateway route. Enabling the cache adds a Redis service. Choosing queued notifications adds a worker service.
-
-The compose renderer also enforces a resource envelope. Each service has a fixed CPU and memory cap, and each API replica costs `0.4` CPU and `384 MiB`. The total is computed by `deployment_resources()`. Experiments and search reject genomes that exceed the configured sandbox budget, so "add replicas" is never treated as free.
-
-The `/api/simulate` endpoint runs the SimPy screening model (`backend/darwin/simulator.py`). It uses the **same arrival schedule** as the native benchmark (`backend/darwin/performance.py`): a 3-second warm-up, then 12-second windows, with a `normal`, `flash_sale`, or `checkout_heavy` mix. The model has 8 API workers per replica, 4 database connections, and 1 notification worker. It returns p50/p95/p99, throughput, and a `calibration_status`.
-
-That status is usually `uncalibrated`. The UI says so. A calibrated variant exists (`fitted_limited_evidence`) but it is still an estimate, not a measurement. The page never claims otherwise.
+The illustration is deliberately separated from evidence. The A/B/C costs and timings are hypothetical; the live pages label every number as measured, simulated, or recorded.
 
 ### 4.3 The decision it supports
 
-The Alternatives page supports **design-space reasoning before spending measurement budget**:
-
-- Which controls actually change the topology?
-- What does each choice cost in CPU and memory?
-- Which combinations are even legal under the sandbox budget?
-- What does the model *guess* will happen, so we can choose what deserves a real run?
-
-It is a pre-flight page, not a verdict page.
+It frames the decision before any code runs: the ten-thousand-customer question, the rule that correctness precedes speed, and the six stages that produce a defensible answer. It also tells the audience where the product stops today.
 
 ### 4.4 Real-world mapping
 
-| Real-world activity | How this page maps |
-|---|---|
-| Capacity planning | Replicas and memory are explicit, bounded, and costed instead of hand-waved |
-| FinOps review | A candidate that needs more CPU is visibly more expensive before it is deployed |
-| Architecture review board | Trade-offs become four named controls with allowed values, not a slide of boxes |
-| Pre-benchmark triage | The uncalibrated model ranks hypotheses cheaply; only the promising ones get measured |
-| Design for failure | Notification mode and retry policy are first-class architecture decisions, not afterthoughts |
-
-The honest framing: this page is a **model**, and models are for choosing what to test. It is not evidence of production performance.
+This is the architecture review's opening slide, made interactive: state the decision, name the alternatives, define what "better" means, and agree that a broken business rule disqualifies a fast option. The readiness panel is the "is the lab available?" check that a real review needs before asking anyone for a measurement.
 
 ### 4.5 Demo line
 
-> "This page turns an architecture argument into a constrained design space. Every choice here has a topology consequence and a resource cost, and the estimate is explicitly uncalibrated. The point is not to trust the number — the point is to decide which configuration deserves a real experiment."
+"This page is the lab's thesis: growth forces an architecture decision, and the fastest configuration is not automatically the winner. The six stages are how we settle it with evidence."
 
 ### 4.6 Limits to state
 
-- The genome describes the **demo shop**, not an arbitrary user system. There are four controls and 36 combinations.
-- The simulation is a queueing approximation with fixed service-time distributions, not a trace-driven model of your traffic.
-- The estimate has no error bar in the UI beyond the calibration label.
-- Correctness is explicitly **not** checked here. Only a fault experiment can verify recovery and invariants.
+The A/B/C board is illustrative, not measured. Readiness is a local tool check, not a security or production-readiness check.
 
 ---
 
-## 5. Test & break page (`#experiments`)
+## 5. Project Workspace page (`#project`)
 
 ### 5.1 What you see
-
-- A "New experiment" panel with judge-ready scenarios and a manual setup.
-- Four scenario presets:
-  - **Quick checkout smoke** — start the stack and repeat one order with the same request key.
-  - **Normal baseline vs candidate** — baseline versus two replicas, 10-second cache, queued notifications.
-  - **Flash sale comparison** — baseline versus three replicas, 30-second cache, queued notifications, under `flash_sale` load.
-  - **Payment timeout with unsafe retry** — deliberately unsafe retry, expected to fail with `I-01` and three payment effects.
-- Mode selection: smoke, benchmark, or faults, on native or Docker.
-- Workload profile: `normal`, `flash_sale`, `checkout_heavy`.
-- Constraints: maximum error rate and optional p95 target.
-- Run history with progress, attempts used, candidate summaries, gate state, and artifact links.
-
-### 5.2 How it works
-
-Every experiment is a strict request (`StartExperiment` in `backend/darwin/experiments.py`):
-
-- mode: `native_smoke`, `docker_smoke`, `native_benchmark`, `docker_benchmark`, `native_faults`, or `docker_faults`;
-- one or more genomes (up to 36);
-- a seed, workload profile, fault scenarios, budget, and constraints;
-- an optional fault fixture: `safe` or `unsafe_retry`.
-
-Validation happens before anything runs:
-
-- fault modes require a non-empty, duplicate-free list of fault scenarios;
-- the unsafe fixture requires the `timeout_retry_duplicate` scenario;
-- non-fault modes may not carry fault scenarios;
-- candidate count must fit `max_candidates`;
-- `genomes × repetitions` must fit `real_test_budget`;
-- duplicate genomes are rejected, because they are not separate candidates;
-- every genome must fit the CPU and memory envelope;
-- native benchmark and fault modes require Windows and whole logical CPUs.
-
-Each candidate is evaluated `repetitions` times (default 3, minimum 3). That is the difference between a demo and a measurement: a single run cannot distinguish a real change from noise. The report shows **min / median / max** spread for p95, throughput, CPU seconds, peak memory, and error rate.
-
-The experiment worker starts an isolated shop stack per candidate. The stack includes the gateway, API, inventory, payment, PostgreSQL, and optionally Redis and a worker. It applies the genome through environment variables and the canonical cache namespace. Then it runs:
-
-- a **smoke** path: start, check readiness, repeat one checkout with the same idempotency key;
-- a **benchmark** path: warm-up, fixed 12-second windows, scheduled catalog and checkout traffic, latency percentiles;
-- a **fault** path: inject database delay, service outage, or timeout/retry duplication, then verify recovery and business state.
-
-Artifacts are written per evaluation and hashed: `manifest`, `metrics`, `trace`, `compose`, and `log`. The event stream lets the UI show progress without pretending the run is instantaneous.
-
-The **gate** is computed by `feasibility()` in `backend/darwin/invariants.py`. A candidate fails if any of these is true:
-
-| Gate reason | Meaning |
-|---|---|
-| `resource_limits_unverified` | The run could not prove cgroup limits were enforced |
-| `business_invariant_failed` | I-01…I-05 produced a violation |
-| `fault_scenario_incomplete` | A requested fault was not fully exercised |
-| `invariant_coverage_incomplete` | Not all five invariants were checked |
-| `measurement_error_threshold` | Error rate exceeded the constraint |
-| `fault_operation_error_threshold` | Fault-path logical error rate exceeded the constraint |
-| `measurement_latency_threshold` | p95 exceeded the constraint |
-| `recovery_not_observed` | A recovery time was never observed |
-
-A performance win cannot override any of these. That ordering is the core design decision of the page.
-
-The five invariants are:
-
-- **I-01** — one payment effect per payment key (no double charge).
-- **I-02** — stock reconciles with reservations and confirmed orders.
-- **I-03** — every confirmed order has matching successful payment evidence.
-- **I-04** — no duplicate business records, and replay does not change response or state.
-- **I-05** — a confirmed order keeps its notification job, and an accepted notification survives restart and finishes with matching delivery evidence.
-
-### 5.3 The decision it supports
-
-The Test & break page answers: **"Is this change safe enough to consider, and what did it actually cost?"**
-
-It supports three distinct decisions:
-
-1. **Correctness first.** The unsafe-retry scenario is designed to fail. Showing a rejection is as important as showing a win.
-2. **Performance with uncertainty.** Repeated runs produce a spread, not a single hero number.
-3. **Comparability.** Same seed, same workload schedule, same constraints, same artifact schema.
-
-### 5.4 Real-world mapping
-
-| Real-world activity | How this page maps |
-|---|---|
-| Pre-production regression testing | The gate catches correctness failures before a performance claim is made |
-| SLO validation | p95 and error-rate constraints are explicit inputs, not post-hoc excuses |
-| Chaos engineering | Fault scenarios are bounded, recorded, and tied to recovery evidence |
-| Incident prevention | I-01/I-03/I-05 encode the failure modes that cause duplicate charges and lost notifications |
-| Release evidence | Hashed artifacts give reviewers something to inspect after the demo |
-
-The page's real-world lesson is blunt: **a faster system that loses an order is not an improvement**. The unsafe-payment scenario exists to make that lesson visible in under two minutes.
-
-### 5.5 Demo line
-
-> "We are not just measuring latency. We are asking whether the system still behaves correctly under retries, database delay, and a service outage. The gate runs first. If correctness fails, the performance number never becomes a recommendation."
-
-### 5.6 Limits to state
-
-- The shop is a synthetic demo, not your production system.
-- Native runs are Windows-only; the native fault adapter is not portable.
-- Docker search depth is intentionally small; the point is the method, not exhaustive optimization.
-- One host and one environment means results are comparable within a session, not automatically across machines.
-- Fault injection is bounded and scripted, not a general chaos platform.
-
----
-
-## 6. Evolve page (`#search`)
-
-### 6.1 What you see
-
-- Search method: **NSGA-II**, **Random search**, or **Hill climbing**.
-- Runtime: native or Docker.
-- Workload profile and attempt budget (the UI offers 6, 12, or 18 measured attempts).
-- A Pareto chart of measured feasible candidates: latency versus application CPU time.
-- A candidate table with configuration, evidence status, p95, CPU seconds, and recovery time.
-- An explicit panel when nothing passes: **"No candidate passed all gates"**, with retained gate reasons.
-- A candidate dialog with the genome, parents, generation, evaluations, and simulation summary.
-
-### 6.2 How it works
-
-Search treats architecture selection as a **constrained multi-objective optimization** problem (`backend/darwin/search.py`).
-
-The search space is the same 36 genomes. Before proposing a candidate, the engine filters out genomes whose CPU or memory cost exceeds the sandbox budget. The baseline genome is always proposed first, so the comparison always has a control.
-
-Three objectives are computed from measured evidence:
-
-1. **p95 latency** (lower is better),
-2. **CPU seconds** (lower is better),
-3. **recovery time** (lower is better).
-
-A candidate receives objectives only if **every** repetition is `measured`, `completed`, and `gate == passed`. If any repetition fails the gate, the candidate gets no objectives and a penalty based on its gate reasons. This is the constraint mechanism: an unsafe configuration cannot win on latency.
-
-The three algorithms differ in how they propose the next generation:
-
-- **Random search** takes proposals without using parent feedback. It is the honest baseline for "did the search actually help?"
-- **Hill climbing** picks the current incumbent and proposes single-control neighbours. It is cheap and interpretable, but can get stuck.
-- **NSGA-II** uses non-dominated sorting and crowding distance to keep a diverse Pareto front. It selects parents by rank, performs uniform crossover over the four controls, and mutates one control. It is the default because architecture decisions are genuinely multi-objective.
-
-When the simulator is enabled, it pre-ranks proposals by modelled p95 before promotion. The promotion step always keeps the baseline and reserves alternate slots for diverse or uncertain proposals. This is a deliberate anti-premature-convergence choice: the search should not spend its whole budget on small variations of the first winner.
-
-Search is **bounded** in three ways: `max_candidates`, `real_test_budget`, and `wall_clock_s`. Each generation creates a child experiment sized to the remaining budget. If the wall clock runs out, the search stops and records that fact. If a child experiment fails, the search fails rather than inventing a result. If the user cancels, the active child is cancelled.
-
-The Pareto front is computed only over **feasible measured** candidates. If there are none, `pareto_ids` is empty and the UI shows the no-feasible-candidate verdict with the reasons. That is not an error state; it is a valid, useful outcome.
-
-### 6.3 The decision it supports
-
-Search answers: **"Given a fixed budget, which configurations are worth a human decision, and which trade-offs are real?"**
-
-It supports:
-
-- **Portfolio decisions** — a Pareto front shows that candidate A is faster but uses more CPU than candidate B. The right choice depends on the business, not the algorithm.
-- **Budget discipline** — the search stops when the budget is spent, and it says so.
-- **Falsification** — if no candidate clears the gate, the answer is "none of these", not a forced winner.
-
-### 6.4 Real-world mapping
-
-| Real-world activity | How this page maps |
-|---|---|
-| Architecture modernization | Explore replicas, caching, async work, and retry policy under a fixed evaluation budget |
-| Multi-objective trade-offs | Latency, compute cost, and recovery are optimized together, not one at a time |
-| Platform engineering | A repeatable search protocol instead of ad-hoc tuning by the loudest engineer |
-| FinOps | CPU seconds are a first-class objective; the cheapest feasible candidate is visible |
-| Reliability engineering | Recovery time is an objective, so "fast but fragile" does not automatically win |
-
-The important real-world shift is from **"what is the best architecture?"** to **"what is the best architecture *for this workload, under this budget, with these constraints*?"** That is the question companies can actually act on.
-
-### 6.5 Demo line
-
-> "Search does not decide for you. It spends a bounded budget to find the measured trade-off curve, and it refuses to put a candidate on that curve unless every repetition passed the correctness gate. If nothing passes, it tells you that too."
-
-### 6.6 Limits to state
-
-- The search space is 36 genomes, not an arbitrary infrastructure graph.
-- The budget is intentionally small; this demonstrates the method, not exhaustive optimization.
-- Objectives are local measured metrics, not cloud cost or revenue.
-- NSGA-II is constrained by the gate, but the gate is only as good as the five invariants and the fault coverage.
-- Search results are comparable within a session and environment; cross-machine comparison requires the recorded environment and artifacts.
-
----
-
-## 7. Demo shop page (`#shop`)
-
-### 7.1 What you see
-
-- A three-step walkthrough: choose a product, place the order, resend the same request.
-- Catalog with stock counts.
-- Checkout receipt with order ID, SKU, quantity, and amount.
-- A comparison between the original response and the resent response.
-- A ledger for the request: orders, captures, payment effects.
-- A reset action.
-- A clear badge: **"Simulated payments"**.
-
-### 7.2 How it works
-
-The shop is a real small service stack: gateway, API, inventory, payment, PostgreSQL, and optionally Redis and a worker. The page talks to it through the gateway.
-
-A checkout sends `POST /shop/checkout` with an `Idempotency-Key` header. The key is the request identity. The API:
-
-1. reserves stock,
-2. verifies the simulated payment,
-3. persists the order, capture, payment effect, and outbox job,
-4. returns a receipt.
-
-When the page resends the **same** request with the same key, the API must return the existing order rather than creating a second one. The ledger then shows **1 order, 1 capture, 1 payment effect** for that key. The UI compares the two responses and states that the repeat added no second effect.
-
-The ledger is not a frontend invention. It reads persisted rows: `orders`, `captures`, `payment_effects`, `outbox`, and `deliveries`. The invariant checker reads the same tables.
-
-Why this matters for the rest of the demo: the shop is the **physical evidence** behind the gate. When the Test & break page says a candidate passed, it means these tables reconciled. When the unsafe-retry scenario says `I-01` failed, it means this ledger shows more than one payment effect for one key.
-
-### 7.3 The decision it supports
-
-The Demo shop supports the **trust decision**: "Should I believe the rest of the demo?"
-
-It does that by making one narrow, checkable claim: a retried checkout does not double-charge, double-reserve, or lose its notification. That claim is visible in the UI and in the database.
-
-### 7.4 Real-world mapping
-
-| Real-world activity | How this page maps |
-|---|---|
-| Payment reliability | Idempotency keys and a payment ledger are the standard defence against duplicate charges |
-| Inventory consistency | Stock reconciliation is checked against reservations and confirmed orders |
-| Notification durability | The transactional outbox pattern plus delivery evidence prevents lost confirmations |
-| Incident review | A per-request ledger is exactly what an on-call engineer wants during a duplicate-charge incident |
-| Compliance evidence | Persisted, inspectable effects are stronger than a log line saying "success" |
-
-This is the least glamorous page and the most important one. Most production incidents that hurt customers are not p95 regressions; they are duplicate charges, oversold stock, and lost notifications. The shop makes those failure modes concrete.
-
-### 7.5 Demo line
-
-> "This is the ground truth for everything else. Place an order, resend the exact same request, and watch the ledger stay at one order, one capture, one payment effect. If this page is wrong, no performance number on the other pages matters."
-
-### 7.6 Limits to state
-
-- Payments are simulated. No real payment processor is involved.
-- The catalog and workload are synthetic.
-- The shop is a demonstration of correctness patterns, not a production commerce system.
-- The reset action is for demo hygiene, not a production workflow.
-
----
-
-## 8. Guided evaluation page (`#project`)
-
-### 8.1 What you see
 
 A five-step stepper:
 
@@ -408,11 +142,11 @@ A five-step stepper:
 2. **Understand** — project facts with evidence files, supported and unsupported capabilities, guesses separated from facts, architecture sketch, hotspots.
 3. **Challenge** — choose a challenge and a mode (`quick` or `full`), and see the candidates DARWIN would deploy.
 4. **Evolve** — watch the stages and progress.
-5. **Prove** — a verdict, a decision card, correctness results, cost, recovery, provenance, and evidence files.
+5. **Prove** — a verdict, a decision card, correctness results, cost, recovery, provenance, and evidence files. The same verdict is carried into the Solution stage, which keeps the decision record for every evaluated project.
 
 The page visibly separates **measured** runs from **simulated** screening. A screening result is labelled `SIMULATED · x% modelled`; a measured result is labelled `−x% measured`.
 
-### 8.2 How it works
+### 5.2 How it works
 
 #### Step 1 — Connect
 
@@ -509,11 +243,11 @@ The recorded validation evidence for the Sanchay adapter is:
 - recorded full run `141c9b56`: **68/68 correctness checks**, **29/29 Vitest tests**, **28.5% latency improvement**, **100% paired wins** at 50,000 rows;
 - live full run `e3057b59`: **68/68 checks**, **22.4% improvement**, **97% paired wins**; source tests were skipped because the fetched cache had no installed Vitest runtime, and the verdict shows that reason.
 
-Those numbers belong to the Guided evaluation page, not to the demo shop. Do not mix them.
+Those numbers belong to the Project Workspace page, not to the demo shop. Do not mix them.
 
-### 8.3 The decision it supports
+### 5.3 The decision it supports
 
-The Guided evaluation page supports the **due-diligence decision**:
+The Project Workspace page supports the **due-diligence decision**:
 
 - "What is this repository, really?"
 - "What would DARWIN change, and why?"
@@ -521,9 +255,11 @@ The Guided evaluation page supports the **due-diligence decision**:
 - "What would it cost, and what could go wrong?"
 - "Should a human review this candidate?"
 
+Once the run ends, **Solution** (`#solution`) answers "what should we do next?" from the recorded verdict without recomputing anything.
+
 It is the page that turns DARWIN from a demo into an evaluation instrument.
 
-### 8.4 Real-world mapping
+### 5.4 Real-world mapping
 
 | Real-world activity | How this page maps |
 |---|---|
@@ -533,11 +269,11 @@ It is the page that turns DARWIN from a demo into an evaluation instrument.
 | Vendor evaluation | Ask "is this measured or modelled?" and get an explicit answer |
 | Migration planning | Use screening to rank hypotheses, then measure only the credible ones |
 
-### 8.5 Demo line
+### 5.5 Demo line
 
 > "This page is honest about two different kinds of knowledge. For a trusted adapter, we deploy and measure. For everything else, we inspect the source and run a transparent model that is labelled SIMULATED. It will tell you when the model is inconclusive, and it will refuse to call a fast but incorrect change an improvement."
 
-### 8.6 Limits to state
+### 5.6 Limits to state
 
 - Only three repositories are trusted for evaluation today.
 - The measured adapters cover specific change types, not arbitrary refactors.
@@ -548,37 +284,389 @@ It is the page that turns DARWIN from a demo into an evaluation instrument.
 
 ---
 
-## 9. The end-to-end story (use this as the presentation arc)
+## 6. Architecture page (`#configuration`)
+
+### 6.1 What you see
+
+- Four controls: application replicas (`1/2/3`), catalog cache TTL (`0/10/30` seconds), notification mode (`sync` or `queued`), and retry policy (`none` or `idempotent_only`).
+- A live topology preview: gateway, API replicas, inventory, payment, database, and optionally Redis and a worker.
+- A "Simulated performance" card with p95 latency and requests per second.
+- A resource summary: CPU cores and memory the configuration will consume.
+- A caveat under the estimate: **"Correctness gate unchecked. Use a fault experiment to verify recovery."**
+- A compose download action.
+
+### 6.2 How it works
+
+The four controls form a **genome**. The genome is validated by a strict contract (`backend/darwin/contracts.py`): numbers must be integers, values must come from the allowed sets, and unknown fields are rejected. With the current sets there are `3 × 3 × 2 × 2 = 36` possible genomes.
+
+The genome is canonicalised as sorted JSON and hashed with SHA-256 (`backend/darwin/architecture.py`). That hash is used in three places:
+
+- as the cache namespace inside the running shop,
+- as the compose project name (`darwin-<first 12 hex characters>`),
+- as the identity of a candidate in experiments and search.
+
+This is what makes a result traceable: the same genome always produces the same hash, and the hash appears in the evidence.
+
+The preview endpoint renders the topology from the genome. The topology is not a drawing invented by the frontend; it is derived from the same compose specification that would be deployed. Adding a second replica adds a real `api-2` service and a real gateway route. Enabling the cache adds a Redis service. Choosing queued notifications adds a worker service.
+
+The compose renderer also enforces a resource envelope. Each service has a fixed CPU and memory cap, and each API replica costs `0.4` CPU and `384 MiB`. The total is computed by `deployment_resources()`. Experiments and search reject genomes that exceed the configured sandbox budget, so "add replicas" is never treated as free.
+
+The `/api/simulate` endpoint runs the SimPy screening model (`backend/darwin/simulator.py`). It uses the **same arrival schedule** as the native benchmark (`backend/darwin/performance.py`): a 3-second warm-up, then 12-second windows, with a `normal`, `flash_sale`, or `checkout_heavy` mix. The model has 8 API workers per replica, 4 database connections, and 1 notification worker. It returns p50/p95/p99, throughput, and a `calibration_status`.
+
+That status is usually `uncalibrated`. The UI says so. A calibrated variant exists (`fitted_limited_evidence`) but it is still an estimate, not a measurement. The page never claims otherwise.
+
+### 6.3 The decision it supports
+
+The Architecture page supports **design-space reasoning before spending measurement budget**:
+
+- Which controls actually change the topology?
+- What does each choice cost in CPU and memory?
+- Which combinations are even legal under the sandbox budget?
+- What does the model *guess* will happen, so we can choose what deserves a real run?
+
+It is a pre-flight page, not a verdict page.
+
+### 6.4 Real-world mapping
+
+| Real-world activity | How this page maps |
+|---|---|
+| Capacity planning | Replicas and memory are explicit, bounded, and costed instead of hand-waved |
+| FinOps review | A candidate that needs more CPU is visibly more expensive before it is deployed |
+| Architecture review board | Trade-offs become four named controls with allowed values, not a slide of boxes |
+| Pre-benchmark triage | The uncalibrated model ranks hypotheses cheaply; only the promising ones get measured |
+| Design for failure | Notification mode and retry policy are first-class architecture decisions, not afterthoughts |
+
+The honest framing: this page is a **model**, and models are for choosing what to test. It is not evidence of production performance.
+
+### 6.5 Demo line
+
+> "This page turns an architecture argument into a constrained design space. Every choice here has a topology consequence and a resource cost, and the estimate is explicitly uncalibrated. The point is not to trust the number — the point is to decide which configuration deserves a real experiment."
+
+### 6.6 Limits to state
+
+- The genome describes the **demo shop**, not an arbitrary user system. There are four controls and 36 combinations.
+- The simulation is a queueing approximation with fixed service-time distributions, not a trace-driven model of your traffic.
+- The estimate has no error bar in the UI beyond the calibration label.
+- Correctness is explicitly **not** checked here. Only a fault experiment can verify recovery and invariants.
+
+---
+
+## 7. Experiments page (`#experiments`)
+
+### 7.1 What you see
+
+- A "New experiment" panel with judge-ready scenarios and a manual setup.
+- Four scenario presets:
+  - **Quick checkout smoke** — start the stack and repeat one order with the same request key.
+  - **Normal baseline vs candidate** — baseline versus two replicas, 10-second cache, queued notifications.
+  - **Flash sale comparison** — baseline versus three replicas, 30-second cache, queued notifications, under `flash_sale` load.
+  - **Payment timeout with unsafe retry** — deliberately unsafe retry, expected to fail with `I-01` and three payment effects.
+- Mode selection: smoke, benchmark, or faults, on native or Docker.
+- Workload profile: `normal`, `flash_sale`, `checkout_heavy`.
+- Constraints: maximum error rate and optional p95 target.
+- Run history with progress, attempts used, candidate summaries, gate state, and artifact links.
+
+### 7.2 How it works
+
+Every experiment is a strict request (`StartExperiment` in `backend/darwin/experiments.py`):
+
+- mode: `native_smoke`, `docker_smoke`, `native_benchmark`, `docker_benchmark`, `native_faults`, or `docker_faults`;
+- one or more genomes (up to 36);
+- a seed, workload profile, fault scenarios, budget, and constraints;
+- an optional fault fixture: `safe` or `unsafe_retry`.
+
+Validation happens before anything runs:
+
+- fault modes require a non-empty, duplicate-free list of fault scenarios;
+- the unsafe fixture requires the `timeout_retry_duplicate` scenario;
+- non-fault modes may not carry fault scenarios;
+- candidate count must fit `max_candidates`;
+- `genomes × repetitions` must fit `real_test_budget`;
+- duplicate genomes are rejected, because they are not separate candidates;
+- every genome must fit the CPU and memory envelope;
+- native benchmark and fault modes require Windows and whole logical CPUs.
+
+Each candidate is evaluated `repetitions` times (default 3, minimum 3). That is the difference between a demo and a measurement: a single run cannot distinguish a real change from noise. The report shows **min / median / max** spread for p95, throughput, CPU seconds, peak memory, and error rate.
+
+The experiment worker starts an isolated shop stack per candidate. The stack includes the gateway, API, inventory, payment, PostgreSQL, and optionally Redis and a worker. It applies the genome through environment variables and the canonical cache namespace. Then it runs:
+
+- a **smoke** path: start, check readiness, repeat one checkout with the same idempotency key;
+- a **benchmark** path: warm-up, fixed 12-second windows, scheduled catalog and checkout traffic, latency percentiles;
+- a **fault** path: inject database delay, service outage, or timeout/retry duplication, then verify recovery and business state.
+
+Artifacts are written per evaluation and hashed: `manifest`, `metrics`, `trace`, `compose`, and `log`. The event stream lets the UI show progress without pretending the run is instantaneous.
+
+The **gate** is computed by `feasibility()` in `backend/darwin/invariants.py`. A candidate fails if any of these is true:
+
+| Gate reason | Meaning |
+|---|---|
+| `resource_limits_unverified` | The run could not prove cgroup limits were enforced |
+| `business_invariant_failed` | I-01…I-05 produced a violation |
+| `fault_scenario_incomplete` | A requested fault was not fully exercised |
+| `invariant_coverage_incomplete` | Not all five invariants were checked |
+| `measurement_error_threshold` | Error rate exceeded the constraint |
+| `fault_operation_error_threshold` | Fault-path logical error rate exceeded the constraint |
+| `measurement_latency_threshold` | p95 exceeded the constraint |
+| `recovery_not_observed` | A recovery time was never observed |
+
+A performance win cannot override any of these. That ordering is the core design decision of the page.
+
+The five invariants are:
+
+- **I-01** — one payment effect per payment key (no double charge).
+- **I-02** — stock reconciles with reservations and confirmed orders.
+- **I-03** — every confirmed order has matching successful payment evidence.
+- **I-04** — no duplicate business records, and replay does not change response or state.
+- **I-05** — a confirmed order keeps its notification job, and an accepted notification survives restart and finishes with matching delivery evidence.
+
+### 7.3 The decision it supports
+
+The Experiments page answers: **"Is this change safe enough to consider, and what did it actually cost?"**
+
+It supports three distinct decisions:
+
+1. **Correctness first.** The unsafe-retry scenario is designed to fail. Showing a rejection is as important as showing a win.
+2. **Performance with uncertainty.** Repeated runs produce a spread, not a single hero number.
+3. **Comparability.** Same seed, same workload schedule, same constraints, same artifact schema.
+
+### 7.4 Real-world mapping
+
+| Real-world activity | How this page maps |
+|---|---|
+| Pre-production regression testing | The gate catches correctness failures before a performance claim is made |
+| SLO validation | p95 and error-rate constraints are explicit inputs, not post-hoc excuses |
+| Chaos engineering | Fault scenarios are bounded, recorded, and tied to recovery evidence |
+| Incident prevention | I-01/I-03/I-05 encode the failure modes that cause duplicate charges and lost notifications |
+| Release evidence | Hashed artifacts give reviewers something to inspect after the demo |
+
+The page's real-world lesson is blunt: **a faster system that loses an order is not an improvement**. The unsafe-payment scenario exists to make that lesson visible in under two minutes.
+
+### 7.5 Demo line
+
+> "We are not just measuring latency. We are asking whether the system still behaves correctly under retries, database delay, and a service outage. The gate runs first. If correctness fails, the performance number never becomes a recommendation."
+
+### 7.6 Limits to state
+
+- The shop is a synthetic demo, not your production system.
+- Native runs are Windows-only; the native fault adapter is not portable.
+- Docker search depth is intentionally small; the point is the method, not exhaustive optimization.
+- One host and one environment means results are comparable within a session, not automatically across machines.
+- Fault injection is bounded and scripted, not a general chaos platform.
+
+---
+
+## 8. Evolution page (`#search`)
+
+### 8.1 What you see
+
+- Search method: **NSGA-II**, **Random search**, or **Hill climbing**.
+- Runtime: native or Docker.
+- Workload profile and attempt budget (the UI offers 6, 12, or 18 measured attempts).
+- A Pareto chart of measured feasible candidates: latency versus application CPU time.
+- A candidate table with configuration, evidence status, p95, CPU seconds, and recovery time.
+- An explicit panel when nothing passes: **"No candidate passed all gates"**, with retained gate reasons.
+- A candidate dialog with the genome, parents, generation, evaluations, and simulation summary.
+
+### 8.2 How it works
+
+Search treats architecture selection as a **constrained multi-objective optimization** problem (`backend/darwin/search.py`).
+
+The search space is the same 36 genomes. Before proposing a candidate, the engine filters out genomes whose CPU or memory cost exceeds the sandbox budget. The baseline genome is always proposed first, so the comparison always has a control.
+
+Three objectives are computed from measured evidence:
+
+1. **p95 latency** (lower is better),
+2. **CPU seconds** (lower is better),
+3. **recovery time** (lower is better).
+
+A candidate receives objectives only if **every** repetition is `measured`, `completed`, and `gate == passed`. If any repetition fails the gate, the candidate gets no objectives and a penalty based on its gate reasons. This is the constraint mechanism: an unsafe configuration cannot win on latency.
+
+The three algorithms differ in how they propose the next generation:
+
+- **Random search** takes proposals without using parent feedback. It is the honest baseline for "did the search actually help?"
+- **Hill climbing** picks the current incumbent and proposes single-control neighbours. It is cheap and interpretable, but can get stuck.
+- **NSGA-II** uses non-dominated sorting and crowding distance to keep a diverse Pareto front. It selects parents by rank, performs uniform crossover over the four controls, and mutates one control. It is the default because architecture decisions are genuinely multi-objective.
+
+When the simulator is enabled, it pre-ranks proposals by modelled p95 before promotion. The promotion step always keeps the baseline and reserves alternate slots for diverse or uncertain proposals. This is a deliberate anti-premature-convergence choice: the search should not spend its whole budget on small variations of the first winner.
+
+Search is **bounded** in three ways: `max_candidates`, `real_test_budget`, and `wall_clock_s`. Each generation creates a child experiment sized to the remaining budget. If the wall clock runs out, the search stops and records that fact. If a child experiment fails, the search fails rather than inventing a result. If the user cancels, the active child is cancelled.
+
+The Pareto front is computed only over **feasible measured** candidates. If there are none, `pareto_ids` is empty and the UI shows the no-feasible-candidate verdict with the reasons. That is not an error state; it is a valid, useful outcome.
+
+### 8.3 The decision it supports
+
+Search answers: **"Given a fixed budget, which configurations are worth a human decision, and which trade-offs are real?"**
+
+It supports:
+
+- **Portfolio decisions** — a Pareto front shows that candidate A is faster but uses more CPU than candidate B. The right choice depends on the business, not the algorithm.
+- **Budget discipline** — the search stops when the budget is spent, and it says so.
+- **Falsification** — if no candidate clears the gate, the answer is "none of these", not a forced winner.
+
+### 8.4 Real-world mapping
+
+| Real-world activity | How this page maps |
+|---|---|
+| Architecture modernization | Explore replicas, caching, async work, and retry policy under a fixed evaluation budget |
+| Multi-objective trade-offs | Latency, compute cost, and recovery are optimized together, not one at a time |
+| Platform engineering | A repeatable search protocol instead of ad-hoc tuning by the loudest engineer |
+| FinOps | CPU seconds are a first-class objective; the cheapest feasible candidate is visible |
+| Reliability engineering | Recovery time is an objective, so "fast but fragile" does not automatically win |
+
+The important real-world shift is from **"what is the best architecture?"** to **"what is the best architecture *for this workload, under this budget, with these constraints*?"** That is the question companies can actually act on.
+
+### 8.5 Demo line
+
+> "Search does not decide for you. It spends a bounded budget to find the measured trade-off curve, and it refuses to put a candidate on that curve unless every repetition passed the correctness gate. If nothing passes, it tells you that too."
+
+### 8.6 Limits to state
+
+- The search space is 36 genomes, not an arbitrary infrastructure graph.
+- The budget is intentionally small; this demonstrates the method, not exhaustive optimization.
+- Objectives are local measured metrics, not cloud cost or revenue.
+- NSGA-II is constrained by the gate, but the gate is only as good as the five invariants and the fault coverage.
+- Search results are comparable within a session and environment; cross-machine comparison requires the recorded environment and artifacts.
+
+---
+
+## 9. Solution page (`#solution`)
+
+### 9.1 What you see
+
+- **Stage 06 · Solution** framing: the outcome of one pinned project, ready for a team to act on.
+- A **decision selector** listing every recorded project evaluation with a verdict — repository, commit, verdict label and date. The newest is selected by default.
+- A **decision card**: the verdict label and reason, the source repository and pinned commit, the challenge, the mode and repetitions, the correctness count (for example 3/3), the evidence kind, and the recorded date.
+- Measured panels: original versus recommended median and p95, the percentage change, and the cost of the change when a metric regressed.
+- **Recommendation** and **evidence to keep**: the reviewable change with apply and rollback notes, and the evidence files with their digest prefixes.
+- A **truth boundary** panel: what the decision carries and what it does not claim.
+- **Download evidence bundle** when connected to a live bench; disabled on the hosted copy, which keeps reading recorded evidence.
+
+### 9.2 How it works
+
+The page reads `GET /api/project-evaluations`, keeps the entries that carry a verdict, and sorts them newest first. It does not recompute anything: the verdict, correctness counts, metrics and evidence manifest were produced by the run and are displayed as recorded.
+
+Evidence kind drives the presentation:
+
+- A measured evaluation shows the original-versus-recommended latency panels, regressions, and an enabled bundle download on a live bench.
+- A simulated screening keeps the **SIMULATED · NOT MEASURED** badge, hides the measured latency panels, and never presents the recommendation as a measured winner.
+- If no evaluation has a verdict yet, the page says so and links back to the Project Workspace instead of inventing a decision.
+
+The hosted showcase serves the same data from its captured snapshot and labels the page **Recorded evidence**. A live connection switches the badge and enables the download.
+
+### 9.3 The decision it supports
+
+It answers the only question a team needs after the experiments: **what should we do next?** The page states one of the policy outcomes plainly — verified improvement, baseline retained, trade-off requiring a choice, inconclusive, rejected as incorrect, or not measured — and attaches the evidence needed to defend it.
+
+A verified improvement includes a reviewable change and rollback notes. A retained baseline is an honest result too: the measured evidence did not justify a change. DARWIN never edits, commits or pushes the project repository.
+
+### 9.4 Real-world mapping
+
+This is the decision record an architecture review would sign off: recommendation, measured trade-off, correctness evidence, the change to apply, the way back, and the artifacts to keep. It is deliberately not a deploy button.
+
+### 9.5 Demo line
+
+"The last stage is the one a team actually needs: not a chart, but a decision with its evidence and its way back. When there is a change, it is a reviewable diff with rollback notes. The numbers are measured on this host for this workload, and the page states that limit rather than turning one run into a production promise."
+
+### 9.6 Limits to state
+
+One host and one workload window; the page is not a production benchmark. A recorded verdict is not a fresh measurement. A simulated recommendation is a direction to test, never deployment evidence. The badge on the card is the authority — read it before the number.
+
+---
+
+## 10. Example lab: demo shop (`#shop`)
+
+### 10.1 What you see
+
+- A three-step walkthrough: choose a product, place the order, resend the same request.
+- Catalog with stock counts.
+- Checkout receipt with order ID, SKU, quantity, and amount.
+- A comparison between the original response and the resent response.
+- A ledger for the request: orders, captures, payment effects.
+- A reset action.
+- A clear badge: **"Simulated payments"**.
+
+### 10.2 How it works
+
+The shop is a real small service stack: gateway, API, inventory, payment, PostgreSQL, and optionally Redis and a worker. The page talks to it through the gateway.
+
+A checkout sends `POST /shop/checkout` with an `Idempotency-Key` header. The key is the request identity. The API:
+
+1. reserves stock,
+2. verifies the simulated payment,
+3. persists the order, capture, payment effect, and outbox job,
+4. returns a receipt.
+
+When the page resends the **same** request with the same key, the API must return the existing order rather than creating a second one. The ledger then shows **1 order, 1 capture, 1 payment effect** for that key. The UI compares the two responses and states that the repeat added no second effect.
+
+The ledger is not a frontend invention. It reads persisted rows: `orders`, `captures`, `payment_effects`, `outbox`, and `deliveries`. The invariant checker reads the same tables.
+
+Why this matters for the rest of the demo: the shop is the **physical evidence** behind the gate. When the Experiments page says a candidate passed, it means these tables reconciled. When the unsafe-retry scenario says `I-01` failed, it means this ledger shows more than one payment effect for one key.
+
+### 10.3 The decision it supports
+
+The Demo shop supports the **trust decision**: "Should I believe the rest of the demo?"
+
+It does that by making one narrow, checkable claim: a retried checkout does not double-charge, double-reserve, or lose its notification. That claim is visible in the UI and in the database.
+
+### 10.4 Real-world mapping
+
+| Real-world activity | How this page maps |
+|---|---|
+| Payment reliability | Idempotency keys and a payment ledger are the standard defence against duplicate charges |
+| Inventory consistency | Stock reconciliation is checked against reservations and confirmed orders |
+| Notification durability | The transactional outbox pattern plus delivery evidence prevents lost confirmations |
+| Incident review | A per-request ledger is exactly what an on-call engineer wants during a duplicate-charge incident |
+| Compliance evidence | Persisted, inspectable effects are stronger than a log line saying "success" |
+
+This is the least glamorous page and the most important one. Most production incidents that hurt customers are not p95 regressions; they are duplicate charges, oversold stock, and lost notifications. The shop makes those failure modes concrete.
+
+### 10.5 Demo line
+
+> "This is the ground truth for everything else. Place an order, resend the exact same request, and watch the ledger stay at one order, one capture, one payment effect. If this page is wrong, no performance number on the other pages matters."
+
+### 10.6 Limits to state
+
+- Payments are simulated. No real payment processor is involved.
+- The catalog and workload are synthetic.
+- The shop is a demonstration of correctness patterns, not a production commerce system.
+- The reset action is for demo hygiene, not a production workflow.
+
+---
+
+## 11. The end-to-end story (use this as the presentation arc)
 
 If you have ten minutes, tell it as one continuous investigation.
 
 **Minute 1 — Frame the problem.**
 Open `#overview`. Point at the illustrative decision board: Basic is cheap, Cached is the balance, Distributed is fastest and still rejected for failing the duplicate-payment rule. Then say: "Architecture decisions are usually argued, not tested. And when they are tested, performance wins often hide correctness regressions. DARWIN is an architecture experimentation laboratory: understand the backend, generate alternatives, run them under traffic, introduce failures, verify business correctness, then search the trade-offs. A fast configuration that double-charges is a rejected candidate with evidence."
 
-**Minute 2 — Alternatives.**
+**Minute 2 — Project Workspace.**
+Open `#project`. Walk the five steps. Show the facts with evidence files, the separate guesses, and the hotspots. Say: "One exact commit is pinned before anything is downloaded, and the architecture map is source-backed."
+
+**Minute 3 — Architecture.**
 Open `#configuration`. Change replicas from 1 to 2, enable the cache, switch notifications to queued. Show the topology and the resource cost. Point at the line: "Correctness gate unchecked." Say: "This is a hypothesis, not evidence."
 
-**Minute 3 — Test & break.**
+**Minute 4 — Experiments.**
 Open `#experiments`. Run or show the normal comparison. Show the repeated runs and the spread. Then show the unsafe-payment scenario failing with `I-01`. Say: "This is the gate doing its job. The fast number never becomes a recommendation."
 
-**Minute 4 — Evolve.**
+**Minute 5 — Evolution.**
 Open `#search`. Show the Pareto front. Point out that only measured, gate-passing candidates are on it. Show the no-feasible panel if you have one recorded. Say: "If nothing passes, the search says so."
 
-**Minute 5 — Demo shop.**
+**Minute 6 — Solution.**
+Open `#solution`. Read the latest verdict, the correctness count, and the measured trade-off. Point at the cost of the change and the rollback notes. Say: "This is what the team acts on — and when the evidence does not justify a change, the page keeps the baseline instead of inventing a winner."
+
+**Minute 7 — Demo shop.**
 Open `#shop`. Place an order, resend the same request, show the ledger staying at 1/1/1. Say: "This is the ground truth the gate is protecting."
 
-**Minutes 6–7 — Guided evaluation.**
-Open `#project`. Walk the five steps. Show the facts with evidence files, the separate guesses, and the hotspots. Then show a measured verdict and a simulated screening side by side. Say: "Measured and modelled are different evidence tiers, and the UI never blurs them."
-
 **Minute 8 — Evidence.**
-Open an artifact or the evidence directory. Show the manifest, metrics, trace, and hashes. Say: "The result is reproducible and reviewable after the demo."
+Open an artifact or the evidence bundle. Show the manifest, metrics, trace, and hashes. Show that Solution carries the same evidence files and digests. Say: "The result is reproducible and reviewable after the demo."
 
 **Minutes 9–10 — Limits and next step.**
 State the limits: one host, small search space, Windows-only native faults, no cloud/Kubernetes, no installer. Then say what a company would actually do next: run a pilot on one service, define the invariants that matter, and use DARWIN to produce a reviewable candidate — not to auto-deploy.
 
 ---
 
-## 10. Why would a company use DARWIN?
+## 12. Why would a company use DARWIN?
 
 The short answer: **to replace architecture opinion with bounded, reviewable evidence — without giving up human control.**
 
@@ -618,7 +706,7 @@ A longer answer, grouped by buyer:
 
 ---
 
-## 11. Questionnaire: likely questions and strong answers
+## 13. Questionnaire: likely questions and strong answers
 
 The answers below are written to be said out loud. They are grouped by the kind of question, not by page. Where a claim has a limit, the limit is in the answer.
 
@@ -648,7 +736,7 @@ Pick one service with a clear invariant and a clear performance complaint. Defin
 
 **Q6. What kind of architecture are you going to evolve?**
 
-In the demo, the evolvable architecture is a checkout stack with four controls: replicas, catalog cache TTL, notification mode, and retry policy. That yields 36 legal genomes. In Guided evaluation mode, the evolvable controls depend on what the source actually supports: replicas, cache TTL, background offload, retry policy, database pool, read replicas, and rate limiting. DARWIN does not claim to evolve an arbitrary microservice graph. It evolves a **bounded, source-backed change space**.
+In the demo, the evolvable architecture is a checkout stack with four controls: replicas, catalog cache TTL, notification mode, and retry policy. That yields 36 legal genomes. In Project Workspace mode, the evolvable controls depend on what the source actually supports: replicas, cache TTL, background offload, retry policy, database pool, read replicas, and rate limiting. DARWIN does not claim to evolve an arbitrary microservice graph. It evolves a **bounded, source-backed change space**.
 
 **Q7. Why only four controls in the demo? Is that too simple?**
 
@@ -728,7 +816,7 @@ A Windows host for native benchmark and fault modes, with whole logical CPUs ava
 
 **Q24. How long does a run take?**
 
-It depends on the mode and scenario. The scenario catalog shows recorded durations when available and falls back to estimates. Quick smoke is on the order of tens of seconds; normal and flash-sale comparisons are on the order of minutes; a full Guided evaluation run is longer. The UI shows the source of the duration (`recorded` or `estimate`) rather than hiding it.
+It depends on the mode and scenario. The scenario catalog shows recorded durations when available and falls back to estimates. Quick smoke is on the order of tens of seconds; normal and flash-sale comparisons are on the order of minutes; a full Project Workspace run is longer. The UI shows the source of the duration (`recorded` or `estimate`) rather than hiding it.
 
 **Q25. What happens if a run is interrupted?**
 
@@ -740,7 +828,7 @@ Experiments are bounded by `concurrent_deployments = 1`. The repository worker r
 
 **Q27. How does it handle secrets and untrusted code?**
 
-The demo shop is synthetic and has no real payment credentials. Guided evaluation inspection pins a commit and requires consent. Measured adapters run only allowlisted source files in a DARWIN-owned overlay; the repository's Compose file, Dockerfile, and gateway config are not executed. Unsupported repositories are inspection-only. This is a security boundary, not a sandbox for arbitrary hostile code, and it should be described that way.
+The demo shop is synthetic and has no real payment credentials. Project Workspace inspection pins a commit and requires consent. Measured adapters run only allowlisted source files in a DARWIN-owned overlay; the repository's Compose file, Dockerfile, and gateway config are not executed. Unsupported repositories are inspection-only. This is a security boundary, not a sandbox for arbitrary hostile code, and it should be described that way.
 
 **Q28. What about data privacy?**
 
@@ -775,7 +863,7 @@ Native execution uses Windows job objects and a Windows-specific fault path. Doc
 
 **Q33. Is the accessibility claim complete?**
 
-No. The audit covers automated axe-core rules and scripted keyboard checks across 144 page/theme/viewport states, plus 23 palette colour pairs per theme. It does not include screen-reader testing or a user study. Say "automated and keyboard coverage passed", not "fully accessible".
+No. The audit covers automated axe-core rules and scripted keyboard checks across 162 page/theme/viewport states, plus 23 palette colour pairs per theme. It does not include screen-reader testing or a user study. Say "automated and keyboard coverage passed", not "fully accessible".
 
 ### F. Comparisons
 
@@ -793,7 +881,7 @@ DORA measures delivery performance across an organization. DARWIN measures a spe
 
 **Q37. How is this different from an AI coding assistant?**
 
-An AI coding assistant proposes code. DARWIN measures a deployment configuration and can reject it. The value is not generation; it is falsification. In Guided evaluation mode, DARWIN can also produce a specific source-backed change, but the measured adapter and the verdict are what make it credible.
+An AI coding assistant proposes code. DARWIN measures a deployment configuration and can reject it. The value is not generation; it is falsification. In Project Workspace mode, DARWIN can also produce a specific source-backed change, but the measured adapter and the verdict are what make it credible.
 
 **Q38. Why not just use a cloud cost calculator?**
 
@@ -819,13 +907,13 @@ Start with one service and one invariant. Run a baseline and one candidate. Revi
 
 **Q43. How do you prevent the demo from becoming a science fair?**
 
-Tie every page to a decision the audience recognizes. The lab: which architecture should carry the next 10,000 users? Alternatives: what is this configuration made of and what does it cost? Test & break: does it still work under traffic and failure? Evolve: which trade-off do we accept? Demo shop: would this double-charge a customer? Guided evaluation: what would we change, and is it measured? If a page cannot answer a decision question, cut it from the presentation.
+Tie every page to a decision the audience recognizes. Overview: which architecture should carry the next 10,000 users? Project Workspace: what would we change, and is it measured? Architecture: what is this configuration made of and what does it cost? Experiments: does it still work under traffic and failure? Evolution: which trade-off do we accept? Solution: what should the team do next, and how do we roll it back? Demo shop: would this double-charge a customer? If a page cannot answer a decision question, cut it from the presentation.
 
 ### H. Tough and cynical questions
 
 **Q44. Isn't this just a toy shop?**
 
-The shop is deliberately small, but the method is not. The interesting part is the contract around it: genome identity, repeated measurement, fault injection, invariants, hashed evidence, and a verdict policy. A toy shop is the right size to make the method inspectable. The Guided evaluation page is where the method meets an actual repository, with a measured adapter and a simulated screening branch.
+The shop is deliberately small, but the method is not. The interesting part is the contract around it: genome identity, repeated measurement, fault injection, invariants, hashed evidence, and a verdict policy. A toy shop is the right size to make the method inspectable. The Project Workspace page is where the method meets an actual repository, with a measured adapter and a simulated screening branch.
 
 **Q45. The simulated screening sounds like guesswork. Why include it?**
 
@@ -853,7 +941,7 @@ It is not a replacement for judgment. It is a way to give judgment better inputs
 
 ---
 
-## 12. What you can and cannot claim
+## 14. What you can and cannot claim
 
 Use this table as a guardrail before any presentation.
 
@@ -872,7 +960,7 @@ Use this table as a guardrail before any presentation.
 
 ---
 
-## 13. Glossary
+## 15. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -892,17 +980,18 @@ Use this table as a guardrail before any presentation.
 
 ---
 
-## 14. One-page cheat sheet
+## 16. One-page cheat sheet
 
 **The spine:** Genome → Experiment → Gate → Evidence.
 
 **Page in one line each:**
 
-- **The lab** — state the decision and the six-step method, then separate what runs today from the product direction. The illustrative A/B/C costs are hypothetical, not measurements.
-- **Guided evaluation** — inspect a repository, separate facts from guesses, then measure a trusted adapter or screen the architecture. Never blur `SIMULATED` and measured.
-- **Alternatives** — choose four controls, see the topology and resource cost, get an uncalibrated estimate. Correctness is not checked here.
-- **Test & break** — deploy the stack, repeat the measurement, inject faults, check the invariants. A fast failure is still a failure.
-- **Evolve** — spend a bounded budget to find the measured Pareto front. If nothing passes, say so.
+- **Overview** — state the decision and the six-stage method, then separate what runs today from the product direction. The illustrative A/B/C costs are hypothetical, not measurements.
+- **Project Workspace** — inspect a repository, separate facts from guesses, then measure a trusted adapter or screen the architecture. Never blur `SIMULATED` and measured.
+- **Architecture** — choose four controls, see the topology and resource cost, get an uncalibrated estimate. Correctness is not checked here.
+- **Experiments** — deploy the stack, repeat the measurement, inject faults, check the invariants. A fast failure is still a failure.
+- **Evolution** — spend a bounded budget to find the measured Pareto front. If nothing passes, say so.
+- **Solution** — read the recorded verdict, correctness count, measured trade-off, regressions, reviewable change, rollback notes and evidence bundle. Never recompute or upgrade a simulated recommendation.
 - **Demo shop** — resend the same checkout and watch the ledger stay at 1 order, 1 capture, 1 payment effect. This is the ground truth.
 
 **The three sentences to repeat:**

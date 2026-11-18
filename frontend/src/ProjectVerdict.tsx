@@ -101,7 +101,7 @@ function ScreeningVerdict({evaluation, onRerun, onChooseAnother, downloadsAvaila
     return <section className="project-panel project-verdict">
       <div className="section-title">
         <div className="panel-heading">
-          <span className="section-kicker">Step 5 · Prove · Simulated screening</span>
+          <span className="section-kicker">Stage 06 · Solution · Simulated screening</span>
           <h2>No screening result was produced.</h2>
         </div>
         <span className="status-chip warn">SIMULATED · NOT MEASURED</span>
@@ -132,7 +132,7 @@ function ScreeningVerdict({evaluation, onRerun, onChooseAnother, downloadsAvaila
   return <section className="project-panel project-verdict project-sim-verdict" aria-labelledby="project-verdict-title">
     <div className="section-title">
       <div className="panel-heading">
-        <span className="section-kicker">Step 5 · Prove · Simulated recommendation</span>
+        <span className="section-kicker">Stage 06 · Solution · Simulated recommendation</span>
         <h2 id="project-verdict-title">{recommendation.label}</h2>
       </div>
       <span className="status-chip warn"
@@ -157,24 +157,24 @@ function ScreeningVerdict({evaluation, onRerun, onChooseAnother, downloadsAvaila
     </div>
 
     <dl className="metrics-grid project-metrics">
-      <div><dt>Modelled baseline p95</dt><dd>{formatMs(recommendation.baseline_p95_ms)}</dd>
-        <span className="metric-range">synthetic workload</span></div>
-      <div><dt>Modelled candidate p95</dt><dd>{formatMs(recommendation.candidate_p95_ms)}</dd>
-        <span className="metric-range">same seeds</span></div>
+      <div><dt>Modelled baseline p95</dt><dd>{formatMs(recommendation.baseline_p95_ms)}
+        <span className="metric-range">synthetic workload</span></dd></div>
+      <div><dt>Modelled candidate p95</dt><dd>{formatMs(recommendation.candidate_p95_ms)}
+        <span className="metric-range">same seeds</span></dd></div>
       <div><dt>Modelled change</dt>
         <dd className={(recommendation.modelled_change_pct ?? 0) > 0 ? 'project-good'
           : (recommendation.modelled_change_pct ?? 0) < 0 ? 'project-bad' : ''}>
           {modelledLabel(recommendation.modelled_change_pct)}
-        </dd>
-        <span className="metric-range">not measured</span></div>
-      <div><dt>Cost index</dt><dd>{recommendation.cost_multiplier?.toFixed(2) ?? '—'}×</dd>
-        <span className="metric-range">baseline = 1.00×</span></div>
-      <div><dt>Modelled error rate</dt><dd>{recommendation.error_rate_pct?.toFixed(2) ?? '—'}%</dd>
-        <span className="metric-range">policy limit {policy.maximum_error_rate_pct ?? '—'}%</span></div>
+          <span className="metric-range">not measured</span>
+        </dd></div>
+      <div><dt>Cost index</dt><dd>{recommendation.cost_multiplier?.toFixed(2) ?? '—'}×
+        <span className="metric-range">baseline = 1.00×</span></dd></div>
+      <div><dt>Modelled error rate</dt><dd>{recommendation.error_rate_pct?.toFixed(2) ?? '—'}%
+        <span className="metric-range">policy limit {policy.maximum_error_rate_pct ?? '—'}%</span></dd></div>
       <div><dt>Candidate state</dt>
         <dd><span className={`status-chip ${candidate?.qualifies ? 'good' : 'warn'}`}>
-          {candidate?.qualifies ? 'Clears policy' : 'Does not clear policy'}</span></dd>
-        <span className="metric-range">{recommendation.measured ? '' : 'unmeasured'}</span></div>
+          {candidate?.qualifies ? 'Clears policy' : 'Does not clear policy'}</span>
+          <span className="metric-range">{recommendation.measured ? '' : 'unmeasured'}</span></dd></div>
     </dl>
 
     <div className="project-sim-grid">
@@ -398,7 +398,7 @@ function ArchitectureVerdict({evaluation, onRerun, onChooseAnother, downloadsAva
   return <section className="project-panel project-verdict" aria-labelledby="project-verdict-title">
     <div className="section-title">
       <div className="panel-heading">
-        <span className="section-kicker">Step 5 · Prove</span>
+        <span className="section-kicker">Stage 06 · Solution</span>
         <h2 id="project-verdict-title">{verdict.label}</h2>
       </div>
       <span className={`status-chip ${live ? 'good' : 'warn'}`}
@@ -663,7 +663,7 @@ export function ProjectVerdict(props: Props) {
 
   if (!verdict) {
     return <section className="project-panel project-verdict">
-      <span className="section-kicker">Step 5 · Prove · Verdict</span>
+      <span className="section-kicker">Stage 06 · Solution · Verdict</span>
       <h2>No verdict was recorded</h2>
       <p className="project-lede">This evaluation ended without a defensible result. DARWIN will not invent one.</p>
       {evaluation.error && <p className="notice" role="alert">{evaluation.error}</p>}
@@ -678,7 +678,7 @@ export function ProjectVerdict(props: Props) {
   return <section className="project-panel project-verdict" aria-labelledby="project-verdict-title">
     <div className="section-title">
       <div className="panel-heading">
-        <span className="section-kicker">Step 5 · Prove · Verdict</span>
+        <span className="section-kicker">Stage 06 · Solution · Verdict</span>
         <h2 id="project-verdict-title">{verdict.label}</h2>
       </div>
       <span className={`status-chip ${liveEvidence ? 'good' : ''}`}
@@ -695,10 +695,10 @@ export function ProjectVerdict(props: Props) {
     </div>
 
     <dl className="metrics-grid project-metrics">
-      <div><dt>Original median</dt><dd>{formatMs(verdict.baseline_median_ms)}</dd><span className="metric-range">{primary ? `${formatRows(primary)} rows` : ''}</span></div>
-      <div><dt>Candidate median</dt><dd>{formatMs(verdict.candidate_median_ms)}</dd><span className="metric-range">{primary ? `${formatRows(primary)} rows` : ''}</span></div>
-      <div><dt>Time change</dt><dd>{changeLabel(verdict.change_pct)}</dd><span className="metric-range">{speedLabel(verdict.change_pct)}</span></div>
-      <div><dt>Correctness</dt><dd>{verdict.correctness.checks_passed}/{verdict.correctness.checks_total}</dd><span className="metric-range">{verdict.correctness.passed ? 'all checks passed' : 'failed'}</span></div>
+      <div><dt>Original median</dt><dd>{formatMs(verdict.baseline_median_ms)}<span className="metric-range">{primary ? `${formatRows(primary)} rows` : ''}</span></dd></div>
+      <div><dt>Candidate median</dt><dd>{formatMs(verdict.candidate_median_ms)}<span className="metric-range">{primary ? `${formatRows(primary)} rows` : ''}</span></dd></div>
+      <div><dt>Time change</dt><dd>{changeLabel(verdict.change_pct)}<span className="metric-range">{speedLabel(verdict.change_pct)}</span></dd></div>
+      <div><dt>Correctness</dt><dd>{verdict.correctness.checks_passed}/{verdict.correctness.checks_total}<span className="metric-range">{verdict.correctness.passed ? 'all checks passed' : 'failed'}</span></dd></div>
     </dl>
 
     <div className="project-verdict-grid">

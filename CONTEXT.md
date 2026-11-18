@@ -1,6 +1,6 @@
 # DARWIN — Project Context
 
-> **Snapshot:** 17 November 2026
+> **Snapshot:** 18 November 2026
 > **Repository:** [github.com/udbhavnc7/DARWIN](https://github.com/udbhavnc7/DARWIN) (public, MIT)
 > **Short version:** the ten-phase MVP is functionally complete. DARWIN is roughly **82% of the way to a production-ready release**; the remainder is multi-host validation, per-user security, deeper packaging, and refreshed demo assets — not missing core features.
 
@@ -142,7 +142,7 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 | Evidence and replay | Done | 90% | SQLite history, artifact digests, source snapshots, export bundle, replay instructions |
 | Docker path | Done | 85% | Full acceptance passed; the fresh search found two feasible candidates on its Pareto front |
 | Native path | Done on Windows | 80% | Windows resource jobs and private PostgreSQL clusters; not cross-platform |
-| Tests | Strong locally and in CI | 90% | 108 pass locally; 14 service integrations skip by default and run in CI with PostgreSQL and Redis; Windows native paths remain local-only |
+| Tests | Strong locally and in CI | 90% | 216 pass locally; the 14 shop integrations reuse the demo cluster or provision disposable PostgreSQL and Redis; Windows native paths remain local-only |
 | Security and multi-user | Partial | 35% | Loopback-only default, optional shared bearer token, no per-user accounts, quotas, or project isolation |
 | Packaging and distribution | Partial | 65% | One-command start/stop launcher with readiness checks; no installer, service manager, or containerized control plane |
 | Documentation | Strong | 92% | README, contracts, phase records, and an exhibition runbook; phase notes are annotated where later work closed their gaps |
@@ -157,14 +157,15 @@ Percentages are engineering estimates based on what is implemented, tested, and 
 
 ### In the dashboard
 
-- **The lab** home page with the product narrative (the growth decision, the illustrative A/B/C board, the six-step method, why DARWIN sits alongside AWS/Kubernetes/load-test tools, what runs today vs the product direction), the product tour, and a machine-readiness panel (required vs optional tools, execution modes, remedies)
-- **Guided evaluation** to connect a real public backend and compress the six steps into Connect → Understand → Challenge → Evolve → Prove
-- **Alternatives** with live topology, simulation, Compose export, and hand-off to Test & break
-- **Test & break** for smoke checks, benchmarks, fault verification, request validation, and four judge-ready scenario presets with observed durations
-- **Evolve** for NSGA-II, random, and hill-climbing runs with lineage, gates, the Pareto plot, an explicit no-feasible verdict, and a saved feasible/rejected run fallback
+- **Overview** home page with the product narrative (the growth decision, the illustrative A/B/C board, the six stages, why DARWIN sits alongside AWS/Kubernetes/load-test tools, what runs today vs the product direction), the product tour, and a machine-readiness panel (required vs optional tools, execution modes, remedies)
+- **Project Workspace** to connect a real public backend, pin one commit, understand its services and run the guided evaluation (Connect → Understand → Challenge → Evolve → Prove)
+- **Architecture** with live topology, simulation, Compose export, and hand-off to Experiments
+- **Experiments** for smoke checks, benchmarks, fault verification, request validation, and four judge-ready scenario presets with observed durations
+- **Evolution** for NSGA-II, random, and hill-climbing runs with lineage, gates, the Pareto plot, an explicit no-feasible verdict, and a saved feasible/rejected run fallback
+- **Solution** for the latest evidence-backed decision: verdict, correctness checks, measured trade-off and regressions, reviewable change, rollback notes, and the evidence bundle
 - **Demo shop** where the same request key can be replayed against the real local shop
 - Six lab themes — Green Texture (green + white default), Leather Red, Blueprint, Amethyst, Carbon Black, Midnight — persisted per browser
-- A six-step product tour at `?tour=1`, from the sidebar, or from **The lab**
+- A six-stage product tour at `?tour=1`, from the sidebar, or from **Overview**
 - A three.js calibration intro on first load: the gate stack assembles over the test deck, four genome controls sit on the bench, and a measuring beam verifies I-01…I-05 before the workspace takes over. Skippable with Escape, replayed from **Lab appearance → Replay calibration** or `?splash=1`, and static under reduced motion
 
 ### Hosted showcase
@@ -175,7 +176,7 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 - **What is hosted:** nothing on the backend. No API, shop, database, or WebSocket. That keeps the Priority-0 "no shared deployment" rule intact.
 - **Live bench (optional):** from the hosted page, **Connect this computer** probes `127.0.0.1:8000` and, if the local stack answers, the fetch shim forwards `/api` to the API and `/shop` to the shop gateway instead of the snapshots. The hosted copy itself needs no install, Docker or server. The API allows the published origin through CORS (with private-network access) but still binds to loopback. If the bench cannot be reached, an informational note says so and the page keeps working on recorded evidence; if a previously connected bench stops answering, the page clears the connection and returns to recorded evidence on reload. Measured smoke runs and shop checkouts were driven this way from the hosted page during verification.
 - **Labelling:** a permanent "Recorded evidence from <date>, not a live run" banner appears on every page, switching to a green "Live bench" banner when connected. Without a bench, run, rerun, checkout, reset, and artifact-download controls are disabled.
-- **Publishing:** the snapshot lives in `frontend/showcase/`, and `.github/workflows/pages.yml` redeploys on every push to `master`. The current snapshot holds 63 experiments and 12 searches, captured 2026-11-15 from commit `a23e2c1` on the native runtime.
+- **Publishing:** the snapshot lives in `frontend/showcase/`, and `.github/workflows/pages.yml` redeploys on every push to `master`. The current snapshot holds 75 experiments, 13 searches, and 15 project evaluations, captured 2026-11-16 from commit `2f7d223` on the native runtime.
 
 ### From the CLI and API
 
@@ -206,8 +207,8 @@ A read-only build of the same dashboard is published at [udbhavnc7.github.io/DAR
 | Search comparison | Single seed: NSGA-II + simulation best at 273.9 ms median p95. Three-seed campaign: 11 / 12 searches completed; NSGA-II + simulation median-of-best 357.2 ms, random 407.6 ms, hill climbing 394.6 ms, NSGA-II without simulation 445.1 ms (2 / 3 completed); one seed-202 arm interrupted by a fault-measurement connection timeout |
 | Simulator calibration | 27.0% mean absolute p95 error across nine held-out repetitions |
 | Responsive layout | Verified at 1440, 900, 430, 390, 360, and 320 px |
-| Accessibility | axe-core found no WCAG 2.1 A/AA violations across 144 page/theme/viewport states; all 23 palette colour pairs per theme meet AA; 9 of 9 keyboard checks pass. See [ACCESSIBILITY](docs/ACCESSIBILITY.md) |
-| Showcase deploy | Live at [udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/); all five screens checked on desktop and mobile in all six themes, with no `/api` or `/shop` requests leaving the static bundle |
+| Accessibility | axe-core found no WCAG 2.1 A/AA violations across 162 page/theme/viewport states; all 23 palette colour pairs per theme meet AA; 9 of 9 keyboard checks pass. See [ACCESSIBILITY](docs/ACCESSIBILITY.md) |
+| Showcase deploy | Live at [udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/); every screen checked on desktop and mobile in all six themes, with no `/api` or `/shop` requests leaving the static bundle |
 | Fresh-clone quickstart | Cloned from GitHub and followed the README: dependencies installed, Toxiproxy verified, `demo.py start` brought up shop, API, and dashboard |
 
 ---
@@ -330,10 +331,11 @@ To exercise the UI:
 
 1. Start the API, Vite dev server, and demo shop as described in the [README](README.md#quickstart).
 2. Open `http://127.0.0.1:5173/?tour=1`.
-3. Confirm the **Machine readiness** panel on **The lab**; optional tools should be explained, not failing.
-4. Run the **Quick checkout smoke** card from **Test & break**.
-5. In **Evolve**, open a completed run or the recorded feasible/rejected examples; inspect lineage, the Pareto plot, and the no-feasible verdict.
-6. Place and replay an order in **Demo shop**; confirm the ledger stays at 1 order / 1 capture / 1 payment effect. The full runbook is in [docs/EXHIBITION.md](docs/EXHIBITION.md).
+3. Confirm the **Machine readiness** panel on **Overview**; optional tools should be explained, not failing.
+4. Run the **Quick checkout smoke** card from **Experiments**.
+5. In **Evolution**, open a completed run or the recorded feasible/rejected examples; inspect lineage, the Pareto plot, and the no-feasible verdict.
+6. In **Solution**, read the latest decision record: verdict, correctness, change and rollback notes, and evidence files.
+7. Place and replay an order in **Demo shop**; confirm the ledger stays at 1 order / 1 capture / 1 payment effect. The full runbook is in [docs/EXHIBITION.md](docs/EXHIBITION.md).
 
 ---
 

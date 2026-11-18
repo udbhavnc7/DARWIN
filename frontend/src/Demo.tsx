@@ -25,28 +25,6 @@ function GrowthVisual() {
   </div>;
 }
 
-function ToolsVisual() {
-  return <div className="tour-tools">
-    <span className="tour-test-label">Existing tools provide the pieces</span>
-    <div className="tour-tool-grid">
-      <span className="tour-tool">AWS<small>infrastructure</small></span>
-      <span className="tour-tool">Kubernetes<small>instance scaling</small></span>
-      <span className="tour-tool">Redis<small>caching</small></span>
-      <span className="tour-tool">Locust<small>load tests</small></span>
-      <span className="tour-tool">Prometheus<small>metrics</small></span>
-      <span className="tour-tool">Chaos<small>failures</small></span>
-    </div>
-    <span className="tour-connector"/>
-    <div className="tour-gate"><Icon name="configuration"/>
-      <span><strong>DARWIN coordinates one decision</strong><small>alternatives → traffic → failures → correctness → search</small></span>
-    </div>
-    <div className="tour-outcomes">
-      <span className="tour-outcome good"><Icon name="check"/>Measured recommendation</span>
-      <span className="tour-outcome bad"><Icon name="close"/>Correctness failure rejected</span>
-    </div>
-  </div>;
-}
-
 function MapVisual() {
   return <div className="tour-stack">
     <span className="tour-node">Public repo · pinned commit</span>
@@ -123,33 +101,42 @@ function ChartVisual() {
   </>;
 }
 
+function SolutionVisual() {
+  return <div className="tour-solution">
+    <div className="tour-solution-head"><span>Decision card</span><span>Illustrative</span></div>
+    <div className="tour-alt best"><span>B</span><strong>Cached</strong><small>2 APIs · Redis</small></div>
+    <div className="tour-solution-stats">
+      <div><b>250 ms</b><small>p95 · was 900 ms</small></div>
+      <div><b>5 / 5</b><small>correctness gates</small></div>
+      <div><b>−72%</b><small>median latency</small></div>
+    </div>
+    <div className="tour-controls">
+      <span className="tour-control"><b>Change</b> reviewed diff</span>
+      <span className="tour-control"><b>Rollback</b> documented</span>
+      <span className="tour-control"><b>Evidence</b> hashed bundle</span>
+    </div>
+    <div className="tour-evidence"><Icon name="book"/>
+      <span><strong>The fastest candidate can still lose.</strong><small>A rejected duplicate-payment bug never becomes a winner.</small></span>
+    </div>
+  </div>;
+}
+
 const steps: Step[] = [
   {
-    kicker: 'The decision',
-    title: 'One server works. Then the traffic arrives.',
+    kicker: 'Stage 01 · Overview',
+    title: 'Architecture, decided by evidence.',
     lede: 'At 100 customers, one backend and one database are enough. At 10,000, requests time out, the database saturates and payments fail. Scaling adds capacity; it does not tell you which architecture is right.',
     points: [
-      {icon: 'check', text: 'Vertical scaling makes one machine bigger; it eventually reaches a limit.'},
-      {icon: 'check', text: 'Horizontal scaling adds servers, but the database, queue and cost still need decisions.'},
-      {icon: 'check', text: 'AWS, Kubernetes, Redis and load tests provide the pieces — not the answer.'},
+      {icon: 'check', text: 'AWS, Kubernetes, Redis and load tests provide the pieces — not the decision.'},
+      {icon: 'check', text: 'DARWIN coordinates deployable alternatives, traffic, failures and correctness gates into one experiment.'},
+      {icon: 'check', text: 'The output is a recommendation with an evidence trail, not a prettier diagram.'},
     ],
     visual: <GrowthVisual/>,
   },
   {
-    kicker: 'Positioning',
-    title: 'A lab, not a replacement for your stack.',
-    lede: 'DARWIN sits alongside AWS, Kubernetes, Redis, Locust and Prometheus. It coordinates them into one experiment: generate alternatives, run traffic, inject failures, verify business rules, then search.',
-    points: [
-      {icon: 'check', text: 'It does not replace infrastructure, caching, monitoring or load generation.'},
-      {icon: 'check', text: 'It did not invent load testing, fault injection or architecture optimization.'},
-      {icon: 'check', text: 'The differentiator is the combined workflow with correctness gates and NSGA-II search.'},
-    ],
-    visual: <ToolsVisual/>,
-  },
-  {
-    kicker: 'Step 1 · Understand',
+    kicker: 'Stage 02 · Project Workspace',
     title: 'Understand the backend before changing it.',
-    lede: 'Connect a pinned public repository, or use the controlled checkout lab. DARWIN maps the services, data stores, cache and workers, and separates proven facts from guesses.',
+    lede: 'Connect a pinned public repository, or use the controlled checkout lab. DARWIN resolves one exact commit, maps the services, data stores, cache and workers, and separates proven facts from guesses.',
     points: [
       {icon: 'check', text: 'One exact commit is resolved before anything is downloaded.'},
       {icon: 'check', text: 'The architecture map is source-backed, not a name match.'},
@@ -158,30 +145,31 @@ const steps: Step[] = [
     visual: <MapVisual/>,
   },
   {
-    kicker: 'Steps 2–3 · Generate and test',
-    title: 'Build alternatives. Run them at 100, 1,000 and 5,000 users.',
-    lede: 'A candidate is a deployable configuration, not a diagram. The checkout lab varies replicas, cache TTL, notification delivery and retry policy. Each candidate is deployed and measured under simulated traffic.',
+    kicker: 'Stage 03 · Architecture',
+    title: 'Shape the candidates that can actually be deployed.',
+    lede: 'A candidate is a deployable configuration, not a diagram. The checkout lab varies replicas, cache TTL, notification delivery and retry policy; the reviewed adapters propose scoped changes for the connected backend.',
     points: [
       {icon: 'check', text: 'One, two or three API replicas behind the gateway.'},
-      {icon: 'check', text: 'Catalog cache off, 10 seconds or 30 seconds.'},
-      {icon: 'check', text: 'Notifications sent inline or queued to a worker.'},
+      {icon: 'check', text: 'Catalog cache off, 10 seconds or 30 seconds; notifications inline or queued.'},
       {icon: 'check', text: 'Retries disabled, or idempotent only in the safe path.'},
+      {icon: 'check', text: 'Every candidate keeps its own ID so later stages reference the same object.'},
     ],
     visual: <AlternativesVisual/>,
   },
   {
-    kicker: 'Steps 4–5 · Break and verify',
+    kicker: 'Stage 04 · Experiments',
     title: 'The fastest configuration can still lose.',
-    lede: 'DARWIN injects database delays, service outages, payment timeouts and duplicate requests. Five invariants run before performance counts. A configuration that double-charges a customer is rejected, however fast it is.',
+    lede: 'DARWIN pushes seeded traffic through each candidate, then injects database delays, service outages, payment timeouts and duplicate requests. Correctness gates run before performance counts; a configuration that double-charges a customer is rejected, however fast it is.',
     points: [
       {icon: 'shield', text: 'No duplicate payment for one request key.'},
       {icon: 'shield', text: 'No overselling; confirmed orders were paid.'},
       {icon: 'shield', text: 'Replayed requests add no extra business effects.'},
+      {icon: 'experiments', text: 'Measured runs and simulated screening stay labelled separately.'},
     ],
     visual: <GateVisual/>,
   },
   {
-    kicker: 'Step 6 · Evolve',
+    kicker: 'Stage 05 · Evolution',
     title: 'Search the trade-offs. Keep the evidence.',
     lede: 'NSGA-II, random search and hill climbing propose configurations. The simulator screens them cheaply; only promoted candidates are measured. Pareto ranking weighs latency, CPU time and recovery — after correctness gates remove failures.',
     points: [
@@ -191,6 +179,18 @@ const steps: Step[] = [
       {icon: 'project', text: 'Today: a controlled checkout lab plus two public backends. General-purpose repository optimization is the roadmap, not shipped functionality.'},
     ],
     visual: <ChartVisual/>,
+  },
+  {
+    kicker: 'Stage 06 · Solution',
+    title: 'A decision the team can act on.',
+    lede: 'The last stage turns the run into a verdict: which configuration to keep, the trade-off it buys, the checks it passed and the way back. The change is reviewable, never applied automatically, and the evidence bundle keeps every seed and hash.',
+    points: [
+      {icon: 'check', text: 'Original retained, verified improvement, trade-off or rejected — stated plainly.'},
+      {icon: 'code', text: 'A reviewable deployment change with apply and rollback notes.'},
+      {icon: 'book', text: 'An evidence bundle with seeds, artifacts, hashes and a replay command.'},
+      {icon: 'shield', text: 'One host and one workload window: the decision is not a production benchmark.'},
+    ],
+    visual: <SolutionVisual/>,
   },
 ];
 

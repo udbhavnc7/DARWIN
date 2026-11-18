@@ -61,7 +61,7 @@ DARWIN treats that as an experiment, not an opinion:
 - Search results are **reproducible**: candidate lineage, fault traces, and replay commands are stored with the evidence.
 - Simulation is only a **screening tool**. Simulated numbers are labeled and can never be presented as winners.
 
-The method is six steps: **understand the backend → generate alternatives → run experiments under simulated traffic → introduce failures → verify business correctness → search the trade-offs**. The guided evaluation compresses them into Connect → Understand → Challenge → Evolve → Prove. The result is a lab where a backend decision can be argued with data instead of intuition.
+The workflow is six stages: **Overview → Project Workspace → Architecture → Experiments → Evolution → Solution**. The project workspace pins one commit and maps the backend; Architecture shapes deployable candidates; Experiments run traffic, faults and correctness gates; Evolution searches the trade-offs; Solution delivers a verdict with a reviewable change, rollback notes and an evidence bundle. The result is a lab where a backend decision can be argued with data instead of intuition.
 
 The decision rule is easy to state and hard to fake. In the illustrative example on the app's home page — hypothetical numbers, not a DARWIN result — three configurations cost ₹10,000, ₹20,000 and ₹35,000 a month. The ₹35,000 one is fastest, but it fails the duplicate-payment rule, so it is rejected. The ₹20,000 configuration is the measured balance. A fast configuration that breaks the business is not a winner.
 
@@ -205,30 +205,35 @@ The React dashboard is the primary interface to the lab. It opens with a short, 
 
 ![Bench calibration intro](docs/images/splash.png)
 
-A six-step product tour explains the whole system, from the growth problem and the six-step method to the correctness gate and measured search. Open it from the sidebar, from **What is DARWIN?** on the overview, or directly with [`?tour=1`](http://127.0.0.1:5173/?tour=1).
+A six-stage product tour explains the whole system, from the growth problem through the correctness gate and measured search to the final decision. Open it from the sidebar, from **What is DARWIN?** on the overview, or directly with [`?tour=1`](http://127.0.0.1:5173/?tour=1).
 
 ![Product tour](docs/images/tour.png)
 
-| Workspace | What you do there |
+| Stage | What you do there |
 | --- | --- |
-| **The lab** | Read the product direction: the growth problem, the six-step method, the illustrative decision, how the lab differs from AWS/Kubernetes/load tests, and what runs today versus what is roadmap |
-| **Guided evaluation** | Connect a pinned public backend, understand it, choose a challenge, evolve it, and prove the verdict with evidence |
-| **Alternatives** | Shape the checkout topology, preview the service graph, simulate, or export Compose |
-| **Test & break** | Run smoke checks, benchmarks, fault verification, request validation, or a judge-ready scenario with its observed duration |
-| **Evolve** | Run NSGA-II, random, or hill-climbing searches; inspect lineage, measured gates, and the Pareto plot; open a saved feasible or rejected run offline |
-| **Demo shop** | Place a simulated checkout and resend the same request to see idempotency, payment effects, and ledger counters |
+| **Overview** | Read the product direction: the growth problem, the six stages, the illustrative decision, how the lab differs from AWS/Kubernetes/load tests, and what runs today versus what is roadmap |
+| **Project Workspace** | Connect a pinned public backend, understand its services and data stores, choose a challenge, and run the guided evaluation |
+| **Architecture** | Shape the checkout topology, preview the service graph, simulate, or export Compose |
+| **Experiments** | Run smoke checks, benchmarks, fault verification, request validation, or a judge-ready scenario with its observed duration |
+| **Evolution** | Run NSGA-II, random, or hill-climbing searches; inspect lineage, measured gates, and the Pareto plot; open a saved feasible or rejected run offline |
+| **Solution** | Read the latest verdict with its measured trade-off, correctness checks, reviewable change, rollback notes and evidence bundle |
+| **Example lab (demo shop)** | Place a simulated checkout and resend the same request to see idempotency, payment effects, and ledger counters |
 
-![Alternatives builder](docs/images/architecture.png)
+![Architecture builder](docs/images/architecture.png)
 
-The Test & break workspace includes four judge-ready presets — quick smoke, normal comparison, flash-sale comparison, and an unsafe payment fixture — each showing whether its duration is live or recorded and which execution environments are actually available.
+The Experiments workspace includes four judge-ready presets — quick smoke, normal comparison, flash-sale comparison, and an unsafe payment fixture — each showing whether its duration is live or recorded and which execution environments are actually available.
 
 ![Judge-ready scenario presets](docs/images/scenarios.png)
 
-The Evolve workspace separates **proposed**, **simulated**, and **measured** evidence. Rejected candidates expose their violated invariant, the trace, and the original artifact downloads. When no measured candidate passes every gate, the workspace shows a "No candidate passed all gates" verdict with the rejection reasons and safe next choices; it never promotes a rejected candidate. A saved-run fallback is labelled **Recorded run** and cannot be mistaken for a live execution.
+The Evolution workspace separates **proposed**, **simulated**, and **measured** evidence. Rejected candidates expose their violated invariant, the trace, and the original artifact downloads. When no measured candidate passes every gate, the workspace shows a "No candidate passed all gates" verdict with the rejection reasons and safe next choices; it never promotes a rejected candidate. A saved-run fallback is labelled **Recorded run** and cannot be mistaken for a live execution.
 
-![Evolve results](docs/images/search.png)
+![Evolution results](docs/images/search.png)
 
 ![No-feasible-candidate verdict with retained gate reasons](docs/images/rejection.png)
+
+The Solution stage reads the recorded project verdicts and presents the newest decision: what to keep or change, the measured trade-off and any regressed cost, the correctness count, the reviewable change with rollback notes, and the evidence files. A retained baseline stays a retained baseline, and a simulated screening stays labelled **SIMULATED · NOT MEASURED**.
+
+![Solution decision record](docs/images/solution.png)
 
 The demo shop records the receipt, stock, order, capture, and payment effect for each request key. Resending the same key returns the original receipt and adds no second effect.
 
@@ -246,7 +251,7 @@ Six lab palettes persist per browser. Four are light: **Green Texture** (laborat
 
 To look around without installing anything, open **[udbhavnc7.github.io/DARWIN](https://udbhavnc7.github.io/DARWIN/)** on any laptop or phone. It is the same dashboard, built in a read-only showcase mode over evidence recorded on a local DARWIN bench. The hosted copy is complete on its own: no local install, Docker engine or running server is needed to browse it.
 
-- **What works:** every saved experiment and search, with metrics, gate results, violated invariants, events, lineage, and the Pareto plot. You can also use the architecture builder's topology preview, the simulator for all 36 configurations, and Compose export, plus all six themes and the product tour.
+- **What works:** every saved experiment, search, and project verdict, with metrics, gate results, violated invariants, events, lineage, the Pareto plot, and the Solution decision record. You can also use the architecture builder's topology preview, the simulator for all 36 configurations, and Compose export, plus all six themes and the product tour.
 - **Running things live (optional):** start the stack on your own machine with `scripts/demo.py start` — Docker is optional; the native runtime works without it — open the showcase, and choose **Connect this computer**. The page then drives your local bench over `127.0.0.1`: experiments, searches, reruns, shop checkouts and artifact downloads all run for real on that machine. Nothing is exposed to the network and no backend is hosted. Chrome may ask once for permission to reach devices on your local network. If a connected bench stops answering, the page returns to the recorded evidence automatically instead of showing broken pages. **Disconnect** also returns to the recorded evidence.
 - **What still needs a local install:** without a connected bench, starting experiments or searches, reruns, demo-shop checkouts and resets, and artifact downloads stay disabled and labelled **Needs a local install**. Artifact names and hashes are always shown; files stay on the machine that recorded them.
 - **Honest labelling:** a permanent banner reads *"Recorded evidence from <date>, not a live run."* Once connected to a local bench it switches to a green **Live bench** banner. No DARWIN API, shop, or database is hosted. Only the browser's connection back to your own bench uses loopback, which keeps the [local security model](#local-security-model) intact.
@@ -351,11 +356,13 @@ Docker measurements require a local Linux engine with cgroup v2 CPU quotas, swap
 ### First five minutes
 
 1. Open the product tour.
-2. On **The lab**, confirm **Machine readiness**. Required tools must be green; optional ones (for example Docker or Toxiproxy) are named with a remedy and their runs stay disabled.
-3. In **Alternatives**, change replicas, cache, notifications, and retries; watch the topology update.
-4. In **Test & break**, start **Quick checkout smoke** (~30 s) or a larger comparison. Each preset records its own duration source.
-5. In **Evolve**, inspect a completed run, its lineage, and the measured Pareto plot, or open the recorded feasible and rejected examples. The rejected example shows the no-feasible verdict without a live run.
-6. In **Demo shop**, place an order, then resend it. The receipt is identical, stock is unchanged, and the ledger stays at one order, one capture, and one payment effect.
+2. On **Overview**, confirm **Machine readiness**. Required tools must be green; optional ones (for example Docker or Toxiproxy) are named with a remedy and their runs stay disabled.
+3. In **Project Workspace**, pin a public backend or choose the catalogued example.
+4. In **Architecture**, change replicas, cache, notifications, and retries; watch the topology update.
+5. In **Experiments**, start **Quick checkout smoke** (~30 s) or a larger comparison. Each preset records its own duration source.
+6. In **Evolution**, inspect a completed run, its lineage, and the measured Pareto plot, or open the recorded feasible and rejected examples. The rejected example shows the no-feasible verdict without a live run.
+7. In **Solution**, read the latest decision: verdict, correctness checks, change and rollback notes, evidence bundle.
+8. In **Example lab**, place an order, then resend it. The receipt is identical, stock is unchanged, and the ledger stays at one order, one capture, and one payment effect.
 
 For a timed presentation checklist and the captured baseline, use the [exhibition runbook](docs/EXHIBITION.md).
 
@@ -547,7 +554,7 @@ Latest local run (2026-11-17):
 - **Quick checkout smoke completed in 18 s** with three measured attempts and verified cleanup; the unsafe-payment scenario rejected all three repetitions.
 - **Docker acceptance passed all 21 repetitions** on Docker Desktop Engine 29.9.3, including recovery windows and cleanup. Fresh run: smoke 114 s, paired benchmark 328 s (median p95 102.75 ms baseline vs 77.65 ms candidate), safe faults 3/3 with every recovery window observed, unsafe fixture 3/3 rejected for I-01, and search completed two generations and six attempts with two feasible Pareto candidates.
 - **Product tour checks passed 10/10**: deep link, focus, step navigation, dots, link routing, and close behavior.
-- **Accessibility audit passed**: axe-core reports no WCAG 2.1 A/AA violations across 144 page/theme/viewport states, no horizontal overflow at 320 CSS px, all 23 palette colour pairs per theme meet AA, and 9 of 9 scripted keyboard checks pass. See [Accessibility](docs/ACCESSIBILITY.md).
+- **Accessibility audit passed**: axe-core reports no WCAG 2.1 A/AA violations across 162 page/theme/viewport states, no horizontal overflow at 320 CSS px, all 23 palette colour pairs per theme meet AA, and 9 of 9 scripted keyboard checks pass. See [Accessibility](docs/ACCESSIBILITY.md).
 
 Build shape: the entry bundle is split into app code (173 kB), React (209 kB), and the graph renderer (198 kB) so each stays cacheable across deploys. The calibration intro and its Three.js scene load as a separate 534 kB chunk only when the intro is shown, so they do not block the dashboard.
 

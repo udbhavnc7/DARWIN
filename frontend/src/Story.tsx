@@ -3,51 +3,51 @@ import {Icon} from './Action';
 const workflow = [
   {
     step: '01',
-    page: 'project',
-    icon: 'project',
-    title: 'Understand the backend',
-    detail: 'Pin one commit. Map the API, database, cache and workers. Keep proven facts separate from guesses.',
-    action: 'Connect a project',
+    page: 'overview',
+    icon: 'overview',
+    title: 'Overview',
+    detail: 'Name the decision: when traffic outgrows one server, which configuration should carry the next 10,000 customers?',
+    action: 'Read the overview',
   },
   {
     step: '02',
-    page: 'configuration',
-    icon: 'configuration',
-    title: 'Generate alternatives',
-    detail: 'Compare one, two or three replicas; cache off, 10 s or 30 s; sync or queued notifications; retry policies.',
-    action: 'Open alternatives',
+    page: 'project',
+    icon: 'project',
+    title: 'Project Workspace',
+    detail: 'Pin one exact commit. Map the API, database, cache and workers. Keep proven facts separate from guesses.',
+    action: 'Open the workspace',
   },
   {
     step: '03',
-    page: 'experiments',
-    icon: 'experiments',
-    title: 'Run experiments',
-    detail: 'Push simulated user traffic through each deployable candidate and time every request.',
-    action: 'Run traffic',
+    page: 'configuration',
+    icon: 'configuration',
+    title: 'Architecture',
+    detail: 'Turn supported controls into deployable candidates: one to three replicas, cache TTL, notifications and retries.',
+    action: 'Shape the architecture',
   },
   {
     step: '04',
     page: 'experiments',
-    icon: 'refresh',
-    title: 'Introduce failures',
-    detail: 'Delay the database, drop a service, time out a payment, deliver the same request twice.',
-    action: 'Inject a fault',
+    icon: 'experiments',
+    title: 'Experiments',
+    detail: 'Push seeded traffic through each candidate, inject failures and run the correctness gates before timing counts.',
+    action: 'Run experiments',
   },
   {
     step: '05',
-    page: 'experiments',
-    icon: 'shield',
-    title: 'Verify correctness',
-    detail: 'Five business invariants run before speed counts. A double charge rejects the candidate.',
-    action: 'Check the gates',
+    page: 'search',
+    icon: 'search',
+    title: 'Evolution',
+    detail: 'NSGA-II explores performance, resource use and recovery. Correctness failures never enter the ranking.',
+    action: 'Evolve the search',
   },
   {
     step: '06',
-    page: 'search',
-    icon: 'search',
-    title: 'Search for better configurations',
-    detail: 'NSGA-II explores performance, resource use and recovery. Correctness failures are removed.',
-    action: 'Evolve the search',
+    page: 'solution',
+    icon: 'solution',
+    title: 'Solution',
+    detail: 'Deliver a verdict with measured trade-offs, a reviewable change, rollback notes and an evidence bundle.',
+    action: 'Read the solution',
   },
 ] as const;
 
@@ -144,9 +144,9 @@ export function Story({baselineReplicas}: {baselineReplicas: number}) {
           deployable alternatives, runs them under simulated traffic and injected failures, rejects any that
           break the business rules, then searches for the best measured trade-off.</p>
         <div className="shop-actions">
-          <a className="primary action-link" href="#project">Run a guided evaluation <Icon name="arrow"/></a>
+          <a className="primary action-link" href="#project">Start in the Project Workspace <Icon name="arrow"/></a>
           <button type="button" className="hero-secondary" onClick={() => document.getElementById('lab-workflow')?.scrollIntoView({behavior: 'smooth', block: 'start'})}>
-            See the six-step method <Icon name="arrow"/>
+            See the six stages <Icon name="arrow"/>
           </button>
         </div>
       </div>
@@ -185,7 +185,7 @@ export function Story({baselineReplicas}: {baselineReplicas: number}) {
         </aside>
       </div>
 
-      <div className="table-scroll story-table">
+      <div className="table-scroll story-table" tabIndex={0} role="region" aria-label="Illustrative architecture comparison">
         <table aria-label="Illustrative architecture comparison with hypothetical numbers">
           <thead><tr>
             <th>Configuration</th><th>Shape</th><th>Monthly cost*</th><th>Response</th><th>Recovery</th><th>Duplicate payment</th><th>Decision</th>
@@ -210,8 +210,8 @@ export function Story({baselineReplicas}: {baselineReplicas: number}) {
 
     <section className="story-section" id="lab-workflow" aria-labelledby="workflow-title">
       <div className="story-section-head">
-        <div><span className="section-kicker">The method</span><h2 id="workflow-title">Six steps, one evidence trail</h2></div>
-        <span className="story-readout">Understand → Prove</span>
+        <div><span className="section-kicker">The six stages</span><h2 id="workflow-title">One project, from question to solution</h2></div>
+        <span className="story-readout">Overview → Solution</span>
       </div>
       <nav className="workflow story-workflow" aria-label="DARWIN lab workflow">
         {workflow.map(item => <a className="panel workflow-link" href={`#${item.page}`} key={item.step}>
@@ -223,8 +223,8 @@ export function Story({baselineReplicas}: {baselineReplicas: number}) {
       <div className="story-outcome">
         <Icon name="book"/>
         <span><strong>Output: evidence-backed architecture recommendations.</strong>
-          The guided evaluation compresses these steps into Connect → Understand → Challenge → Evolve → Prove.</span>
-        <a href="#project">Start guided <Icon name="arrow"/></a>
+          Every stage works on the same pinned commit, reviewed adapter and candidate IDs; a lab result is never presented as an imported-repo measurement.</span>
+        <a href="#project">Start in the workspace <Icon name="arrow"/></a>
       </div>
     </section>
 
@@ -234,7 +234,7 @@ export function Story({baselineReplicas}: {baselineReplicas: number}) {
         <span className="story-readout">Coordinate, don’t replace</span>
       </div>
       <div className="story-decision-grid story-compare-grid">
-        <div className="table-scroll story-table story-compare">
+        <div className="table-scroll story-table story-compare" tabIndex={0} role="region" aria-label="Existing tools compared with DARWIN">
           <table aria-label="What existing tools do and what DARWIN adds">
             <thead><tr><th>Existing tool</th><th>What it gives you</th><th>What it does not decide</th></tr></thead>
             <tbody>

@@ -411,6 +411,7 @@ export type Measurement = {
 
 export type VerdictStatus =
   | 'VERIFIED_IMPROVEMENT'
+  | 'TRADEOFF_REQUIRES_CHOICE'
   | 'BASELINE_RETAINED'
   | 'INCONCLUSIVE'
   | 'REJECTED_INCORRECT'
@@ -682,8 +683,8 @@ export function tone(status?: VerdictStatus | Evaluation['status'] | null): 'goo
   if (!status) return 'muted';
   if (status === 'VERIFIED_IMPROVEMENT' || status === 'completed') return 'good';
   if (status === 'REJECTED_INCORRECT' || status === 'FAILED_INFRASTRUCTURE' || status === 'failed') return 'bad';
-  if (status === 'BASELINE_RETAINED' || status === 'INCONCLUSIVE' || status === 'NOT_MEASURED'
-    || status === 'INTERRUPTED' || status === 'cancelled') return 'warn';
+  if (status === 'TRADEOFF_REQUIRES_CHOICE' || status === 'BASELINE_RETAINED' || status === 'INCONCLUSIVE'
+    || status === 'NOT_MEASURED' || status === 'INTERRUPTED' || status === 'cancelled') return 'warn';
   return 'active';
 }
 

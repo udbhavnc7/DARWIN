@@ -231,7 +231,7 @@ export function Search({workload, runtime, canMeasure, onEditCandidate, onWorklo
     return {id: row.genome_hash, label: `${row.genome_hash.slice(0, 6)} · ${row.status}`, x: column * 220, y: row.generation * 120};
   }) ?? [];
   return <section aria-label="Architecture search workspace" className="page-content">
-    <p className="page-intro"><strong>Step 6 · Evolve.</strong> NSGA-II, random search and hill climbing propose candidate configurations. The simulator screens them cheaply; only promoted candidates are measured, and correctness failures never enter the ranking. The result is a Pareto trade-off across latency, CPU time and recovery — with evidence attached.</p>
+    <p className="page-intro"><strong>Stage 05 · Evolution.</strong> NSGA-II, random search and hill climbing propose candidate configurations. The simulator screens them cheaply; only promoted candidates are measured, and correctness failures never enter the ranking. The result is a Pareto trade-off across latency, CPU time and recovery — with evidence attached.</p>
     <div className={`search-grid${terminal(run) ? '' : ' search-running'}`}>
     <div className="panel search-setup" hidden={!terminal(run)}>
     <div className="section-title panel-heading"><div><p className="section-kicker">Search setup</p><h2>New search</h2></div></div>
@@ -393,7 +393,7 @@ export function Search({workload, runtime, canMeasure, onEditCandidate, onWorklo
           {pareto.has(selected.genome_hash) && <Status value="passed" label="Pareto front"/>}
         </div>
         <div className="shop-actions">
-          <Action variant="primary" icon="configuration" onClick={() => {inspectTrigger.current = null; dialog.current?.close(); onEditCandidate(selected.genome);}}>Open in Alternatives</Action>
+          <Action variant="primary" icon="configuration" onClick={() => {inspectTrigger.current = null; dialog.current?.close(); onEditCandidate(selected.genome);}}>Open in Architecture</Action>
           {selected.experiment_id && !recordedMode && <a className="action-link" href={`?experiment=${encodeURIComponent(selected.experiment_id)}&search=${encodeURIComponent(run!.search_id)}#experiments`}>View experiment</a>}
         </div>
         <dl className="metrics-grid">

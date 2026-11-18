@@ -5,6 +5,7 @@ const paths = {
   configuration: 'm12 3 9 5-9 5-9-5 9-5Z M3 12l9 5 9-5 M3 16l9 5 9-5',
   experiments: 'M3 3v18h18 M6 15h3l3-7 3 5h5',
   search: 'M10.5 17.5a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z M16 16l4.5 4.5',
+  solution: 'M6 21V4 M6 4h11l-3 4 3 4H6',
   shop: 'M5 7h14l2 14H3L5 7Z M9 9V6a3 3 0 1 1 6 0v3',
   arrow: 'M4 12h15 M13 6l6 6-6 6',
   refresh: 'M20 4v5h-5 M19.5 9a8 8 0 0 0-13-3L4 9 M4 20v-5h5 M4.5 15a8 8 0 0 0 13 3L20 15',

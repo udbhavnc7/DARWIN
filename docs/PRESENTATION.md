@@ -14,14 +14,14 @@ The sentence that anchors the whole demo:
 
 > A fast configuration that double-charges a customer is not a winner. It is a rejected candidate with evidence.
 
-The six-step method you are demonstrating:
+The six stages you are demonstrating:
 
-1. **Understand the backend** — map services, data stores, cache and workers from a pinned commit.
-2. **Generate alternatives** — replicas, cache TTL, notification delivery, retry policy; a candidate is deployable, not a diagram.
-3. **Run experiments under simulated traffic** — 100, 1,000 and 5,000 users on the same workload.
-4. **Introduce failures** — database delays, service outages, payment timeouts, duplicate delivery.
-5. **Verify business correctness** — five invariants, including no double charge and no overselling.
-6. **Search for better configurations** — NSGA-II, random or hill climbing; failed candidates never enter the ranking.
+1. **Overview** — frame the decision: which configuration should carry the next 10,000 users?
+2. **Project Workspace** — pin one exact commit and map the services, data stores, cache and workers.
+3. **Architecture** — shape deployable candidates: replicas, cache TTL, notification delivery, retry policy.
+4. **Experiments** — push seeded traffic through each candidate, inject failures and verify the five business invariants.
+5. **Evolution** — NSGA-II, random or hill climbing; failed candidates never enter the ranking.
+6. **Solution** — deliver a verdict with the measured trade-off, a reviewable change, rollback notes and an evidence bundle.
 
 Three claims you can defend on every page:
 
@@ -51,8 +51,8 @@ The local bench already holds 68 experiments and 13 searches, including a feasib
 
 Before the audience arrives, run two things so you never wait on stage:
 
-1. **Quick checkout smoke** (`Test & break → Quick checkout smoke`). About 20–30 seconds natively. This also proves the shop and database are healthy.
-2. **Normal baseline vs candidate** (`Test & break → Normal baseline vs candidate`). About 2.5–3 minutes natively. Let it finish; you will present its result from the saved-run picker.
+1. **Quick checkout smoke** (`Experiments → Quick checkout smoke`). About 20–30 seconds natively. This also proves the shop and database are healthy.
+2. **Normal baseline vs candidate** (`Experiments → Normal baseline vs candidate`). About 2.5–3 minutes natively. Let it finish; you will present its result from the saved-run picker.
 
 Do **not** run a measured search for the first time on stage. The default six measured attempts takes minutes, and Docker searches have taken over 12 minutes.
 
@@ -145,21 +145,21 @@ Press **Esc** or **Skip to workspace** if you are short on time. If the intro is
 
 Then choose your audience:
 
-- **Non-technical:** open **What is DARWIN?** (sidebar) and step through the six tour panels — the growth problem, positioning, understand, generate and test, break and verify, evolve — about 90 seconds. Use arrow keys; close with **Done**.
-- **Technical:** skip the tour. The **The lab** page carries the same story in one scroll.
+- **Non-technical:** open **What is DARWIN?** (sidebar) and step through the six tour panels — Overview, Project Workspace, Architecture, Experiments, Evolution, Solution — about 90 seconds. Use arrow keys; close with **Done**.
+- **Technical:** skip the tour. The **Overview** page carries the same story in one scroll.
 
 ---
 
 ## 5. Page-by-page script
 
-### 5.1 The lab (home)
+### 5.1 Overview (home)
 
 **What is on screen**
 
 - Hero: **"Growth forces a decision. Evidence settles it."** with the *Illustrative decision* board — three configurations, **A Basic**, **B Cached** (choose), **C Distributed** (rejected), and the verdict *"C fails the duplicate-payment rule. The fastest configuration does not win."*
 - **One server works. Then the traffic arrives.** The growth story, failure symptoms, and the question *"Which configuration should carry the next 10,000 users?"*
 - The illustrative A/B/C table: shape, **hypothetical** monthly cost (₹10,000 / ₹20,000 / ₹35,000), response time, recovery, duplicate-payment pass/fail, and the decision. The footnote says it is an example of the decision rule, not a DARWIN result.
-- **Six steps, one evidence trail**: Understand → Generate alternatives → Run experiments → Introduce failures → Verify correctness → Search for better configurations. Each card links to the page that performs it.
+- **One project, from question to solution**: Overview → Project Workspace → Architecture → Experiments → Evolution → Solution. Each card links to the page that performs that stage.
 - **Why not just AWS, Kubernetes and load tests?** A comparison table: what each existing tool gives you, what it does not decide, and DARWIN's row.
 - **What this lab is today — and what it is not yet**: implemented versus roadmap, explicitly labelled.
 - **The analogy**: you would not choose a racing engine by guessing; you would build a test bench.
@@ -167,21 +167,21 @@ Then choose your audience:
 
 **Clicks**
 
-1. Press **Run a guided evaluation** to enter the Connect → Prove flow. (Alternatively, **See the six-step method** scrolls to the method.)
+1. Press **Start in the Project Workspace** to enter the guided flow. (Alternatively, **See the six stages** scrolls to the stage cards.)
 2. Scroll through the illustrative decision and read the footnote aloud. Use **C** to make the central point: fastest, rejected.
-3. Scroll to the six-step method and name the page that performs each step.
+3. Scroll to the six stage cards and name the page that performs each stage.
 4. Point at the scope cards: left is implemented, right is roadmap.
 5. Finish on **Machine readiness** and the baseline stack.
 
 **Say**
 
-> The system under test is a working checkout backend: gateway, API, PostgreSQL, inventory, and a mock payment service. The four controls on the Alternatives page are the only things that vary between candidates, so comparisons stay fair. The home page states the direction of the product: a lab that sits alongside AWS, Kubernetes and load tests, not a replacement for them. The costs in the table are hypothetical on purpose; the decision rule is the point. Readiness is checked before anything runs — a missing dependency disables the run instead of failing halfway through it.
+> The system under test is a working checkout backend: gateway, API, PostgreSQL, inventory, and a mock payment service. The four controls on the Architecture page are the only things that vary between candidates, so comparisons stay fair. The Overview page states the direction of the product: a lab that sits alongside AWS, Kubernetes and load tests, not a replacement for them. The costs in the table are hypothetical on purpose; the decision rule is the point. Readiness is checked before anything runs — a missing dependency disables the run instead of failing halfway through it.
 
 **Do not claim** that the A/B/C monthly costs or response times are measured DARWIN results. They are illustrative. Readiness is a tool check, not a security check.
 
 ---
 
-### 5.2 Alternatives (the builder)
+### 5.2 Architecture (the builder)
 
 **What is on screen**
 
@@ -197,7 +197,7 @@ Then choose your audience:
 3. Set **Notifications** to Queued worker.
 4. Point at the topology summary changing: services, connections, replicas, and the genome hash under the details row.
 5. Press **Simulate performance**. Read the estimate and the calibration label. Point at "Correctness gate unchecked."
-6. Press **Use in experiment**. This carries the configuration into Test & break as **Custom architecture**.
+6. Press **Use in experiment**. This carries the configuration into Experiments as **Custom architecture**.
 
 **Say**
 
@@ -212,11 +212,11 @@ Then choose your audience:
 
 ---
 
-### 5.3 Test & break (experiments)
+### 5.3 Experiments (run and break it)
 
 **What is on screen**
 
-- The page is framed as **Steps 3–4 · Run and break it**: measure under simulated traffic, then inject database delays, outages and duplicate requests. Timing only counts after the invariant gate.
+- The page is framed as **Stage 04 · Experiments**: measure under simulated traffic, then inject database delays, outages and duplicate requests. Timing only counts after the invariant gate.
 - **Judge-ready scenarios**: Quick checkout smoke, Normal baseline vs candidate, Flash sale comparison, Payment timeout with unsafe retry. Each card shows its duration and whether the duration is recorded or estimated.
 - **New experiment**: type selector (Compare performance, Verify failure recovery, Unsafe retry fixture, Checkout smoke check), configuration selector (preset, baseline, or custom architecture).
 - **Validate request** and **Start**.
@@ -266,14 +266,14 @@ Recorded Docker result: baseline median p95 102.75 ms versus 77.65 ms for the th
 
 ---
 
-### 5.4 Evolve (search)
+### 5.4 Evolution (search)
 
 **What is on screen**
 
-- The page is framed as **Step 6 · Evolve**: NSGA-II, random search and hill climbing propose candidates; the simulator screens them; correctness failures never enter the ranking.
-- **Evolve setup**: method (NSGA-II, Random search, Hill climbing), measured attempts (6, 12, 18), seed.
+- The page is framed as **Stage 05 · Evolution**: NSGA-II, random search and hill climbing propose candidates; the simulator screens them; correctness failures never enter the ranking.
+- **Evolution setup**: method (NSGA-II, Random search, Hill climbing), measured attempts (6, 12, 18), seed.
 - **Start measured search**.
-- **Evolve results**: saved-search picker, recorded-run buttons, run card, Pareto chart, candidate table, inspect dialog, lineage.
+- **Evolution results**: saved-search picker, recorded-run buttons, run card, Pareto chart, candidate table, inspect dialog, lineage.
 
 **This is the heart of the talk. Present it from saved evidence.**
 
@@ -282,7 +282,7 @@ Recorded Docker result: baseline median p95 102.75 ms versus 77.65 ms for the th
 1. Press **Open recorded feasible run** (or pick the feasible search from **Saved searches**).
 2. Point at the run cards: generation, runtime, workload, seed, measured attempts started, candidate count, feasible count, search overhead.
 3. Point at the Pareto plot: p95 on the vertical axis, application CPU seconds on the horizontal. Filled points are the Pareto front.
-4. Select a filled point, or press **Inspect** in the table. In the dialog, show the metrics, the service topology, the repetition details, and **Open in Alternatives**.
+4. Select a filled point, or press **Inspect** in the table. In the dialog, show the metrics, the service topology, the repetition details, and **Open in Architecture**.
 5. Close the dialog. Change **Evidence** to **Screened** and back to **All**. Show that simulated candidates are labeled "Simulated · screened" and never appear as feasible winners.
 6. Press **Open recorded rejection**.
 7. Walk through the verdict panel: "No candidate passed all gates", the rejection reasons with counts, the rejected candidates, and the three safe next choices.
@@ -303,11 +303,52 @@ Recorded Docker result: baseline median p95 102.75 ms versus 77.65 ms for the th
 
 ---
 
-### 5.5 Demo shop
+### 5.5 Solution (the decision record)
 
 **What is on screen**
 
-- The page is framed as **Step 5 · Verify correctness**: the checkout walkthrough is the smallest reproduction of the invariant gate.
+- The page is framed as **Stage 06 · Solution**: the outcome of one pinned project, ready for a team to act on.
+- A **decision selector** listing recorded and live project evaluations (project, commit, verdict, date).
+- A **decision card** with the verdict label and reason, the source repository and pinned commit, the challenge,
+  the mode, the correctness checks (for example 3/3), the evidence kind and the recorded date.
+- Measured panels: original versus recommended median, p95 and the percentage change; the cost of the change
+  when a metric regressed.
+- **Recommendation** and **evidence to keep**: the reviewable change with rollback notes, and the evidence files
+  with their digest prefixes.
+- A **truth boundary** panel: what the decision carries, and what it does not claim.
+- When the page is connected to a live bench, **Download evidence bundle** is enabled. In the hosted showcase it
+  reads the recorded evidence and keeps the download disabled rather than pretending.
+
+**Clicks**
+
+1. Open **Solution** from the sidebar. The newest recorded evaluation is selected.
+2. Read the verdict label and reason aloud. Point at the correctness count and the evidence kind.
+3. If the selector has a simulated screening entry, choose it and show the warning: **SIMULATED · NOT MEASURED**,
+   no measured latency panels, and no promotion to a winner.
+4. Choose a measured improvement or trade-off entry. Point at the original-versus-recommended numbers and any
+   regressed metric — a win on latency never hides a cost.
+5. Read the recommendation, then the truth-boundary column: one host, one workload window, reviewable change,
+   no automatic edit.
+6. Finish by pointing back to **Project Workspace** to run a fresh comparison.
+
+**Say**
+
+> The last stage is the one a team actually needs: not a chart, but a decision with its evidence and its way back.
+> This verdict kept the original configuration because the improvement did not clear the policy threshold — and the
+> page says so instead of inventing a winner. When there is a change, it is a reviewable diff with rollback notes;
+> DARWIN never edits or pushes the repository. The numbers are measured on this host for this workload, and the
+> page states that limit rather than turning one run into a production promise.
+
+**Do not claim** that a recorded verdict is a fresh measurement, or that a simulated recommendation is deployable
+evidence. The badge on the card is the authority; read it before the number.
+
+---
+
+### 5.6 Example lab (demo shop)
+
+**What is on screen**
+
+- The page is framed as **Example lab · Verify correctness**: the checkout walkthrough is the smallest reproduction of the invariant gate.
 - Shop connection status and **Reset demo shop**.
 - Three steps: Place a demo order, Resend the same request, Compare the results.
 - **Checkout** with product, quantity, simulated credits, stock.
@@ -332,7 +373,7 @@ Recorded Docker result: baseline median p95 102.75 ms versus 77.65 ms for the th
 
 ---
 
-### 5.6 Closing (30 seconds)
+### 5.7 Closing (30 seconds)
 
 > DARWIN is not a diagram tool and not a load-test dashboard. It closes the loop: design a real backend, measure it, break it, verify the business rules, and evolve the ones that survive. Simulation only screens. Rejected candidates keep their evidence. The system runs locally on loopback with an optional shared token; it is not a hosted service, and it does not handle real payments.
 
@@ -350,7 +391,7 @@ Run the benchmark, the fault verification, and any search **before** the talk. P
 
 ### Rule 2: keep exactly one live run in flight
 
-Choose one live measurement for credibility — usually **Quick checkout smoke** (about 20–30 seconds). Start it, then immediately move to another page while it runs. The Test & break page keeps polling in the background; when you return, the result is there.
+Choose one live measurement for credibility — usually **Quick checkout smoke** (about 20–30 seconds). Start it, then immediately move to another page while it runs. The Experiments page keeps polling in the background; when you return, the result is there.
 
 ### Rule 3: choreograph the wait
 
@@ -358,10 +399,10 @@ Start the run, then use the time for content that does not depend on it:
 
 | Start this | While it runs, show | Return to |
 | --- | --- | --- |
-| Quick checkout smoke | Alternatives controls and topology, then the lab readiness panel | Test & break result and gate |
-| Normal comparison (pre-run preferred) | Evolve recorded feasible run | Test & break metrics |
-| Fault verification (pre-run preferred) | Demo shop idempotency | Test & break gate rejection |
-| Live search (only if rehearsed) | Demo shop, then Alternatives export | Evolve Pareto and candidates |
+| Quick checkout smoke | Architecture controls and topology, then the readiness panel | Experiments result and gate |
+| Normal comparison (pre-run preferred) | Evolution recorded feasible run | Experiments metrics |
+| Fault verification (pre-run preferred) | Example lab idempotency | Experiments gate rejection |
+| Live search (only if rehearsed) | Example lab, then Architecture export | Evolution Pareto and candidates |
 
 The transition sentence matters:
 
@@ -403,26 +444,28 @@ These are this project's observed numbers, not guarantees. State them as recorde
 | Time | Page | Action | Point |
 | --- | --- | --- | --- |
 | 0:00 | Splash | Let it play, or skip | Gates before speed |
-| 0:20 | The lab | Decision board, six-step method, scope cards | Lab alongside your stack; fastest can lose |
-| 1:30 | Alternatives | Change replicas, cache, notifications; simulate | Four controls; simulation is screening only |
-| 3:00 | Test & break | Start **Quick checkout smoke**; leave it running | One live measurement, started early |
-| 3:20 | Evolve | **Open recorded feasible run**; inspect a Pareto point | Measured vs simulated; the Pareto front |
-| 5:40 | Evolve | **Open recorded rejection** | No honest winner; gates are hard |
-| 7:00 | Test & break | Return; show smoke result, repetitions, gate, evidence | The live run finished while we talked |
-| 8:00 | Demo shop | Reset, order, resend, compare, ledger | Idempotency in one request key |
+| 0:20 | Overview | Decision board, six stages, scope cards | Lab alongside your stack; fastest can lose |
+| 1:30 | Architecture | Change replicas, cache, notifications; simulate | Four controls; simulation is screening only |
+| 3:00 | Experiments | Start **Quick checkout smoke**; leave it running | One live measurement, started early |
+| 3:20 | Evolution | **Open recorded feasible run**; inspect a Pareto point | Measured vs simulated; the Pareto front |
+| 5:40 | Evolution | **Open recorded rejection** | No honest winner; gates are hard |
+| 6:15 | Solution | Latest verdict, correctness count, change and rollback, evidence files | The last stage is a decision, not a chart |
+| 7:00 | Experiments | Return; show smoke result, repetitions, gate, evidence | The live run finished while we talked |
+| 8:00 | Example lab | Reset, order, resend, compare, ledger | Idempotency in one request key |
 | 9:20 | Any | Closing boundary | Local, honest, negative results retained |
 
 If the smoke is still running at 7:00, show the progress and events, then continue to the shop. Do not stall.
 
 ---
 
-## 8. The 5-minute version
+## 8. The six-minute version
 
-1. **The lab** (40 s): the decision board, the six-step method, and the scope line — "this is the lab today, that is the roadmap".
-2. **Alternatives** (45 s): change three controls, simulate, point at "Correctness gate unchecked."
-3. **Evolve** (2 min): recorded feasible run, one Pareto point, then recorded rejection.
-4. **Demo shop** (1 min): order, resend, ledger.
-5. **Close** (30 s): measured evidence, correctness before speed, local-only.
+1. **Overview** (40 s): the decision board, the six stages, and the scope line — "this is the lab today, that is the roadmap".
+2. **Architecture** (45 s): change three controls, simulate, point at "Correctness gate unchecked."
+3. **Evolution** (2 min): recorded feasible run, one Pareto point, then recorded rejection.
+4. **Solution** (45 s): the latest verdict, correctness checks, change and rollback, evidence bundle.
+5. **Example lab** (1 min): order, resend, ledger.
+6. **Close** (30 s): measured evidence, correctness before speed, local-only.
 
 Skip the live experiment entirely. Show the pre-run smoke from **Saved experiments** if you need a completed run.
 
@@ -433,15 +476,16 @@ Skip the live experiment entirely. Show the pre-run smoke from **Saved experimen
 ```
 OPEN      http://127.0.0.1:5173   (bench: scripts\demo.py start)
 
-1. The lab        decision board + six-step method + scope cards
-2. Alternatives   3 replicas, 10s cache, queued -> simulate
+1. Overview      decision board + six stages + scope cards
+2. Architecture  3 replicas, 10s cache, queued -> simulate
                  "Correctness gate unchecked" -> Use in experiment
-3. Test & break  Quick checkout smoke (start, LEAVE IT RUNNING)
-4. Evolve        Open recorded feasible run -> inspect a filled point
+3. Experiments   Quick checkout smoke (start, LEAVE IT RUNNING)
+4. Evolution     Open recorded feasible run -> inspect a filled point
                  -> filter "Screened" -> Open recorded rejection
-5. Test & break  back to results -> repetitions -> gate -> evidence
-6. Demo shop     Reset -> Place order -> Resend -> 1/1/1 ledger
-7. Close         local-only, gates before speed, negative results kept
+5. Experiments   back to results -> repetitions -> gate -> evidence
+6. Solution      latest verdict -> correctness -> change/rollback -> evidence
+7. Example lab   Reset -> Place order -> Resend -> 1/1/1 ledger
+8. Close         local-only, gates before speed, negative results kept
 
 WAIT PHRASE  "While that measures, here is what decides who competes."
 FALLBACK     hosted showcase in recorded mode; saved experiments/searches

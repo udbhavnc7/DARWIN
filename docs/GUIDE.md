@@ -8,28 +8,28 @@ The short version: DARWIN is an architecture experimentation laboratory. It buil
 
 ## 0. The whole app in one paragraph
 
-DARWIN sits alongside AWS, Kubernetes, Redis, Locust, Prometheus and chaos tools; it does not replace them. It coordinates one decision: which architecture should carry the next 10,000 users. The method has six steps: **understand the backend → generate alternatives → run experiments under simulated traffic → introduce failures → verify business correctness → search the trade-offs**. In the app, **The lab** home page tells that story. **Alternatives** lets you shape a deployable checkout configuration (replicas, catalog cache, notification delivery, retries). **Test & break** runs it under traffic and injects database delays, outages and duplicate requests; five invariants run before timing counts. **Evolve** proposes many configurations with NSGA-II, random search or hill climbing, screens them cheaply, and keeps a Pareto front of measured trade-offs. **Demo shop** is the smallest reproduction of the correctness idea: repeating a request with the same key must never create a second order or a second charge. **Guided evaluation** connects a pinned public backend and compresses the six steps into Connect → Understand → Challenge → Evolve → Prove.
+DARWIN sits alongside AWS, Kubernetes, Redis, Locust, Prometheus and chaos tools; it does not replace them. It coordinates one decision: which architecture should carry the next 10,000 users. The workflow has six stages: **Overview → Project Workspace → Architecture → Experiments → Evolution → Solution**. In the app, **Overview** frames the decision. **Project Workspace** connects a pinned public backend and carries it through Connect → Understand → Challenge → Evolve → Prove. **Architecture** lets you shape a deployable checkout configuration (replicas, catalog cache, notification delivery, retries). **Experiments** runs it under traffic and injects database delays, outages and duplicate requests; five invariants run before timing counts. **Evolution** proposes many configurations with NSGA-II, random search or hill climbing, screens them cheaply, and keeps a Pareto front of measured trade-offs. **Solution** turns the recorded verdict into a decision with its measured trade-off, reviewable change, rollback notes and evidence bundle. **Demo shop** is the smallest reproduction of the correctness idea: repeating a request with the same key must never create a second order or a second charge.
 
 ---
 
-## 1. The lab (home page)
+## 1. Overview (home page)
 
 The home page states the product direction before you run anything:
 
 1. **What decision is this?** The hero — *Growth forces a decision. Evidence settles it.* — introduces the **Illustrative decision** board. Three configurations: **A Basic**, **B Cached** (choose), **C Distributed** (rejected). C is fastest and still loses because it fails the duplicate-payment rule.
 2. **Why does the decision appear?** The *"One server works. Then the traffic arrives."* section explains the growth problem: at 100 customers one backend and one database are enough; at 10,000, pages slow down, writes time out and payments fail. The question card asks which configuration should carry the next 10,000 users.
 3. **What does the example look like?** An A/B/C table with shape, monthly cost, response time, recovery, duplicate-payment pass/fail, and the decision. The costs (₹10,000 / ₹20,000 / ₹35,000) are **hypothetical** and footnoted as an illustration of the decision rule, not a DARWIN result.
-4. **What is the method?** **Six steps, one evidence trail** — understand, generate, run, break, verify, search — with a link from each step to the page that performs it. The outcome strip names the deliverable: evidence-backed architecture recommendations.
+4. **What is the workflow?** **One project, from question to solution** — Overview, Project Workspace, Architecture, Experiments, Evolution and Solution — with a link from each stage to the page that performs it. The outcome strip names the deliverable: evidence-backed architecture recommendations.
 5. **Why not just AWS, Kubernetes and load tests?** A comparison table lists what each existing tool provides and what it does not decide, then shows DARWIN's coordinating role. The callout repeats the rule: a fast configuration that double-charges is a rejected candidate with evidence.
 6. **What is real today?** Two scope cards separate **Runs today** (controlled checkout lab, five invariants, two public backends, guarded Linux Docker execution, labelled simulation) from **Product direction** (arbitrary repositories, more frameworks, cloud execution, cost comparison, deploy). The right card is roadmap, not shipped functionality.
 7. **What is the analogy?** A racing test bench: you would not guess an engine by feel; you would measure each combination, reject the ones that fail safety, and keep the best overall trade-off.
 8. **What can I run right now?** The baseline checkout stack, **Execution environment**, and **Machine readiness** (a preflight report of required and optional tools). When the hosted recorded build is open, the cards say **Recorded** instead of pretending to be live.
 
-**One sentence to say it out loud:** "This page is the lab's thesis: growth forces an architecture decision, and the fastest configuration is not automatically the winner — the six-step method is how we settle it with evidence."
+**One sentence to say it out loud:** "This page is the lab's thesis: growth forces an architecture decision, and the fastest configuration is not automatically the winner — the six stages are how we settle it with evidence."
 
 ---
 
-## 2. Alternatives: what the four knobs mean
+## 2. Architecture: what the four knobs mean
 
 A configuration in DARWIN is called a *genome*. It has exactly four controls, and every combination is a legitimate candidate:
 
@@ -76,7 +76,7 @@ Either way, invariant I-05 says an accepted notification must survive a process 
 - **`none`**: one attempt. If a downstream call fails transiently, the checkout returns 503 and the client must retry with the same idempotency key.
 - **`idempotent_only`**: one bounded retry (two attempts total, a short delay between them, inside the checkout deadline), reusing the identical payload and request key. Business errors like out-of-stock are not retried; only transient failures are.
 
-The retry is safe because inventory reservations, payment captures, and order rows are all keyed by the request key. Retrying the same key cannot double-reserve or double-charge. The contrast is the **unsafe retry fixture**, used deliberately on the Test & break page to show what happens when a payment is retried *without* that discipline: one request, three payment effects, gate rejected.
+The retry is safe because inventory reservations, payment captures, and order rows are all keyed by the request key. Retrying the same key cannot double-reserve or double-charge. The contrast is the **unsafe retry fixture**, used deliberately on the Experiments page to show what happens when a payment is retried *without* that discipline: one request, three payment effects, gate rejected.
 
 ### 2.5 Service connections (the topology picture)
 
@@ -104,7 +104,7 @@ The same four values always produce the same hash; changing any one value produc
 
 ### 2.7 Simulated performance
 
-The Alternatives page can simulate the configuration before spending real time. The simulator is a discrete-event model of the same shop: requests arrive on the seeded plan, API capacity is divided among replicas, a description-cache hit skips the description query (stock is still read live), queued notifications move work off the request path, and the model can account for a database delay in milliseconds.
+The Architecture page can simulate the configuration before spending real time. The simulator is a discrete-event model of the same shop: requests arrive on the seeded plan, API capacity is divided among replicas, a description-cache hit skips the description query (stock is still read live), queued notifications move work off the request path, and the model can account for a database delay in milliseconds.
 
 It is **calibrated, not guessed**. A service-time scale factor is fitted from successful native benchmark samples, so the model's latency is anchored to measurements from this code on this class of machine. The honest limits are visible in the repo's results: mean absolute p95 error around 27% across held-out samples, with one holdout as high as 53.9%. That is useful for ranking and screening; it is not proof.
 
@@ -117,11 +117,11 @@ The simulation card also says **"Correctness gate unchecked."** A simulator can 
 
 ### 2.8 The configuration screenshot, summarized
 
-Alternatives = "here is the system I am proposing." The four knobs change the topology, the hash names it, and the simulator gives a first, cheap opinion. Nothing here is a result yet.
+Architecture = "here is the system I am proposing." The four knobs change the topology, the hash names it, and the simulator gives a first, cheap opinion. Nothing here is a result yet.
 
 ---
 
-## 3. Test & break: scenarios, types, and metrics
+## 3. Experiments: scenarios, types, and metrics
 
 ### 3.1 What an experiment actually is
 
@@ -156,9 +156,9 @@ The scenario cards and the type selector are two views of the same request. "Qui
 
 ### 3.4 The configuration picker
 
-- **Preset** uses one of the two named configurations (`cached`) from the Alternatives page.
+- **Preset** uses one of the two named configurations (`cached`) from the Architecture page.
 - **Baseline** uses the reference configuration, useful for re-running the reference or for the smoke check.
-- **Custom** uses whatever you last edited in the Alternatives builder.
+- **Custom** uses whatever you last edited in the Architecture builder.
 
 Choosing the baseline as the candidate in a performance comparison is rejected by the UI: comparing a configuration with itself proves nothing. The summary line under the picker spells out the four chosen values in words, so there is no ambiguity about what will be deployed.
 
@@ -248,7 +248,7 @@ The five invariants, in plain words:
 
 ---
 
-## 4. Evolve: how DARWIN looks for a better configuration
+## 4. Evolution: how DARWIN looks for a better configuration
 
 ### 4.1 What a search is doing
 
@@ -344,7 +344,30 @@ The "no feasible candidate" outcome is a legitimate, explainable result: within 
 
 ---
 
-## 5. The demo shop, simply
+## 5. Solution: the decision record
+
+The **Solution** page is where a run stops being a chart and becomes something a team can act on. It reads the project evaluations that recorded a verdict and presents the newest one by default.
+
+| Part of the page | What it tells you |
+|---|---|
+| Decision selector | Every recorded verdict, newest first: project, commit, verdict label and date |
+| Decision card | The verdict label and reason, source repository, pinned commit, challenge, mode, repetitions, correctness count, evidence kind and date |
+| Measured panels | Original versus recommended median and p95, the percentage change, and any metric that regressed |
+| Recommendation | Whether the evidence supports applying the change, or keeping the original as the fallback |
+| Evidence to keep | The artifact files and digest prefixes in the bundle |
+| Truth boundary | What the decision carries and what it explicitly does not claim |
+
+The badge is the authority. A measured verdict reads **Measured** (or **Live · this computer** on a live bench); a simulated screening reads **SIMULATED · NOT MEASURED** and hides the measured latency panels, because a model's recommendation is a direction to test, never a measured winner.
+
+A recorded decision is presented exactly as recorded. If the evidence retained the original architecture, the page says so instead of inventing a winner. If a metric regressed, the cost of the change is shown next to the improvement. **Download evidence bundle** is enabled only when the page is connected to a live bench; on the hosted showcase it stays disabled and the page keeps reading recorded evidence.
+
+DARWIN never edits, commits or pushes the project repository. The change is a reviewable diff with apply and rollback notes, and the decision remains a local result for one host and one workload window.
+
+**One sentence to say it out loud:** "The last stage is the one a team actually needs: not a chart, but a decision with its evidence and its way back."
+
+---
+
+## 6. The demo shop, simply
 
 The demo shop is a tiny, self-contained checkout used to *show* the idempotency idea without any load, faults, or timing. It is the page to open when someone asks, "What does 'safe retry' actually mean?"
 
@@ -376,26 +399,26 @@ The demo shop is the safe version of the exact situation the **unsafe retry fixt
 
 ---
 
-## 6. How the pieces fit together
+## 7. How the pieces fit together
 
-The six-step method maps onto the six pages:
+The six stages map onto the pages:
 
-1. **Understand the backend** — **The lab** shows the system under test, the decision it faces, and why the fastest option can still be rejected.
-2. **Generate alternatives** — **Alternatives** proposes a deployable configuration and gives a cheap, calibrated estimate.
-3. **Run experiments under traffic** — **Test & break** measures one or two systems for real: load, CPU, latency, errors.
-4. **Introduce failures** — the same page injects database delays, outages and duplicate requests, and measures recovery.
-5. **Verify business correctness** — the five invariants run before timing counts; **Demo shop** explains the duplicate-request rule that makes retries safe in all of the above.
-6. **Search the trade-offs** — **Evolve** automates steps 3–5 across many candidates, using the simulator only to decide what deserves a real test, and keeps a Pareto front of measured trade-offs.
+1. **Overview** — frames the decision: which architecture should carry the next 10,000 users, and why the fastest option can still be rejected.
+2. **Project Workspace** — pins one exact commit, maps the backend, separates facts from guesses, and runs the guided Connect → Understand → Challenge → Evolve → Prove flow.
+3. **Architecture** — proposes a deployable configuration and gives a cheap, calibrated estimate. Correctness is not checked here.
+4. **Experiments** — measures one or two systems for real: load, CPU, latency, errors, database delays, outages and duplicate requests; the five invariants run before timing counts.
+5. **Evolution** — automates the measurement loop across candidates, using the simulator only to decide what deserves a real test, and keeps a Pareto front of measured trade-offs.
+6. **Solution** — turns the recorded verdict into a recommendation with its measured trade-off, reviewable change, rollback notes and evidence bundle.
 
-**Guided evaluation** runs the same method end to end against a pinned public backend.
+**Demo shop** is the smallest reproduction of the correctness idea that protects all six stages: repeating a request with the same key must never create a second order or a second charge.
 
 The governing sentence for the whole app: *a configuration is only a result when it was measured, and it is only feasible when the business checks passed first.*
 
-The governing sentence for the six-step method: *the fastest configuration is a candidate; the correct one is a conclusion.*
+The governing sentence for the workflow: *the fastest configuration is a candidate; the correct one is a conclusion.*
 
 ---
 
-## 7. Numbers worth remembering
+## 8. Numbers worth remembering
 
 | Number | Where it comes from | Why it matters |
 |---|---|---|
@@ -413,7 +436,7 @@ The governing sentence for the six-step method: *the fastest configuration is a 
 
 ---
 
-## 8. One-line explanations (cue card)
+## 9. One-line explanations (cue card)
 
 - **Quick checkout smoke:** "Start the shop and prove a repeated order returns the same receipt — a handshake, not a benchmark."
 - **Normal baseline vs candidate:** "Compare the reference system with a two-replica, cached, queued variant under the normal workload, three runs each."
@@ -442,13 +465,15 @@ The governing sentence for the six-step method: *the fastest configuration is a 
 - **Measured rejected:** "Real evidence, negative verdict — the gate reasons say exactly why."
 - **Measured incomplete:** "A real run without a full three-repetition summary; not a guess, not a verdict."
 - **Demo shop:** "One order, one capture, one payment effect — retry with the same key returns the same receipt."
-- **The lab:** "The decision, the six-step method, what is shipped, and where measurement happens."
-- **Six-step method:** "Understand, generate, run, break, verify, search — correctness before speed."
+- **Overview:** "The decision, the six stages, what is shipped, and where measurement happens."
+- **Project Workspace:** "One pinned commit, understood from source, then measured through a reviewed adapter or screened and labelled simulated."
+- **Solution:** "The recorded verdict, its measured trade-off, the reviewable change, the rollback notes, and the evidence bundle."
+- **Six stages:** "Overview, Project Workspace, Architecture, Experiments, Evolution, Solution — correctness before speed."
 - **Why not just AWS, Kubernetes and load tests:** "They supply infrastructure and measurements; DARWIN coordinates the architecture decision and rejects candidates that break the business rules."
 
 ---
 
-## 9. What this evidence is not
+## 10. What this evidence is not
 
 Being clear about limits makes the rest credible:
 

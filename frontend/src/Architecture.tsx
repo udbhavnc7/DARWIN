@@ -86,7 +86,7 @@ export function Architecture({genome, onEdit, workload, connected, active, onUse
   }
 
   return <section aria-label="Architecture builder" className="page-content">
-    <p className="page-intro"><strong>Step 2 · Generate alternatives.</strong> Shape a deployable candidate — replicas, cache, notifications and retries — then simulate it or send it to a measured experiment. Comparisons stay fair because the same checkout stack and workload are used for every candidate.</p>
+    <p className="page-intro"><strong>Stage 03 · Architecture.</strong> Shape a deployable candidate — replicas, cache, notifications and retries — then simulate it or send it to a measured experiment. Comparisons stay fair because the same checkout stack and workload are used for every candidate.</p>
     <div className="builder-grid">
       <div className="panel builder-controls">
         <div className="section-title panel-heading">
