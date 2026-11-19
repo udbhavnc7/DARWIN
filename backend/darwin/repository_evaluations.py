@@ -642,53 +642,58 @@ class RepositoryEngine:
             record['cleanup_status'] = 'completed'
             record['finished_at'] = now()
         except AdapterCancelled as exc:
-            record.update(status='cancelled', stage='cancelled', error=str(exc),
-                          cleanup_status='completed', finished_at=now())
-            record['verdict'] = _empty_verdict(
-                'INTERRUPTED', 'Interrupted',
-                'The operation was cancelled. No winner is reported.',
-            )
-            self._safe_failure_evidence(record, inspection)
-        except AdapterError as exc:
-            completed = exc.verdict == 'NO_FEASIBLE_CANDIDATE'
-            record.update(status='completed' if completed else 'failed',
-                          stage='no_candidate' if completed else 'failed',
-                          error=str(exc), cleanup_status='completed', finished_at=now())
-            record['verdict'] = _empty_verdict(
-                exc.verdict,
-                'No verified candidate' if completed else 'Infrastructure failed',
-                str(exc),
-            )
-            self._safe_failure_evidence(record, inspection)
-        except BaseException as exc:
-            record.update(status='failed', stage='failed', error=str(exc),
-                          cleanup_status='requires_review', finished_at=now())
-            record['verdict'] = _empty_verdict(
-                'FAILED_INFRASTRUCTURE', 'Infrastructure failed',
-                'The evaluator stopped unexpectedly. No metrics are reported as valid.',
-            )
-            self._safe_failure_evidence(record, inspection)
-        finally:
-            if record is None:
-                return
-            if not record.get('finished_at'):
-                record['finished_at'] = now()
-            if record.get('started_at') and record.get('finished_at'):
-                try:
-                    start = datetime.fromisoformat(record['started_at'])
-                    end = datetime.fromisoformat(record['finished_at'])
-                    record['duration_s'] = round(max(0.0, (end - start).total_seconds()), 3)
-                except ValueError:
-                    pass
-            if record.get('status') not in TERMINAL:
-                record.update(status='failed', stage='failed', cleanup_status='requires_review')
+            if record is not None:
+                record.update(status='cancelled', stage='cancelled', error=str(exc),
+                              cleanup_status='completed', finished_at=now())
                 record['verdict'] = _empty_verdict(
                     'INTERRUPTED', 'Interrupted',
-                    'The evaluator stopped before a verdict. No metrics are reported as valid.',
+                    'The operation was cancelled. No winner is reported.',
                 )
-            try:
-                self.store.save_evaluation(record, 'Evaluation finished')
-            finally:
+                self._safe_failure_evidence(record, inspection)
+        except AdapterError as exc:
+            if record is not None:
+                completed = exc.verdict == 'NO_FEASIBLE_CANDIDATE'
+                record.update(status='completed' if completed else 'failed',
+                              stage='no_candidate' if completed else 'failed',
+                              error=str(exc), cleanup_status='completed', finished_at=now())
+                record['verdict'] = _empty_verdict(
+                    exc.verdict,
+                    'No verified candidate' if completed else 'Infrastructure failed',
+                    str(exc),
+                )
+                self._safe_failure_evidence(record, inspection)
+        except BaseException as exc:
+            if record is not None:
+                record.update(status='failed', stage='failed', error=str(exc),
+                              cleanup_status='requires_review', finished_at=now())
+                record['verdict'] = _empty_verdict(
+                    'FAILED_INFRASTRUCTURE', 'Infrastructure failed',
+                    'The evaluator stopped unexpectedly. No metrics are reported as valid.',
+                )
+                self._safe_failure_evidence(record, inspection)
+        finally:
+            if record is not None:
+                if not record.get('finished_at'):
+                    record['finished_at'] = now()
+                if record.get('started_at') and record.get('finished_at'):
+                    try:
+                        start = datetime.fromisoformat(record['started_at'])
+                        end = datetime.fromisoformat(record['finished_at'])
+                        record['duration_s'] = round(max(0.0, (end - start).total_seconds()), 3)
+                    except ValueError:
+                        pass
+                if record.get('status') not in TERMINAL:
+                    record.update(status='failed', stage='failed', cleanup_status='requires_review')
+                    record['verdict'] = _empty_verdict(
+                        'INTERRUPTED', 'Interrupted',
+                        'The evaluator stopped before a verdict. No metrics are reported as valid.',
+                    )
+                try:
+                    self.store.save_evaluation(record, 'Evaluation finished')
+                finally:
+                    with self.guard:
+                        self.cancels.pop(ident, None)
+            else:
                 with self.guard:
                     self.cancels.pop(ident, None)
 
@@ -774,28 +779,30 @@ class RepositoryEngine:
             record['screening'] = None
             self._safe_failure_evidence(record, inspection)
         finally:
-            if record is None:
-                return
-            if not record.get('finished_at'):
-                record['finished_at'] = now()
-            if record.get('started_at') and record.get('finished_at'):
+            if record is not None:
+                if not record.get('finished_at'):
+                    record['finished_at'] = now()
+                if record.get('started_at') and record.get('finished_at'):
+                    try:
+                        start = datetime.fromisoformat(record['started_at'])
+                        end = datetime.fromisoformat(record['finished_at'])
+                        record['duration_s'] = round(max(0.0, (end - start).total_seconds()), 3)
+                    except ValueError:
+                        pass
+                if record.get('status') not in TERMINAL:
+                    record.update(status='failed', stage='failed', cleanup_status='requires_review')
+                    record['verdict'] = empty_screening_verdict(
+                        'The screening stopped before a recommendation. No result is reported.'
+                    )
+                    record['correctness'] = record['verdict']['correctness']
+                    record['recommendation'] = record['verdict']['recommendation']
+                    record['screening'] = None
                 try:
-                    start = datetime.fromisoformat(record['started_at'])
-                    end = datetime.fromisoformat(record['finished_at'])
-                    record['duration_s'] = round(max(0.0, (end - start).total_seconds()), 3)
-                except ValueError:
-                    pass
-            if record.get('status') not in TERMINAL:
-                record.update(status='failed', stage='failed', cleanup_status='requires_review')
-                record['verdict'] = empty_screening_verdict(
-                    'The screening stopped before a recommendation. No result is reported.'
-                )
-                record['correctness'] = record['verdict']['correctness']
-                record['recommendation'] = record['verdict']['recommendation']
-                record['screening'] = None
-            try:
-                self.store.save_evaluation(record, 'Screening finished')
-            finally:
+                    self.store.save_evaluation(record, 'Screening finished')
+                finally:
+                    with self.guard:
+                        self.cancels.pop(ident, None)
+            else:
                 with self.guard:
                     self.cancels.pop(ident, None)
 
